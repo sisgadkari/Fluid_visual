@@ -10,9 +10,7 @@ st.markdown(
     "<h3 style='text-align: center; font-weight: normal;'>Capillarity effect refers to the rise or fall of a liquid in a small-diameter tube. It is caused by surface tension.</h3>",
     unsafe_allow_html=True
 )
-
 st.markdown("<br>", unsafe_allow_html=True)
-# Create two columns with equal width
 col1, col2 = st.columns([2,3])
 
 with col1:
@@ -22,13 +20,21 @@ with col1:
 with col2:
     st.title("Capillary Rise Calculator")
 
-    # Sliders and inputs
-    sigma = st.slider("Surface tension (N/m)", 0.01, 0.10, 0.0728)
-    theta_deg = st.slider("Contact angle (degrees)", 0, 180, 0)
+    st.markdown("<span style='font-size:20px;'>Surface tension (N/m)</span>", unsafe_allow_html=True)
+    sigma = st.slider("", 0.01, 0.10, 0.0728)
+
+    st.markdown("<span style='font-size:20px;'>Contact angle (degrees)</span>", unsafe_allow_html=True)
+    theta_deg = st.slider("", 0, 180, 0)
     theta = np.deg2rad(theta_deg)
-    rho = st.number_input("Liquid density (kg/m³)", value=1000)
-    d = st.slider("Capillary diameter (mm)", 0.1, 5.0, 1.0) / 1000  # convert mm to m
-    g = st.number_input("Gravity (m/s²)", value=9.81)
+
+    st.markdown("<span style='font-size:20px;'>Liquid density (kg/m³)</span>", unsafe_allow_html=True)
+    rho = st.number_input("", value=1000)
+
+    st.markdown("<span style='font-size:20px;'>Capillary diameter (mm)</span>", unsafe_allow_html=True)
+    d = st.slider("", 0.1, 5.0, 1.0) / 1000  # convert mm to m
+
+    st.markdown("<span style='font-size:20px;'>Gravity (m/s²)</span>", unsafe_allow_html=True)
+    g = st.number_input("", value=9.81)
 
     # Calculation
     if d > 0:
