@@ -261,9 +261,9 @@ with tab1:
             st.write(f"• Current value: {rho_m} kg/m³")
             
             # Calculate for different manometer fluids
-            h_needed_water = (0.5 * rho_f * U**2) / (1000 * g) * 100  # cm
-            h_needed_mercury = (0.5 * rho_f * U**2) / (13600 * g) * 100  # cm
-            h_needed_oil = (0.5 * rho_f * U**2) / (850 * g) * 100  # cm
+            h_needed_water = (0.5 * rho_f * U**2) / (1000 * g) * 100 if U > 0 else 0  # cm
+            h_needed_mercury = (0.5 * rho_f * U**2) / (13600 * g) * 100 if U > 0 else 0  # cm
+            h_needed_oil = (0.5 * rho_f * U**2) / (850 * g) * 100 if U > 0 else 0  # cm
             
             st.write(f"**For current velocity ({U:.2f} m/s):**")
             st.write(f"• Water manometer: {h_needed_water:.2f} cm")
@@ -290,17 +290,18 @@ with tab1:
             # Temperature effect (for gases)
             if rho_f < 10:
                 st.markdown("#### 3. Temperature Effect on Air Density")
-                st.write(f"• Current temperature: {temp_c}°C")
+                if 'temp_c' in locals():
+                    st.write(f"• Current temperature: {temp_c}°C")
                 
-                # Show density at different temperatures
-                temps = [-20, 0, 20, 40]
-                st.write("**Air density at different temperatures:**")
-                for T in temps:
-                    T_K = T + 273.15
-                    rho_at_T = 1.225 * (288.15 / T_K)
-                    st.write(f"• {T}°C: ρ = {rho_at_T:.3f} kg/m³")
-                
-                st.info("💡 For accurate measurements, always correct for actual temperature or use temperature-compensated instruments.")
+                    # Show density at different temperatures
+                    temps = [-20, 0, 20, 40]
+                    st.write("**Air density at different temperatures:**")
+                    for T in temps:
+                        T_K = T + 273.15
+                        rho_at_T = 1.225 * (288.15 / T_K)
+                        st.write(f"• {T}°C: ρ = {rho_at_T:.3f} kg/m³")
+                    
+                    st.info("💡 For accurate measurements, always correct for actual temperature or use temperature-compensated instruments.")
             
             # Manometer height sensitivity
             st.markdown("#### 4. Measurement Resolution")
@@ -458,222 +459,363 @@ with tab1:
                 
                 for i in range(len(x_grid)-1):
                     for j in range(len(y_grid)-1):
-                        x_center = (x_grid[i] + x_grid[i+1]) / 2
+                        x_pos = (x_grid[i] + x_grid[i+1]) / 2
+                        y_pos = (y_grid[j] + y_grid[j+1]) / 2
                         
-                        # Create pressure gradient effect (higher pressure near stagnation point)
-                        if x_center < 0:
-                            pressure_intensity = 0.3 + 0.7 * (x_center + 2) / 2
+                        # Calculate local pressure (simplified)
+                        if x_pos < 0 and abs(y_pos) < probe_outer_r * 1.5:
+                            # Stagnation region
+                            pressure_factor = 1.0
                         else:
-                            pressure_intensity = 0.3
+                            # Normal flow
+                            pressure_factor = 0.5
                         
-                        color_intensity = int(255 * (1 - pressure_intensity * 0.5))
-                        fig.add_shape(
-                            type="rect",
-                            x0=x_grid[i], y0=y_grid[j],
-                            x1=x_grid[i+1], y1=y_grid[j+1],
-                            fillcolor=f'rgba({color_intensity}, {color_intensity}, 255, 0.2)',
-                            line_width=0
-                        )
+                        color_intensity = int(255 * (1 - pressure_factor))
+                        fig.add_shape(type="rect",
+                                     x0=x_grid[i], y0=y_grid[j],
+                                     x1=x_grid[i+1], y1=y_grid[j+1],
+                                     fillcolor=f'rgba({color_intensity}, {color_intensity}, 255, 0.3)',
+                                     line_width=0)
+            else:
+                # Simple flow field background
+                fig.add_shape(type="rect", x0=-2, y0=-field_height/2, 
+                             x1=field_width, y1=field_height/2,
+                             fillcolor=fluid_color, line_width=0)
             
-            # 2. Draw streamlines if enabled
+            # Add boundary walls
+            fig.add_shape(type="line", x0=-2, y0=field_height/2, 
+                         x1=field_width, y1=field_height/2,
+                         line=dict(color="black", width=2))
+            fig.add_shape(type="line", x0=-2, y0=-field_height/2,
+                         x1=field_width, y1=-field_height/2,
+                         line=dict(color="black", width=2))
+            
+            # 2. Draw streamlines with realistic flow behavior
             if show_streamlines and velocity > 0:
-                for y_start in np.linspace(-1.5, 1.5, 7):
-                    if abs(y_start) > probe_outer_r * 1.2:
-                        x_stream = np.linspace(-2, field_width, 100)
-                        y_stream = y_start * np.ones_like(x_stream)
+                n_streamlines = 12
+                y_starts = np.linspace(-field_height/2 * 0.9, field_height/2 * 0.9, n_streamlines)
+                
+                for y_start in y_starts:
+                    if abs(y_start) < probe_outer_r:
+                        # Streamlines that hit the probe
+                        # Stagnation streamline
+                        x_stream = np.linspace(-2, -0.1, 50)
+                        y_stream = y_start * (1 - x_stream / -2) ** 2
+                    else:
+                        # Streamlines that go around
+                        x_points = np.linspace(-2, field_width, 100)
+                        y_deflection = np.zeros_like(x_points)
                         
-                        # Deflect streamlines around probe
-                        for i, x in enumerate(x_stream):
+                        for i, x in enumerate(x_points):
                             if -0.5 < x < probe_length:
-                                r = np.sqrt(x**2 + y_start**2) if x > 0 else abs(y_start)
-                                if r < probe_outer_r * 3:
-                                    deflection = probe_outer_r**2 / (r + 0.1) * np.sign(y_start)
-                                    y_stream[i] = y_start + deflection * (1 - x/probe_length) if x > 0 else y_start + deflection
+                                # Deflection around probe
+                                deflection_strength = np.exp(-(x - probe_length/2)**2 / 2)
+                                min_distance = probe_outer_r * 1.3
+                                if abs(y_start) < min_distance * 2:
+                                    y_deflection[i] = np.sign(y_start) * deflection_strength * \
+                                                     (min_distance - abs(y_start)) * 0.5
                         
-                        fig.add_trace(go.Scatter(
-                            x=x_stream, y=y_stream,
-                            mode='lines',
-                            line=dict(color='rgba(100, 100, 100, 0.3)', width=1),
-                            hoverinfo='none',
-                            showlegend=False
-                        ))
-                        
-                        # Add arrow heads
-                        for x_arrow in [0, 4, 8]:
-                            if x_arrow < len(x_stream) - 5:
-                                idx = np.argmin(np.abs(x_stream - x_arrow))
-                                fig.add_annotation(
-                                    x=x_stream[idx], y=y_stream[idx],
-                                    ax=x_stream[idx-5], ay=y_stream[idx-5],
-                                    xref='x', yref='y', axref='x', ayref='y',
-                                    showarrow=True, arrowhead=2, arrowsize=0.8,
-                                    arrowwidth=1.5, arrowcolor='rgba(100, 100, 100, 0.5)'
-                                )
+                        y_stream = y_start + y_deflection
+                        x_stream = x_points
+                    
+                    fig.add_trace(go.Scatter(x=x_stream, y=y_stream, mode='lines',
+                                           line=dict(color='rgba(0, 0, 0, 0.3)', width=1),
+                                           hoverinfo='none', showlegend=False))
+                    
+                    # Add flow arrows
+                    if y_start % (field_height/6) < field_height/12:
+                        arrow_x = -1.5
+                        fig.add_annotation(x=arrow_x, y=y_start,
+                                         ax=arrow_x + 0.3, ay=y_start,
+                                         showarrow=True, arrowhead=2, arrowsize=1.5,
+                                         arrowwidth=2, arrowcolor="darkblue")
             
-            # 3. Draw Pitot-static probe
+            # 3. Draw Pitot-static tube with details
             # Probe body
-            probe_body_x = [0, probe_length, probe_length, 0, 0]
-            probe_body_y = [-probe_outer_r, -probe_outer_r, probe_outer_r, probe_outer_r, -probe_outer_r]
-            fig.add_trace(go.Scatter(
-                x=probe_body_x, y=probe_body_y,
-                fill='toself', fillcolor=probe_color,
-                line=dict(color='black', width=2),
-                mode='lines', hoverinfo='none', showlegend=False
-            ))
+            fig.add_shape(type="rect", x0=0, y0=-probe_outer_r,
+                         x1=probe_length, y1=probe_outer_r,
+                         fillcolor=probe_color, line_width=0)
             
-            # Inner stagnation tube
-            stag_tube_x = [0, probe_length*0.95, probe_length*0.95, 0, 0]
-            stag_tube_y = [-probe_inner_r, -probe_inner_r, probe_inner_r, probe_inner_r, -probe_inner_r]
-            fig.add_trace(go.Scatter(
-                x=stag_tube_x, y=stag_tube_y,
-                fill='toself', fillcolor='white',
-                line=dict(color='gray', width=1),
-                mode='lines', hoverinfo='none', showlegend=False
-            ))
+            # Hemispherical nose
+            theta = np.linspace(-np.pi/2, np.pi/2, 50)
+            x_nose = probe_outer_r * np.cos(theta)
+            y_nose = probe_outer_r * np.sin(theta)
+            fig.add_trace(go.Scatter(x=x_nose, y=y_nose, fill="toself",
+                                   fillcolor=probe_color, mode='none',
+                                   hoverinfo='none', showlegend=False))
             
-            # Nose cone
-            nose_x = [0, -0.3, 0]
-            nose_y = [probe_inner_r, 0, -probe_inner_r]
-            fig.add_trace(go.Scatter(
-                x=nose_x, y=nose_y,
-                fill='toself', fillcolor=probe_color,
-                line=dict(color='black', width=2),
-                mode='lines', hoverinfo='none', showlegend=False
-            ))
-            
-            # Static ports (if details shown)
             if show_details:
-                for port_x in [static_port_x, static_port_x + 0.8]:
-                    fig.add_shape(
-                        type="circle",
-                        x0=port_x - 0.08, y0=probe_outer_r - 0.04,
-                        x1=port_x + 0.08, y1=probe_outer_r + 0.04,
-                        fillcolor=static_color, line=dict(color='darkblue', width=1)
-                    )
-                    fig.add_shape(
-                        type="circle",
-                        x0=port_x - 0.08, y0=-probe_outer_r - 0.04,
-                        x1=port_x + 0.08, y1=-probe_outer_r + 0.04,
-                        fillcolor=static_color, line=dict(color='darkblue', width=1)
-                    )
+                # Inner tube (stagnation pressure)
+                fig.add_shape(type="rect", x0=0, y0=-probe_inner_r,
+                             x1=probe_length, y1=probe_inner_r,
+                             fillcolor="lightgrey", line_width=0)
+                
+                # Stagnation pressure port
+                fig.add_shape(type="circle", x0=-0.04, y0=-probe_inner_r/2,
+                             x1=0.04, y1=probe_inner_r/2,
+                             fillcolor=stagnation_color, line_width=0)
+                
+                # Enhanced static pressure ports - showing circumferential distribution
+                n_static_ports = 8  # Total ports around circumference
+                port_radius = 0.03  # Port hole radius
+                
+                for i in range(n_static_ports):
+                    angle = i * 2 * np.pi / n_static_ports
+                    port_y = probe_outer_r * 0.85 * np.sin(angle)
+                    port_z = probe_outer_r * 0.85 * np.cos(angle)  # For 3D effect
+                    
+                    # Determine visibility and appearance based on angle
+                    if abs(angle - np.pi/2) < np.pi/4 or abs(angle - 3*np.pi/2) < np.pi/4:
+                        # Top and bottom ports (fully visible)
+                        port_color = static_color
+                        port_size = port_radius
+                        port_opacity = 1.0
+                    elif abs(angle) < np.pi/4 or abs(angle - np.pi) < np.pi/4:
+                        # Front and back ports (partially visible)
+                        port_color = static_color
+                        port_size = port_radius * 0.7
+                        port_opacity = 0.6
+                    else:
+                        # Side ports (visible as ellipses to show perspective)
+                        port_color = static_color
+                        port_size = port_radius * 0.5
+                        port_opacity = 0.8
+                    
+                    # Only draw ports that would be visible from this 2D side view
+                    if abs(port_y) > probe_inner_r * 1.1:  # Avoid overlap with inner tube
+                        fig.add_shape(type="circle",
+                                     x0=static_port_x - port_size,
+                                     y0=port_y - port_size,
+                                     x1=static_port_x + port_size,
+                                     y1=port_y + port_size,
+                                     fillcolor=port_color,
+                                     line=dict(color="darkblue", width=1),
+                                     opacity=port_opacity)
+                
+                # Add indication of circumferential distribution with dashed circles
+                # Top circumferential indication
+                circle_theta = np.linspace(0, 2*np.pi, 100)
+                circle_x = static_port_x + probe_outer_r * 0.85 * 0.3 * np.cos(circle_theta)
+                circle_y = probe_outer_r * 0.85 * np.sin(circle_theta)
+                fig.add_trace(go.Scatter(x=circle_x, y=circle_y, mode='lines',
+                                       line=dict(color='rgba(59, 130, 246, 0.4)', width=1, dash='dot'),
+                                       hoverinfo='none', showlegend=False))
+                
+                # Pressure pathways
+                fig.add_shape(type="rect", x0=0, y0=-probe_inner_r/3,
+                             x1=probe_length, y1=probe_inner_r/3,
+                             fillcolor=stagnation_color, line_width=0, opacity=0.5)
+                fig.add_shape(type="rect", x0=static_port_x, y0=probe_inner_r,
+                             x1=probe_length, y1=probe_outer_r*0.8,
+                             fillcolor=static_color, line_width=0, opacity=0.5)
             
-            # Stagnation point marker
-            fig.add_shape(
-                type="circle",
-                x0=-0.15, y0=-0.08, x1=-0.01, y1=0.08,
-                fillcolor=stagnation_color, line=dict(color='darkred', width=1)
-            )
-            
-            # 4. Manometer section
-            mano_x_center = probe_length / 2
-            mano_y_top = -2.5
-            mano_y_bottom = -3.5
-            
+            # 4. Enhanced U-tube manometer (following the original manometer design)
+            mano_x = probe_length + 1.5
+            mano_bend_y_center = -3.0
             tube_inner_radius = 0.08
-            tube_outer_radius = 0.12
+            tube_outer_radius = 0.10
             
-            # Manometer tubes
-            left_tube_x = mano_x_center - 0.5
-            right_tube_x = mano_x_center + 0.5
+            # Left and right tube x positions
+            tube_spacing = 0.2  # Half distance between tube centers
+            left_tube_x = mano_x - tube_spacing
+            right_tube_x = mano_x + tube_spacing
             
-            # Glass tubes
-            fig.add_shape(type="rect",
-                         x0=left_tube_x - tube_outer_radius, y0=mano_y_bottom,
-                         x1=left_tube_x + tube_outer_radius, y1=mano_y_top,
-                         fillcolor=glass_color, line=dict(color='gray', width=1))
-            fig.add_shape(type="rect",
-                         x0=right_tube_x - tube_outer_radius, y0=mano_y_bottom,
-                         x1=right_tube_x + tube_outer_radius, y1=mano_y_top,
-                         fillcolor=glass_color, line=dict(color='gray', width=1))
+            # Manometer top position
+            mano_top_y = -0.5
             
             # Calculate fluid levels
-            datum = mano_y_bottom + 0.3
-            level_left = datum - h_inst / 200  # Scale for visualization
-            level_right = datum + h_inst / 200
+            level_center = mano_bend_y_center + 0.3
+            level_left = level_center + h_inst
+            level_right = level_center - h_inst
             
-            # Manometer fluid
-            fig.add_shape(type="rect",
-                         x0=left_tube_x - tube_inner_radius, y0=mano_y_bottom,
-                         x1=left_tube_x + tube_inner_radius, y1=level_left,
-                         fillcolor=manometer_fluid_color, line_width=0)
-            fig.add_shape(type="rect",
-                         x0=right_tube_x - tube_inner_radius, y0=mano_y_bottom,
-                         x1=right_tube_x + tube_inner_radius, y1=level_right,
-                         fillcolor=manometer_fluid_color, line_width=0)
+            # Function to generate bend points (from original manometer)
+            def get_bend_points(radius, y_center):
+                theta_angle = np.linspace(np.pi, 2 * np.pi, 50)
+                return radius * np.cos(theta_angle), radius * np.sin(theta_angle) + y_center
             
-            # System fluid on top
-            fig.add_shape(type="rect",
-                         x0=left_tube_x - tube_inner_radius, y0=level_left,
-                         x1=left_tube_x + tube_inner_radius, y1=mano_y_top,
+            # Get bend points for outer and inner curves
+            # Outer bend connects the outer edges of the tubes
+            outer_bend_radius = tube_spacing + tube_outer_radius
+            x_outer_bend, y_outer_bend = get_bend_points(outer_bend_radius, mano_bend_y_center)
+            
+            # Inner bend connects the inner edges of the tubes  
+            inner_bend_radius = tube_spacing - tube_outer_radius + tube_inner_radius
+            x_inner_bend, y_inner_bend = get_bend_points(inner_bend_radius, mano_bend_y_center)
+            
+            # Shift bends to center position
+            x_outer_bend = x_outer_bend + mano_x
+            x_inner_bend = x_inner_bend + mano_x
+            
+            # Draw U-tube glass
+            x_glass = np.concatenate([
+                [left_tube_x - tube_outer_radius, left_tube_x - tube_outer_radius], 
+                x_outer_bend, 
+                [right_tube_x + tube_outer_radius, right_tube_x + tube_outer_radius],
+                [right_tube_x + tube_inner_radius, right_tube_x + tube_inner_radius], 
+                x_inner_bend[::-1], 
+                [left_tube_x - tube_inner_radius, left_tube_x - tube_inner_radius]
+            ])
+            y_glass = np.concatenate([
+                [mano_top_y, mano_bend_y_center], 
+                y_outer_bend, 
+                [mano_bend_y_center, mano_top_y],
+                [mano_top_y, mano_bend_y_center], 
+                y_inner_bend[::-1], 
+                [mano_bend_y_center, mano_top_y]
+            ])
+            fig.add_trace(go.Scatter(x=x_glass, y=y_glass, fill="toself", 
+                                    fillcolor=glass_color, mode='none', 
+                                    hoverinfo='none', showlegend=False))
+            
+            # Connecting lines from probe to manometer
+            # Stagnation connection (red) to left tube
+            fig.add_trace(go.Scatter(x=[probe_length, probe_length + 0.5, left_tube_x],
+                                   y=[0, -0.2, -0.2],
+                                   mode='lines', line=dict(color=stagnation_color, width=3),
+                                   hoverinfo='none', showlegend=False))
+            
+            # Static connection (blue) to right tube
+            fig.add_trace(go.Scatter(x=[probe_length, probe_length + 0.5, right_tube_x],
+                                   y=[probe_outer_r*0.9, -0.1, -0.1],
+                                   mode='lines', line=dict(color=static_color, width=3),
+                                   hoverinfo='none', showlegend=False))
+            
+            # Add connecting tube glass structures
+            conn_tube_inner_radius = 0.03
+            conn_tube_outer_radius = 0.04
+            
+            # Left connecting tube glass
+            fig.add_shape(type="rect", 
+                         x0=left_tube_x - conn_tube_outer_radius, y0=-0.2,
+                         x1=left_tube_x - conn_tube_inner_radius, y1=mano_top_y,
+                         fillcolor=glass_color, line_width=0)
+            fig.add_shape(type="rect", 
+                         x0=left_tube_x + conn_tube_inner_radius, y0=-0.2,
+                         x1=left_tube_x + conn_tube_outer_radius, y1=mano_top_y,
+                         fillcolor=glass_color, line_width=0)
+            
+            # Right connecting tube glass
+            fig.add_shape(type="rect", 
+                         x0=right_tube_x - conn_tube_outer_radius, y0=-0.1,
+                         x1=right_tube_x - conn_tube_inner_radius, y1=mano_top_y,
+                         fillcolor=glass_color, line_width=0)
+            fig.add_shape(type="rect", 
+                         x0=right_tube_x + conn_tube_inner_radius, y0=-0.1,
+                         x1=right_tube_x + conn_tube_outer_radius, y1=mano_top_y,
+                         fillcolor=glass_color, line_width=0)
+            
+            # System fluid in connecting tubes
+            # Left connecting tube
+            fig.add_shape(type="rect", 
+                         x0=left_tube_x - conn_tube_inner_radius, y0=-0.2,
+                         x1=left_tube_x + conn_tube_inner_radius, y1=mano_top_y,
                          fillcolor=stagnation_color, line_width=0, opacity=0.5)
-            fig.add_shape(type="rect",
-                         x0=right_tube_x - tube_inner_radius, y0=level_right,
-                         x1=right_tube_x + tube_inner_radius, y1=mano_y_top,
+            
+            # Right connecting tube
+            fig.add_shape(type="rect", 
+                         x0=right_tube_x - conn_tube_inner_radius, y0=-0.1,
+                         x1=right_tube_x + conn_tube_inner_radius, y1=mano_top_y,
                          fillcolor=static_color, line_width=0, opacity=0.5)
             
-            # Height indicator
-            if abs(h_inst) > 0.5:
+            # Draw Manometer Fluids (exactly like original)
+            # Manometer fluid in left column
+            fig.add_shape(type="rect", 
+                         x0=left_tube_x, y0=mano_bend_y_center, 
+                         x1=left_tube_x + (tube_outer_radius - tube_inner_radius), y1=level_left, 
+                         fillcolor=manometer_fluid_color, line_width=0)
+            # Manometer fluid in right column
+            fig.add_shape(type="rect", 
+                         x0=right_tube_x - (tube_outer_radius - tube_inner_radius), y0=mano_bend_y_center, 
+                         x1=right_tube_x, y1=level_right, 
+                         fillcolor=manometer_fluid_color, line_width=0)
+            
+            # Bottom bend manometer fluid
+            x_mano_bend = np.concatenate([x_outer_bend, x_inner_bend[::-1]])
+            y_mano_bend = np.concatenate([y_outer_bend, y_inner_bend[::-1]])
+            fig.add_trace(go.Scatter(x=x_mano_bend, y=y_mano_bend, fill="toself", 
+                                    fillcolor=manometer_fluid_color, mode='none', hoverinfo='none', showlegend=False))
+            
+            # System fluid on top of manometer fluid
+            # Left side
+            fig.add_shape(type="rect", 
+                         x0=left_tube_x, y0=level_left, 
+                         x1=left_tube_x + (tube_outer_radius - tube_inner_radius), y1=mano_top_y, 
+                         fillcolor=stagnation_color, line_width=0, opacity=0.5)
+            # Right side
+            fig.add_shape(type="rect", 
+                         x0=right_tube_x - (tube_outer_radius - tube_inner_radius), y0=level_right, 
+                         x1=right_tube_x, y1=mano_top_y, 
+                         fillcolor=static_color, line_width=0, opacity=0.5)
+            
+            # Interface markers
+            fig.add_shape(type="line", 
+                         x0=left_tube_x + (tube_outer_radius - tube_inner_radius) - 0.02, 
+                         y0=level_left, 
+                         x1=left_tube_x + (tube_outer_radius - tube_inner_radius) + 0.02, 
+                         y1=level_left, 
+                         line=dict(color="black", width=2))
+            fig.add_shape(type="line", 
+                         x0=right_tube_x - (tube_outer_radius - tube_inner_radius) - 0.02, 
+                         y0=level_right, 
+                         x1=right_tube_x - (tube_outer_radius - tube_inner_radius) + 0.02, 
+                         y1=level_right, 
+                         line=dict(color="black", width=2))
+            
+            # Height dimension
+            if abs(h_inst) > 0.01:
+                dim_x = right_tube_x + 0.05
                 fig.add_shape(type="line",
-                             x0=right_tube_x + 0.2, y0=level_left,
-                             x1=right_tube_x + 0.2, y1=level_right,
+                             x0=dim_x, y0=level_left,
+                             x1=dim_x, y1=level_right,
                              line=dict(color="black", width=1))
-                fig.add_annotation(
-                    x=right_tube_x + 0.25, y=(level_left + level_right)/2,
-                    text=f"h={h_inst:.1f}cm",
-                    showarrow=False, font=dict(size=10), xanchor="left"
-                )
+                # Add arrows at ends
+                fig.add_shape(type="line", 
+                             x0=dim_x - 0.01, y0=level_left, 
+                             x1=dim_x + 0.01, y1=level_left, 
+                             line=dict(color="black", width=1))
+                fig.add_shape(type="line", 
+                             x0=dim_x - 0.01, y0=level_right, 
+                             x1=dim_x + 0.01, y1=level_right, 
+                             line=dict(color="black", width=1))
+                fig.add_annotation(x=dim_x + 0.02, y=level_center,
+                                 text=f"h = {h_inst*100:.1f} cm",
+                                 showarrow=False, xanchor="left", font=dict(size=14))
             
             # 5. Annotations and labels
             # Velocity annotation with arrow
             if velocity > 0:
-                fig.add_annotation(
-                    x=-1, y=field_height/2+0.3,
-                    text=f"U = {velocity:.1f} m/s",
-                    showarrow=False, font=dict(size=16, color="darkblue")
-                )
+                fig.add_annotation(x=-1, y=field_height/2+0.3,
+                                 text=f"U = {velocity:.1f} m/s",
+                                 showarrow=False, font=dict(size=16, color="darkblue"))
                 
                 # Dynamic pressure annotation
-                fig.add_annotation(
-                    x=probe_length/2, y=-probe_outer_r-0.7,
-                    text=f"q = ½ρU² = {q/1000:.2f} kPa",
-                    showarrow=False, font=dict(size=10)
-                )
+                fig.add_annotation(x=probe_length/2, y=-probe_outer_r-0.7,
+                                 text=f"q = ½ρU² = {0.5*rho_f*velocity**2/1000:.2f} kPa",
+                                 showarrow=False, font=dict(size=10))
             
             # Pressure labels
-            fig.add_annotation(
-                x=-0.2, y=0.3, text="P₀<br>(Stagnation)",
-                showarrow=False, font=dict(size=12, color="darkred"),
-                bgcolor="white", bordercolor="darkred", borderwidth=1
-            )
-            fig.add_annotation(
-                x=static_port_x, y=probe_outer_r+0.3, text="P<br>(Static)",
-                showarrow=False, font=dict(size=12, color="darkblue"),
-                bgcolor="white", bordercolor="darkblue", borderwidth=1
-            )
+            fig.add_annotation(x=-0.2, y=0.3, text="P₀<br>(Stagnation)",
+                              showarrow=False, font=dict(size=12, color="darkred"),
+                              bgcolor="white", bordercolor="darkred", borderwidth=1)
+            fig.add_annotation(x=static_port_x, y=probe_outer_r+0.3, text="P<br>(Static)",
+                              showarrow=False, font=dict(size=12, color="darkblue"),
+                              bgcolor="white", bordercolor="darkblue", borderwidth=1)
             
             # Manometer labels
-            fig.add_annotation(
-                x=left_tube_x, y=mano_y_top + 0.1, text="P₀",
-                showarrow=False, font=dict(size=14, color="darkred")
-            )
-            fig.add_annotation(
-                x=right_tube_x, y=mano_y_top + 0.1, text="P",
-                showarrow=False, font=dict(size=14, color="darkblue")
-            )
+            fig.add_annotation(x=left_tube_x, y=mano_top_y + 0.1, text="P₀",
+                              showarrow=False, font=dict(size=14, color="darkred"))
+            fig.add_annotation(x=right_tube_x, y=mano_top_y + 0.1, text="P",
+                              showarrow=False, font=dict(size=14, color="darkblue"))
             
             # Title
-            fig.add_annotation(
-                x=probe_length/2, y=probe_outer_r+0.8,
-                text="Pitot-Static Tube",
-                showarrow=False, font=dict(size=16, color="black", family="Arial Black")
-            )
+            fig.add_annotation(x=probe_length/2, y=probe_outer_r+0.8,
+                              text="Pitot-Static Tube",
+                              showarrow=False, font=dict(size=16, color="black", family="Arial Black"))
             
             # Manometer fluid label
-            fig.add_annotation(
-                x=mano_x_center, y=mano_y_bottom - 0.05,
-                text=f"Manometer Fluid (ρ = {rho_m:.0f} kg/m³)",
-                showarrow=False, font=dict(size=10), yanchor="top"
-            )
+            fig.add_annotation(x=(left_tube_x + right_tube_x) / 2, y=mano_bend_y_center - 0.05,
+                              text=f"Manometer Fluid<br>(ρ = {rho_m:.0f} kg/m³)",
+                              showarrow=False, font=dict(size=10), yanchor="top")
             
             # Layout
             fig.update_layout(
