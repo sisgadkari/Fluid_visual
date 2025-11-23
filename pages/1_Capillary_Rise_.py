@@ -60,8 +60,8 @@ with tab1:
             st.markdown(f"**Liquid Density (ρ):** `{rho}` kg/m³")
 
         st.subheader("Tube and Angle Properties")
-        theta_deg = st.slider("Contact Angle (θ) [degrees]", 0, 180, 
-                             properties.get('theta', 90) if fluid_choice != "Custom" else 90,
+        # Always start at 90 degrees for neutral display
+        theta_deg = st.slider("Contact Angle (θ) [degrees]", 0, 180, 90,
                              help="0° = perfect wetting, 90° = neutral, >90° = non-wetting")
         d_mm = st.slider("Capillary Diameter (d) [mm]", 0.1, 10.0, 1.0, 0.1,
                         help="Smaller diameter = greater capillary rise")
