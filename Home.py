@@ -342,8 +342,7 @@ st.markdown("""
     <p>🎓 Developed for Chemical Engineering Students</p>
     <p>University of Surrey | School of Chemistry and Chemical Engineering</p>
     <p style='margin-top: 10px;'>👨‍💻 Developer: <strong>Dr Siddharth Gadkari</strong></p>
-    <p style='margin-top: 5px;'>🏆 Funded by the <strong>Fluor Global University Sponsorship Program (GUSP) Award</strong></p>
-    <p style='margin-top: 10px;'>💻 Built with Streamlit & Plotly | 🔬 Powered by Fluid Mechanics Principles</p>
+    <p style='margin-top: 5px;'>🏆 Funded by the <strong>Fluor Global University Sponsorship Program (GUSP) Award</strong> and <strong>Faculty of Engineering and Physical Sciences Teaching Innovation Fund</strong></p>
 </div>
 """, unsafe_allow_html=True)
 
