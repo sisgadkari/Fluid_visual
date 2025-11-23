@@ -339,8 +339,9 @@ st.markdown("---")
 # --- Credits Footer ---
 st.markdown("""
 <div style='text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9em;'>
-    <p>🎓 Developed for Chemical Engineering Students</p>
+    <p>🎓 Developed by Dr. Siddharth Gadkari for Chemical Engineering Students</p>
     <p>University of Surrey | School of Chemistry and Chemical Engineering</p>
     <p style='margin-top: 10px;'>💻 Built with Streamlit & Plotly | 🔬 Powered by Fluid Mechanics Principles</p>
 </div>
 """, unsafe_allow_html=True)
+
