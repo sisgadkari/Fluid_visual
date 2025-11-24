@@ -194,80 +194,70 @@ modules = [
         "icon": "💧",
         "title": "Capillary Rise",
         "description": "Watch liquid defy gravity! Explore how surface tension pulls fluids up narrow tubes. Experiment with water, mercury, and ethanol.",
-        "key_concept": "Surface Tension & Contact Angles",
-        "page": "1_Capillary_Rise_Enhanced"
+        "key_concept": "Surface Tension & Contact Angles"
     },
     {
         "number": "2",
         "icon": "📏",
         "title": "Open Manometer",
         "description": "Master pressure measurement with U-tube manometers. See how fluid heights reveal pressure differences in real-time.",
-        "key_concept": "Pressure Measurement & Fluid Statics",
-        "page": "2_Open_Manometer_Enhanced"
+        "key_concept": "Pressure Measurement & Fluid Statics"
     },
     {
         "number": "3",
         "icon": "🔒",
         "title": "Closed Manometer",
         "description": "Unlock the secrets of closed-system pressure measurements. Perfect for understanding vacuum and absolute pressure.",
-        "key_concept": "Absolute vs Gauge Pressure",
-        "page": "3_Closed_Manometer_Enhanced"
+        "key_concept": "Absolute vs Gauge Pressure"
     },
     {
         "number": "4",
         "icon": "✈️",
         "title": "Pitot-Static Tube",
         "description": "Discover how aircraft measure airspeed! Learn the principles behind one of aviation's most important instruments.",
-        "key_concept": "Dynamic Pressure & Flow Velocity",
-        "page": "4_Pitot-Static_Tube_Enhanced"
+        "key_concept": "Dynamic Pressure & Flow Velocity"
     },
     {
         "number": "5",
         "icon": "🏗️",
         "title": "Hydrostatic Force - Straight Wall",
         "description": "Calculate massive forces on dams and tanks! Visualize pressure distribution and find the center of pressure on vertical walls.",
-        "key_concept": "Hydrostatic Force & Pressure Distribution",
-        "page": "5_Hydrostatic_Pressure_Straight_wall_Enhanced"
+        "key_concept": "Hydrostatic Force & Pressure Distribution"
     },
     {
         "number": "6",
         "icon": "📐",
         "title": "Hydrostatic Force - Inclined Wall",
         "description": "See how tilting a surface changes everything! Master force calculations on inclined gates and surfaces.",
-        "key_concept": "Forces on Inclined Surfaces",
-        "page": "6_Hydrostatic_Pressure_Inclined_wall_Enhanced"
+        "key_concept": "Forces on Inclined Surfaces"
     },
     {
         "number": "7",
         "icon": "🔄",
         "title": "Reducing Pipe Bend",
         "description": "Witness momentum in action! Calculate forces on pipe bends and understand why pipelines need support structures.",
-        "key_concept": "Momentum Equation & Reaction Forces",
-        "page": "7_Reducing_Bend_Enhanced"
+        "key_concept": "Momentum Equation & Reaction Forces"
     },
     {
         "number": "8",
         "icon": "🌊",
         "title": "Laminar vs Turbulent Flow",
         "description": "Inject virtual dye and watch flow patterns emerge! Cross the Reynolds number threshold and see chaos unfold.",
-        "key_concept": "Reynolds Number & Flow Regimes",
-        "page": "8_Laminar-and-Turbulent-Flow_Enhanced"
+        "key_concept": "Reynolds Number & Flow Regimes"
     },
     {
         "number": "9",
         "icon": "⚡",
         "title": "Pump Head & Power",
         "description": "Design pumping systems like a pro! Calculate required pump power for any piping configuration.",
-        "key_concept": "Bernoulli Equation & Energy Analysis",
-        "page": "9_Pump_head_demand_Enhanced"
+        "key_concept": "Bernoulli Equation & Energy Analysis"
     },
     {
         "number": "10",
         "icon": "⚙️",
         "title": "Turbine Power",
         "description": "Extract energy from flowing fluids! Explore how turbines convert fluid power into mechanical work.",
-        "key_concept": "Energy Extraction & Efficiency",
-        "page": "10_Turbine_Power"
+        "key_concept": "Energy Extraction & Efficiency"
     }
 ]
 
@@ -285,9 +275,6 @@ for i, module in enumerate(modules):
             </p>
         </div>
         """, unsafe_allow_html=True)
-        
-        # Add proper Streamlit page navigation - pages are now in pages/ subdirectory
-        st.page_link(f"pages/{module['page']}.py", label=f"🚀 Launch {module['title']} →", icon="🚀")
 
 st.markdown("---")
 
