@@ -1,713 +1,913 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
 import pandas as pd
-import math
 
-def main():
-    st.set_page_config(page_title="Two-Reservoir System Calculator", layout="wide")
-    
-    st.title("🏔️ Two-Reservoir System Head Demand Calculator")
-    st.markdown("**Calculate pump head requirements using the equivalent length method for fitting losses**")
-    
-    # Create tabs for different aspects
-    tab1, tab2 = st.tabs(["🎯 System Analysis", "📋 Fittings Reference"])
-    
-    with tab1:
-        system_analysis_tab()
-    
-    with tab2:
-        fittings_reference_tab()
+# --- Page Configuration ---
+st.set_page_config(page_title="Pump Head Demand Calculator", layout="wide")
+
+# --- Title and Introduction ---
+st.markdown("<h1 style='text-align: center;'>⚡ Pump Head Demand Calculator</h1>", unsafe_allow_html=True)
+st.markdown("""
+<p style='text-align: center; font-size: 18px;'>
+Calculate pump requirements for two-reservoir systems using the equivalent length method.
+Understand how elevation, friction, and fittings affect total head demand.
+</p>
+""", unsafe_allow_html=True)
+st.markdown("---")
+
+# Create tabs for different aspects
+tab1, tab2, tab3 = st.tabs(["🎯 Interactive Simulation", "📚 Understanding Pump Systems", "📋 Real-World Applications"])
 
 def get_fittings_database():
-    """Return the fittings database from the reference table"""
+    """Return the fittings database with equivalent lengths"""
     return {
-        "90° Standard Elbow": {"n": 35, "icon": "🔄"},
-        "90° Radius Elbow": {"n": 23, "icon": "🔄"},
-        "Sharp Pipe Exit": {"n": 50, "icon": "➡️"},
-        "Sharp Inlet": {"n": 25, "icon": "⬅️"},
-        "Radius Inlet": {"n": 0, "icon": "⬅️"},
-        "Re-entrant Inlet": {"n": 50, "icon": "⬅️"},
-        "Globe Valve (Fully Open)": {"n": 180, "icon": "🌐"},
-        "Gate Valve (Fully Open)": {"n": 7, "icon": "🚪"},
-        "Gate Valve (3/4 Open)": {"n": 40, "icon": "🚪"},
-        "Gate Valve (1/4 Open)": {"n": 800, "icon": "🚪"},
+        "90° Standard Elbow": {"n": 35, "icon": "🔄", "desc": "Common pipe elbow"},
+        "90° Long Radius Elbow": {"n": 23, "icon": "🔄", "desc": "Smoother bend, less loss"},
+        "45° Elbow": {"n": 16, "icon": "↗️", "desc": "Gentler direction change"},
+        "T-junction (flow through)": {"n": 20, "icon": "➕", "desc": "Straight flow through tee"},
+        "T-junction (branch flow)": {"n": 60, "icon": "➕", "desc": "90° turn through tee"},
+        "Sharp Pipe Exit": {"n": 50, "icon": "➡️", "desc": "Sudden expansion to reservoir"},
+        "Sharp Inlet": {"n": 25, "icon": "⬅️", "desc": "Square-edged entrance"},
+        "Radius Inlet": {"n": 0, "icon": "⬅️", "desc": "Rounded entrance, minimal loss"},
+        "Re-entrant Inlet": {"n": 50, "icon": "⬅️", "desc": "Pipe protruding into tank"},
+        "Globe Valve (fully open)": {"n": 180, "icon": "🌐", "desc": "High control, high loss"},
+        "Gate Valve (fully open)": {"n": 7, "icon": "🚪", "desc": "Low loss when open"},
+        "Gate Valve (3/4 open)": {"n": 40, "icon": "🚪", "desc": "Partially closed"},
+        "Gate Valve (1/2 open)": {"n": 200, "icon": "🚪", "desc": "Half closed"},
+        "Gate Valve (1/4 open)": {"n": 800, "icon": "🚪", "desc": "Nearly closed, huge loss"},
+        "Ball Valve (fully open)": {"n": 3, "icon": "⚽", "desc": "Very low loss"},
+        "Check Valve (swing)": {"n": 50, "icon": "✓", "desc": "Prevents backflow"},
+        "Butterfly Valve (fully open)": {"n": 45, "icon": "🦋", "desc": "Moderate loss"},
     }
 
-def system_analysis_tab():
-    """Main system analysis with step-by-step calculations"""
+def calculate_friction_factor(reynolds, relative_roughness):
+    """Calculate friction factor using Churchill equation"""
+    if reynolds < 2300:  # Laminar
+        return 64 / reynolds
+    else:  # Turbulent - Churchill equation
+        A = (2.457 * np.log(1 / ((7/reynolds)**0.9 + 0.27 * relative_roughness)))**16
+        B = (37530 / reynolds)**16
+        f = 8 * ((8/reynolds)**12 + 1/(A + B)**(3/2))**(1/12)
+        return f
+
+def calculate_system(Q, L, D, epsilon, z1, z2, rho, nu, fittings):
+    """Calculate complete system head demand"""
+    # Flow characteristics
+    A = np.pi * (D/2)**2
+    V = Q / A if A > 0 else 0
+    Re = (V * D) / nu if nu > 0 else 0
     
-    # --- Sidebar for System Parameters ---
-    st.sidebar.header("⚙️ System Parameters")
+    # Flow regime
+    if Re < 2300:
+        regime = "Laminar"
+    elif Re < 4000:
+        regime = "Transitional"
+    else:
+        regime = "Turbulent"
     
-    # Reservoir elevations
-    st.sidebar.markdown("#### 🏔️ Reservoir Elevations")
-    z1 = st.sidebar.number_input("Reservoir 1 Elevation (m)", value=0.0, disabled=True, help="Reference level")
-    z2 = st.sidebar.slider("Reservoir 2 Elevation (m)", 50, 200, 100, 5, help="Height above reservoir 1")
+    # Friction factor
+    rel_rough = epsilon / D if D > 0 else 0
+    f = calculate_friction_factor(Re, rel_rough)
     
-    # Pipe specifications
-    st.sidebar.markdown("#### 🔧 Pipe Specifications")
-    pipe_length = st.sidebar.number_input("Pipe Length (m)", 10, 2000, 500, 10, help="Total length of connecting pipe")
-    pipe_diameter = st.sidebar.number_input("Pipe Internal Diameter (mm)", 25, 500, 150, 5, help="Internal diameter") / 1000  # Convert to meters
+    # Equivalent length from fittings
+    Le_fittings = 0
+    for fitting_data in fittings.values():
+        Le_fittings += D * fitting_data['n'] * fitting_data['quantity']
     
-    # Pipe roughness selection
-    st.sidebar.markdown("#### 🧱 Pipe Material & Roughness")
-    roughness_options = {
-        "Smooth (drawn tubing)": 0.0015e-3,
-        "Commercial steel (new)": 0.045e-3,
-        "Commercial steel (used)": 0.15e-3,
-        "Galvanized iron": 0.15e-3,
-        "Cast iron (new)": 0.26e-3,
-        "Cast iron (old)": 2.0e-3,
-        "Concrete (smooth)": 0.3e-3,
-        "Concrete (rough)": 3.0e-3
+    Le_total = L + Le_fittings
+    
+    # Head losses
+    static_head = z2 - z1
+    
+    # Darcy-Weisbach equation for total friction loss
+    if V > 0 and D > 0:
+        h_friction_total = f * (4 * Le_total / D) * (V**2 / (2 * 9.81))
+        h_friction_pipe = f * (4 * L / D) * (V**2 / (2 * 9.81))
+        h_friction_fittings = h_friction_total - h_friction_pipe
+    else:
+        h_friction_total = 0
+        h_friction_pipe = 0
+        h_friction_fittings = 0
+    
+    # Total head demand
+    H_demand = static_head + h_friction_total
+    
+    # Power calculations
+    P_hydraulic = rho * 9.81 * Q * H_demand  # Watts
+    P_80 = P_hydraulic / 0.80 / 1000  # kW
+    P_70 = P_hydraulic / 0.70 / 1000  # kW
+    P_60 = P_hydraulic / 0.60 / 1000  # kW
+    
+    return {
+        'velocity': V,
+        'reynolds': Re,
+        'flow_regime': regime,
+        'friction_factor': f,
+        'static_head': static_head,
+        'pipe_friction_loss': h_friction_pipe,
+        'fittings_loss': h_friction_fittings,
+        'total_dynamic_loss': h_friction_total,
+        'total_head_demand': H_demand,
+        'equivalent_length': Le_total,
+        'power_hydraulic': P_hydraulic,
+        'power_80': P_80,
+        'power_70': P_70,
+        'power_60': P_60
     }
-    
-    selected_material = st.sidebar.selectbox("Pipe Material", list(roughness_options.keys()))
-    roughness = roughness_options[selected_material]
-    
-    st.sidebar.info(f"**Selected roughness:** ε = {roughness*1000:.3f} mm")
-    
-    # Flow rate
-    st.sidebar.markdown("#### ⚡ Operating Conditions")
-    flow_rate = st.sidebar.number_input("Flow Rate (m³/h)", 1.0, 500.0, 50.0, 1.0, help="Desired flow rate from reservoir 1 to 2")
-    flow_rate_m3s = flow_rate / 3600  # Convert to m³/s
-    
-    # Fluid properties
-    st.sidebar.markdown("#### 💧 Fluid Properties")
-    fluid_density = st.sidebar.number_input("Density (kg/m³)", 800, 1200, 1000, 10)
-    fluid_viscosity = st.sidebar.number_input("Kinematic Viscosity (cSt)", 0.5, 10.0, 1.0, 0.1) * 1e-6  # Convert to m²/s
-    
-    # Fittings selection
-    st.sidebar.markdown("#### ⚙️ Fittings & Minor Losses")
-    st.sidebar.markdown("*Select fittings present in the system:*")
-    
-    fittings_db = get_fittings_database()
-    selected_fittings = {}
-    
-    # Create fitting selection interface
-    for fitting_name, fitting_data in fittings_db.items():
-        quantity = st.sidebar.number_input(
-            f"{fitting_data['icon']} {fitting_name}",
-            min_value=0, max_value=10, value=0, step=1,
-            key=f"qty_{fitting_name}",
-            help=f"n = Le/D = {fitting_data['n']}"
-        )
+
+with tab1:
+    # --- Main Layout ---
+    col1, col2 = st.columns([2, 3])
+
+    # --- Column 1: Inputs and Results ---
+    with col1:
+        st.header("🔬 Parameters")
         
-        if quantity > 0:
-            selected_fittings[fitting_name] = {
-                "quantity": quantity,
-                "n": fitting_data["n"],
-                "icon": fitting_data["icon"]
+        # --- Interactive Scenarios ---
+        SCENARIOS = {
+            "Custom...": {
+                "z2": 100, "L": 500, "D": 150, "Q": 50, "material": "Commercial steel (new)",
+                "desc": "Manually adjust all parameters below."
+            },
+            "Building Water Supply": {
+                "z2": 50, "L": 200, "D": 100, "Q": 30, "material": "Commercial steel (new)",
+                "desc": "Pumping water to 50m high building, 200m pipe run. Typical commercial application."
+            },
+            "Irrigation System": {
+                "z2": 20, "L": 1000, "D": 200, "Q": 100, "material": "Commercial steel (used)",
+                "desc": "Long horizontal run to elevated fields. Large diameter, high flow rate."
+            },
+            "Fire Protection": {
+                "z2": 80, "L": 300, "D": 150, "Q": 150, "material": "Commercial steel (new)",
+                "desc": "High flow rate required, elevated storage tank. Critical safety system."
+            },
+            "Mining Dewatering": {
+                "z2": 150, "L": 800, "D": 250, "Q": 200, "material": "Cast iron (used)",
+                "desc": "Deep mine, long vertical lift. Heavy-duty pumping, large diameter."
+            },
+            "Domestic Well": {
+                "z2": 30, "L": 100, "D": 50, "Q": 5, "material": "Smooth (drawn tubing)",
+                "desc": "Small diameter, low flow. Residential water supply from well to house."
             }
-    
-    # System diagram - now using full width
-    st.subheader("📐 System Configuration & Analysis")
-    fig_system = create_system_diagram(z1, z2, pipe_length, pipe_diameter*1000, flow_rate, selected_fittings)
-    st.plotly_chart(fig_system, use_container_width=True)
-    
-    # Perform calculations
-    calc_results = calculate_system_head_demand_equivalent_length(
-        flow_rate_m3s, pipe_length, pipe_diameter, roughness, z1, z2, 
-        fluid_density, fluid_viscosity, selected_fittings
-    )
-    
-    # Move calculations below the visual
-    st.markdown("---")
-    st.subheader("🧮 Step-by-Step Calculations")
-    
-    # Display calculations in organized sections
-    col3, col4, col5 = st.columns(3)
-    
-    with col3:
-        st.markdown("#### 🌊 Flow Characteristics")
-        st.metric("Pipe Velocity", f"{calc_results['velocity']:.2f} m/s")
-        st.metric("Reynolds Number", f"{calc_results['reynolds']:,.0f}")
-        st.metric("Flow Regime", calc_results['flow_regime'])
-        st.metric("Friction Factor", f"{calc_results['friction_factor']:.4f}")
+        }
         
-        # Show friction factor calculation method
-        with st.expander("📖 Friction Factor Calculation"):
-            if calc_results['reynolds'] < 2300:
-                st.latex(r"f = \frac{64}{Re}")
-                st.write(f"f = 64/{calc_results['reynolds']:.0f} = {calc_results['friction_factor']:.4f}")
-            else:
-                st.markdown("**Churchill equation for turbulent flow:**")
-                st.latex(r"\frac{1}{\sqrt{C_f}} = -4 \log_{10}\left[0.27\frac{\varepsilon}{D} + \left(\frac{7}{Re}\right)^{0.9}\right]")
-                st.write(f"Using ε/D = {roughness/pipe_diameter:.6f} and Re = {calc_results['reynolds']:.0f}")
-                st.write(f"Calculated friction factor: f = {calc_results['friction_factor']:.4f}")
-    
-    with col4:
-        st.markdown("#### 📏 Head Loss Components")
-        st.metric("Static Head", f"{calc_results['static_head']:.1f} m")
-        st.metric("Pipe Friction Loss", f"{calc_results['pipe_friction_loss']:.2f} m")
-        st.metric("Fittings Loss", f"{calc_results['fittings_loss']:.2f} m")
-        st.metric("**Total Dynamic Loss**", f"{calc_results['total_dynamic_loss']:.2f} m")
+        scenario = st.selectbox("Select Application Scenario", list(SCENARIOS.keys()))
+        selected = SCENARIOS[scenario]
+        st.info(selected["desc"])
         
-        # Show equivalent length method
-        with st.expander("📖 Equivalent Length Method"):
-            st.markdown("**Total Equivalent Length:**")
-            st.latex(r"L_e = L_{pipe} + D \sum (n \times quantity)")
+        st.subheader("Reservoir Elevations")
+        c1, c2 = st.columns(2)
+        with c1:
+            z1 = 0.0  # Reference level
+            st.metric("Reservoir 1 Elevation", f"{z1} m", help="Reference level (ground)")
+        with c2:
+            z2 = st.slider("Reservoir 2 Elevation (m)", 10, 200, selected["z2"], 5,
+                          help="Height above reservoir 1")
+        
+        st.subheader("Pipe Specifications")
+        c1, c2 = st.columns(2)
+        with c1:
+            L = st.slider("Pipe Length (m)", 10, 2000, selected["L"], 10,
+                         help="Total length of pipeline")
+        with c2:
+            D_mm = st.slider("Pipe Diameter (mm)", 25, 500, selected["D"], 5,
+                            help="Internal diameter")
+            D = D_mm / 1000  # Convert to meters
+        
+        st.subheader("Pipe Material & Roughness")
+        roughness_options = {
+            "Smooth (drawn tubing)": 0.0015e-3,
+            "Commercial steel (new)": 0.045e-3,
+            "Commercial steel (used)": 0.15e-3,
+            "Galvanized iron": 0.15e-3,
+            "Cast iron (new)": 0.26e-3,
+            "Cast iron (used)": 2.0e-3,
+            "Concrete (smooth)": 0.3e-3,
+            "Concrete (rough)": 3.0e-3,
+            "PVC": 0.0015e-3
+        }
+        
+        material = st.selectbox("Pipe Material", list(roughness_options.keys()),
+                               index=list(roughness_options.keys()).index(selected["material"]))
+        epsilon = roughness_options[material]
+        st.caption(f"Surface roughness: ε = {epsilon*1000:.4f} mm")
+        
+        st.subheader("Operating Conditions")
+        c1, c2 = st.columns(2)
+        with c1:
+            Q_m3h = st.number_input("Flow Rate (m³/h)", 1.0, 500.0, float(selected["Q"]), 1.0,
+                                   help="Desired flow rate")
+            Q = Q_m3h / 3600  # Convert to m³/s
+        with c2:
+            Q_Ls = Q * 1000
+            st.metric("Flow Rate", f"{Q_Ls:.2f} L/s")
+        
+        st.subheader("Fluid Properties")
+        c1, c2 = st.columns(2)
+        with c1:
+            rho = st.number_input("Density (kg/m³)", 800, 1200, 1000, 10)
+        with c2:
+            nu_cSt = st.number_input("Kinematic Viscosity (cSt)", 0.5, 10.0, 1.0, 0.1)
+            nu = nu_cSt * 1e-6  # Convert to m²/s
+        
+        st.subheader("Fittings & Minor Losses")
+        st.markdown("*Select fittings in the system:*")
+        
+        fittings_db = get_fittings_database()
+        selected_fittings = {}
+        
+        # Organize fittings by category
+        fitting_categories = {
+            "Bends": ["90° Standard Elbow", "90° Long Radius Elbow", "45° Elbow"],
+            "Junctions": ["T-junction (flow through)", "T-junction (branch flow)"],
+            "Inlets/Exits": ["Sharp Inlet", "Radius Inlet", "Re-entrant Inlet", "Sharp Pipe Exit"],
+            "Valves": ["Globe Valve (fully open)", "Gate Valve (fully open)", "Gate Valve (3/4 open)", 
+                      "Gate Valve (1/2 open)", "Gate Valve (1/4 open)", "Ball Valve (fully open)", 
+                      "Check Valve (swing)", "Butterfly Valve (fully open)"]
+        }
+        
+        for category, fittings_list in fitting_categories.items():
+            with st.expander(f"{category}"):
+                for fitting_name in fittings_list:
+                    if fitting_name in fittings_db:
+                        fitting_data = fittings_db[fitting_name]
+                        qty = st.number_input(
+                            f"{fitting_data['icon']} {fitting_name}",
+                            min_value=0, max_value=20, value=0, step=1,
+                            key=f"qty_{fitting_name}",
+                            help=f"{fitting_data['desc']} | Le/D = {fitting_data['n']}"
+                        )
+                        if qty > 0:
+                            selected_fittings[fitting_name] = {
+                                "quantity": qty,
+                                "n": fitting_data["n"],
+                                "icon": fitting_data["icon"]
+                            }
+        
+        # Calculate results
+        results = calculate_system(Q, L, D, epsilon, z1, z2, rho, nu, selected_fittings)
+        
+        st.markdown("---")
+        st.header("📈 Results Summary")
+        
+        col_r1, col_r2 = st.columns(2)
+        with col_r1:
+            st.metric("**TOTAL HEAD DEMAND**", f"{results['total_head_demand']:.2f} m",
+                     help="Required pump head")
+            st.metric("Static Head", f"{results['static_head']:.1f} m")
+        with col_r2:
+            st.metric("Power Required (η=80%)", f"{results['power_80']:.2f} kW")
+            st.metric("Total Friction Loss", f"{results['total_dynamic_loss']:.2f} m")
+        
+        col_r3, col_r4 = st.columns(2)
+        with col_r3:
+            st.metric("Pipe Velocity", f"{results['velocity']:.2f} m/s")
+            st.metric("Reynolds Number", f"{results['reynolds']:,.0f}")
+        with col_r4:
+            st.metric("Flow Regime", results['flow_regime'])
+            st.metric("Friction Factor", f"{results['friction_factor']:.4f}")
+        
+        st.markdown("---")
+        st.header("🧮 Step-by-Step Calculation")
+        
+        with st.expander("📖 See Detailed Breakdown", expanded=False):
+            st.markdown("### Pump Head Demand Calculation")
             
-            st.write(f"**Pipe length:** {pipe_length} m")
+            st.markdown("#### Step 1: Calculate Flow Parameters")
+            st.write(f"**Given:**")
+            st.write(f"• Flow rate: Q = {Q_m3h:.1f} m³/h = {Q:.6f} m³/s = {Q_Ls:.2f} L/s")
+            st.write(f"• Pipe diameter: D = {D_mm} mm = {D:.3f} m")
+            
+            st.write(f"\n**Cross-sectional area:**")
+            st.latex(r'A = \frac{\pi D^2}{4}')
+            A = np.pi * (D/2)**2
+            st.write(f"A = π × ({D:.3f}/2)² = {A:.6f} m²")
+            
+            st.write(f"\n**Flow velocity:**")
+            st.latex(r'V = \frac{Q}{A}')
+            st.write(f"V = {Q:.6f} / {A:.6f} = **{results['velocity']:.3f} m/s**")
+            
+            st.write(f"\n**Reynolds number:**")
+            st.latex(r'Re = \frac{VD}{\nu}')
+            st.write(f"Re = ({results['velocity']:.3f} × {D:.3f}) / {nu:.2e}")
+            st.write(f"Re = **{results['reynolds']:,.0f}** → **{results['flow_regime']} flow**")
+            
+            st.markdown("#### Step 2: Determine Friction Factor")
+            if results['reynolds'] < 2300:
+                st.write("For **laminar flow** (Re < 2300):")
+                st.latex(r'f = \frac{64}{Re}')
+                st.write(f"f = 64 / {results['reynolds']:.0f} = **{results['friction_factor']:.5f}**")
+            else:
+                st.write("For **turbulent flow**, use Churchill equation:")
+                rel_rough = epsilon / D
+                st.latex(r'\frac{1}{\sqrt{f}} = -2\log_{10}\left(\frac{\varepsilon/D}{3.7} + \frac{2.51}{Re\sqrt{f}}\right)')
+                st.write(f"• Relative roughness: ε/D = {epsilon*1000:.4f}mm / {D_mm}mm = {rel_rough:.6f}")
+                st.write(f"• Reynolds number: Re = {results['reynolds']:,.0f}")
+                st.write(f"• Calculated friction factor: f = **{results['friction_factor']:.5f}**")
+            
+            st.markdown("#### Step 3: Calculate Equivalent Length")
+            st.write("**Pipe length:** L_pipe = {} m".format(L))
+            
             if selected_fittings:
-                st.write("**Fitting contributions:**")
+                st.write("\n**Fitting contributions:**")
+                st.latex(r'L_e = L_{pipe} + D \sum (n \times quantity)')
+                
                 total_n = 0
                 for name, data in selected_fittings.items():
                     contribution = data['n'] * data['quantity']
                     total_n += contribution
-                    st.write(f"• {data['quantity']}× {name}: {data['n']} × {data['quantity']} = {contribution}")
-                st.write(f"**Total Σ(n):** {total_n}")
-                st.write(f"**Equivalent length from fittings:** {pipe_diameter:.3f} × {total_n} = {pipe_diameter * total_n:.1f} m")
+                    st.write(f"• {data['quantity']}× {name}: n={data['n']}, contribution = {contribution}")
+                
+                Le_fittings = D * total_n
+                st.write(f"\n**Total from fittings:** {D:.3f} m × {total_n} = {Le_fittings:.2f} m")
+                st.write(f"**Total equivalent length:** L_e = {L} + {Le_fittings:.2f} = **{results['equivalent_length']:.2f} m**")
+            else:
+                st.write("No fittings selected")
+                st.write(f"**Total equivalent length:** L_e = **{results['equivalent_length']:.2f} m**")
             
-            st.write(f"**Total Le:** {calc_results['equivalent_length']:.1f} m")
+            st.markdown("#### Step 4: Calculate Head Losses")
             
-            st.markdown("**Head Loss Calculation:**")
-            st.latex(r"h_L = C_f \frac{4L_e}{D} \frac{V^2}{2g}")
-            st.write(f"h_L = {calc_results['friction_factor']:.4f} × (4×{calc_results['equivalent_length']:.1f})/{pipe_diameter:.3f} × {calc_results['velocity']:.2f}²/(2×9.81)")
-            st.write(f"h_L = **{calc_results['total_dynamic_loss']:.2f} m**")
-    
-    with col5:
-        st.markdown("#### 🎯 **Final Results**")
-        st.metric("**TOTAL HEAD DEMAND**", f"{calc_results['total_head_demand']:.2f} m", 
-                 help="Required pump head to achieve desired flow rate")
-        st.metric("Required Pressure", f"{calc_results['required_pressure']:.0f} Pa")
-        st.metric("Power Required (η=80%)", f"{calc_results['power_80_eff']:.2f} kW")
-        st.metric("Power Required (η=70%)", f"{calc_results['power_70_eff']:.2f} kW")
-        
-        # Show Bernoulli equation application
-        with st.expander("📖 Bernoulli Equation Application"):
-            st.markdown("**Modified Bernoulli Equation:**")
-            st.latex(r"H_{demand} = \frac{p_2-p_1}{\rho g} + \frac{V_2^2-V_1^2}{2g} + (z_2-z_1) + H_{loss}")
+            st.write("**A. Static head (elevation difference):**")
+            st.latex(r'H_{static} = z_2 - z_1')
+            st.write(f"H_static = {z2} - {z1} = **{results['static_head']:.1f} m**")
             
-            st.markdown("**Assumptions:**")
-            st.write("• Both reservoirs open to atmosphere: p₁ = p₂")
+            st.write("\n**B. Friction head loss (Darcy-Weisbach):**")
+            st.latex(r'H_{friction} = f \frac{4L_e}{D} \frac{V^2}{2g}')
+            st.write(f"H_friction = {results['friction_factor']:.5f} × (4×{results['equivalent_length']:.2f})/{D:.3f} × ({results['velocity']:.3f})²/(2×9.81)")
+            st.write(f"H_friction = **{results['total_dynamic_loss']:.3f} m**")
+            
+            st.write("\n**Breakdown:**")
+            st.write(f"• Pipe friction: {results['pipe_friction_loss']:.3f} m ({results['pipe_friction_loss']/results['total_dynamic_loss']*100:.1f}%)")
+            st.write(f"• Fittings loss: {results['fittings_loss']:.3f} m ({results['fittings_loss']/results['total_dynamic_loss']*100:.1f}%)")
+            
+            st.markdown("#### Step 5: Total Head Demand")
+            st.write("**Modified Bernoulli equation:**")
+            st.latex(r'H_{demand} = \Delta z + H_{friction}')
+            st.write("\n**Assumptions:**")
+            st.write("• Both reservoirs open to atmosphere: p₁ = p₂ = p_atm")
             st.write("• Large reservoirs: V₁ ≈ V₂ ≈ 0")
             
-            st.markdown("**Simplified equation:**")
-            st.latex(r"H_{demand} = (z_2-z_1) + H_{total\_loss}")
+            st.write(f"\n**Calculation:**")
+            st.write(f"H_demand = {results['static_head']:.1f} + {results['total_dynamic_loss']:.3f}")
+            st.write(f"H_demand = **{results['total_head_demand']:.3f} m**")
             
-            st.write(f"H_demand = {calc_results['static_head']:.1f} + {calc_results['total_dynamic_loss']:.2f}")
-            st.write(f"H_demand = **{calc_results['total_head_demand']:.2f} m**")
-    
-    # Fittings breakdown if any selected
-    if selected_fittings:
-        st.markdown("---")
-        st.subheader("🔧 Selected Fittings Analysis")
+            st.markdown("#### Step 6: Power Requirements")
+            st.write("**Hydraulic power:**")
+            st.latex(r'P_{hydraulic} = \rho g Q H_{demand}')
+            st.write(f"P_hyd = {rho} × 9.81 × {Q:.6f} × {results['total_head_demand']:.3f}")
+            st.write(f"P_hyd = **{results['power_hydraulic']:.2f} W** = {results['power_hydraulic']/1000:.3f} kW")
+            
+            st.write("\n**Actual power (accounting for pump efficiency):**")
+            st.latex(r'P_{actual} = \frac{P_{hydraulic}}{\eta}')
+            st.write(f"• At η=80%: P = {results['power_hydraulic']/1000:.3f} / 0.80 = **{results['power_80']:.2f} kW**")
+            st.write(f"• At η=70%: P = {results['power_hydraulic']/1000:.3f} / 0.70 = **{results['power_70']:.2f} kW**")
+            st.write(f"• At η=60%: P = {results['power_hydraulic']/1000:.3f} / 0.60 = **{results['power_60']:.2f} kW**")
+            
+            st.markdown("### Physical Interpretation")
+            
+            total_head = results['total_head_demand']
+            static_pct = (results['static_head'] / total_head) * 100
+            friction_pct = (results['total_dynamic_loss'] / total_head) * 100
+            
+            if static_pct > 70:
+                st.success(f"🏔️ **Static-dominated system** ({static_pct:.1f}%): Head requirement mainly due to elevation. Friction losses are minor.")
+            elif friction_pct > 50:
+                st.warning(f"🔧 **Friction-dominated system** ({friction_pct:.1f}%): Consider larger diameter to reduce losses.")
+            else:
+                st.info(f"⚖️ **Balanced system**: Static {static_pct:.1f}%, Friction {friction_pct:.1f}%")
+            
+            if results['velocity'] > 3:
+                st.warning(f"⚠️ **High velocity** ({results['velocity']:.2f} m/s): Consider larger pipe to reduce friction and erosion.")
+            elif results['velocity'] < 0.5:
+                st.info(f"🐌 **Low velocity** ({results['velocity']:.2f} m/s): System may be oversized.")
+            else:
+                st.success(f"✅ **Good velocity** ({results['velocity']:.2f} m/s): Within recommended range (0.5-3 m/s).")
+
+    # --- Column 2: Visualization ---
+    with col2:
+        st.header("🖼️ Visualization")
         
-        col6, col7 = st.columns([1, 1])
+        # Create system diagram
+        fig = go.Figure()
         
-        with col6:
-            # Create fittings breakdown table
+        # Scale factors for visualization
+        pipe_height = z2
+        pipe_width = 10
+        
+        # Draw Reservoir 1 (ground level)
+        reservoir1_width = 3
+        reservoir1_height = 2
+        fig.add_shape(type="rect", x0=0, y0=z1, x1=reservoir1_width, y1=z1+reservoir1_height,
+                     fillcolor="lightblue", line=dict(color="darkblue", width=2))
+        fig.add_annotation(x=reservoir1_width/2, y=z1+reservoir1_height/2, text="<b>Reservoir 1</b>",
+                          showarrow=False, font=dict(size=12, color="darkblue"))
+        
+        # Draw pipe from reservoir 1 to reservoir 2
+        pipe_x = [reservoir1_width, reservoir1_width, pipe_width-reservoir1_width, pipe_width-reservoir1_width]
+        pipe_y = [z1+reservoir1_height/2, z2+reservoir1_height/2, z2+reservoir1_height/2, z1+reservoir1_height/2]
+        fig.add_trace(go.Scatter(x=pipe_x, y=pipe_y, fill="toself", fillcolor="gray",
+                                line=dict(color="black", width=2), mode='lines', showlegend=False))
+        
+        # Add pump symbol
+        pump_x = reservoir1_width + 1
+        pump_y = z1 + reservoir1_height/2
+        fig.add_shape(type="circle", x0=pump_x-0.3, y0=pump_y-0.3, x1=pump_x+0.3, y1=pump_y+0.3,
+                     fillcolor="orange", line=dict(color="darkorange", width=2))
+        fig.add_annotation(x=pump_x, y=pump_y, text="⚡<br>PUMP", showarrow=False,
+                          font=dict(size=10, color="white"))
+        
+        # Draw Reservoir 2
+        fig.add_shape(type="rect", x0=pipe_width-reservoir1_width, y0=z2, 
+                     x1=pipe_width, y1=z2+reservoir1_height,
+                     fillcolor="lightblue", line=dict(color="darkblue", width=2))
+        fig.add_annotation(x=pipe_width-reservoir1_width/2, y=z2+reservoir1_height/2,
+                          text="<b>Reservoir 2</b>", showarrow=False,
+                          font=dict(size=12, color="darkblue"))
+        
+        # Elevation annotations
+        fig.add_annotation(x=-0.5, y=z1, text=f"z₁ = {z1} m", showarrow=False,
+                          font=dict(size=11, color="blue"))
+        fig.add_annotation(x=pipe_width+0.5, y=z2, text=f"z₂ = {z2} m", showarrow=False,
+                          font=dict(size=11, color="blue"))
+        
+        # Elevation difference arrow
+        fig.add_shape(type="line", x0=pipe_width+1, y0=z1, x1=pipe_width+1, y1=z2,
+                     line=dict(color="red", width=3, dash="dash"))
+        fig.add_annotation(x=pipe_width+1.5, y=(z1+z2)/2, text=f"<b>Δz = {z2-z1} m</b>",
+                          showarrow=False, font=dict(size=13, color="red"),
+                          textangle=90, bgcolor="rgba(255,255,255,0.8)")
+        
+        # System specs
+        specs_text = f"<b>Pipe:</b> L={L}m, D={D_mm}mm, ε={epsilon*1000:.3f}mm<br>"
+        specs_text += f"<b>Flow:</b> Q={Q_m3h:.1f} m³/h, V={results['velocity']:.2f} m/s<br>"
+        specs_text += f"<b>Head:</b> H={results['total_head_demand']:.2f} m"
+        fig.add_annotation(x=pipe_width/2, y=z1-3, text=specs_text, showarrow=False,
+                          font=dict(size=10), bgcolor="rgba(255,255,255,0.9)",
+                          bordercolor="gray", borderwidth=1)
+        
+        fig.update_layout(
+            title="<b>Two-Reservoir Pumping System</b>",
+            xaxis=dict(range=[-1, pipe_width+2], showticklabels=False, showgrid=False, zeroline=False),
+            yaxis=dict(range=[z1-4, z2+3], title="<b>Elevation (m)</b>"),
+            showlegend=False,
+            height=500,
+            plot_bgcolor='rgba(240,248,255,0.5)'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Pie chart of head loss breakdown
+        st.subheader("Head Loss Breakdown")
+        
+        labels = ['Static Head', 'Pipe Friction', 'Fittings Loss']
+        values = [results['static_head'], results['pipe_friction_loss'], results['fittings_loss']]
+        colors = ['lightblue', 'orange', 'red']
+        
+        fig_pie = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.4,
+                                         marker_colors=colors)])
+        fig_pie.update_layout(
+            annotations=[dict(text='Head<br>Components', x=0.5, y=0.5, font_size=14, showarrow=False)],
+            height=400
+        )
+        
+        st.plotly_chart(fig_pie, use_container_width=True)
+        
+        # Fittings table if any selected
+        if selected_fittings:
+            st.subheader("Selected Fittings")
             fittings_data = []
             for name, data in selected_fittings.items():
-                individual_loss = calc_results['friction_factor'] * 4 * (pipe_diameter * data['n']) / pipe_diameter * (calc_results['velocity']**2) / (2 * 9.81) * data['quantity']
                 fittings_data.append({
                     "Fitting": f"{data['icon']} {name}",
-                    "Quantity": data['quantity'],
-                    "n (Le/D)": data['n'],
+                    "Qty": data['quantity'],
+                    "Le/D (n)": data['n'],
                     "Total n": data['n'] * data['quantity'],
-                    "Le (m)": pipe_diameter * data['n'] * data['quantity'],
-                    "Head Loss (m)": individual_loss
+                    "Le (m)": f"{D * data['n'] * data['quantity']:.2f}"
                 })
-            
-            df_fittings = pd.DataFrame(fittings_data)
-            st.dataframe(df_fittings, use_container_width=True)
-        
-        with col7:
-            # Create pie chart of fitting contributions
-            fig_fittings = create_fittings_breakdown_chart(selected_fittings, calc_results)
-            st.plotly_chart(fig_fittings, use_container_width=True)
-    
-    # Analysis insights
-    st.markdown("---")
-    st.subheader("💡 Analysis Insights")
-    
-    # Create pie chart of head loss components
-    fig_breakdown = create_head_loss_breakdown(calc_results)
-    
-    col8, col9 = st.columns([1, 1])
-    
-    with col8:
-        st.plotly_chart(fig_breakdown, use_container_width=True)
-    
-    with col9:
-        st.markdown("#### 🔍 System Characteristics")
-        
-        # Calculate percentages
-        total_head = calc_results['total_head_demand']
-        static_pct = (calc_results['static_head'] / total_head) * 100
-        pipe_friction_pct = (calc_results['pipe_friction_loss'] / total_head) * 100
-        fittings_pct = (calc_results['fittings_loss'] / total_head) * 100
-        
-        st.markdown(f"**Static Head:** {static_pct:.1f}% of total")
-        st.markdown(f"**Pipe Friction:** {pipe_friction_pct:.1f}% of total")
-        st.markdown(f"**Fittings Losses:** {fittings_pct:.1f}% of total")
-        
-        if static_pct > 70:
-            st.info("🏔️ **Static-dominated system** - Head requirement mainly due to elevation difference")
-        elif pipe_friction_pct > 50:
-            st.warning("🔧 **Friction-dominated system** - Consider larger pipe diameter to reduce losses")
-        elif fittings_pct > 30:
-            st.warning("⚙️ **Fitting-dominated system** - Consider reducing number of fittings or using low-loss alternatives")
-        else:
-            st.success("⚖️ **Balanced system** - Reasonable distribution of head losses")
-        
-        # Velocity check
-        if calc_results['velocity'] > 3:
-            st.warning(f"⚠️ **High velocity** ({calc_results['velocity']:.1f} m/s) - Consider larger pipe diameter")
-        elif calc_results['velocity'] < 0.5:
-            st.info(f"🐌 **Low velocity** ({calc_results['velocity']:.1f} m/s) - System may be oversized")
-        else:
-            st.success(f"✅ **Good velocity** ({calc_results['velocity']:.1f} m/s) - Within recommended range")
-    
-    # Summary equation box
-    st.markdown("---")
-    st.subheader("📋 Summary")
-    
-    # Create a summary box with the key equation and result
-    summary_col1, summary_col2 = st.columns([1, 1])
-    
-    with summary_col1:
-        st.markdown("### **System Equation (Equivalent Length)**")
-        st.latex(r"H_{demand} = \Delta z + C_f \frac{4L_e}{D} \frac{V^2}{2g}")
-        st.latex(r"L_e = L_{pipe} + D \sum (n \times quantity)")
-        
-        st.markdown("**Substituting values:**")
-        st.write(f"• Δz = {calc_results['static_head']:.1f} m")
-        st.write(f"• Le = {calc_results['equivalent_length']:.1f} m")
-        st.write(f"• V = {calc_results['velocity']:.2f} m/s")
-        st.write(f"• Cf = {calc_results['friction_factor']:.4f}")
-    
-    with summary_col2:
-        st.markdown("### **Final Answer**")
-        
-        # Large result box
-        st.markdown(f"""
-        <div style="
-            background-color: #e1f5fe; 
-            border: 2px solid #01579b; 
-            border-radius: 10px; 
-            padding: 20px; 
-            text-align: center;
-            margin: 20px 0px;
-        ">
-            <h2 style="color: #01579b; margin: 0;">H<sub>demand</sub> = {calc_results['total_head_demand']:.2f} m</h2>
-            <p style="margin: 5px 0; font-size: 16px;">Required pump head for Q = {flow_rate:.1f} m³/h</p>
-        </div>
-        """, unsafe_allow_html=True)
+            st.table(pd.DataFrame(fittings_data))
 
-def fittings_reference_tab():
-    """Reference tab showing the fittings database"""
+with tab2:
+    st.header("📚 Understanding Pump Head Demand")
     
-    st.subheader("📋 Fittings Reference Table")
-    st.markdown("Reference data for pipe fittings using equivalent length method (n = Le/D values)")
+    col_edu1, col_edu2 = st.columns([1, 1])
     
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        # Create reference table
-        fittings_db = get_fittings_database()
+    with col_edu1:
+        st.markdown("""
+        ### What is Pump Head?
         
-        ref_data = []
-        for fitting_name, data in fittings_db.items():
-            ref_data.append({
-                "Fitting": f"{data['icon']} {fitting_name}",
-                "n = Le/D": data['n'],
-                "Category": get_fitting_category(fitting_name)
-            })
+        **Pump head** is the height to which a pump can raise a column of fluid. It represents the 
+        **total energy per unit weight** that the pump must provide to move fluid through the system.
         
-        df_ref = pd.DataFrame(ref_data)
-        st.dataframe(df_ref, use_container_width=True)
+        Units: meters (m) of fluid column
         
-        st.markdown("---")
-        st.subheader("📐 Equivalent Length Method")
+        ### The Energy Equation (Modified Bernoulli)
         
-        st.markdown("**Converting fittings to equivalent pipe length:**")
-        st.latex(r"L_e = L_{pipe} + D \sum (n \times quantity)")
-        st.latex(r"h_L = C_f \frac{4L_e}{D} \frac{V^2}{2g}")
-        
-        st.markdown("**Where:**")
-        st.write("• Le = total equivalent length")
-        st.write("• Lpipe = actual pipe length") 
-        st.write("• n = Le/D ratio for each fitting (from table above)")
-        st.write("• Cf = Darcy friction factor")
-        
-        st.markdown("**Advantages:**")
-        st.write("• Converts all fittings to equivalent pipe length")
-        st.write("• Simpler calculation for multiple fittings")
-        st.write("• Single formula for all losses")
-        st.write("• Widely used in engineering practice")
-    
-    with col2:
-        st.markdown("### 💡 Usage Tips")
-        
-        st.info("""
-        **High Loss Fittings (avoid if possible):**
-        • Globe valves (n=180)
-        • Gate valve 1/4 open (n=800)
-        • Sharp exit (n=50)
-        
-        **Low Loss Fittings (prefer these):**
-        • Gate valve fully open (n=7)
-        • Radius elbow (n=23)
-        • Radius inlet (n=0)
-        
-        **Note:** n = Le/D is the equivalent length ratio
+        For a pumping system between two reservoirs:
         """)
         
-        st.markdown("### 🔍 Fitting Categories")
+        st.latex(r'H_{pump} = \Delta z + H_{friction}')
         
-        categories = {
-            "Valves": ["Gate Valve", "Globe Valve"],
-            "Bends": ["90° Standard Elbow", "90° Radius Elbow"],
-            "Inlets": ["Sharp Inlet", "Radius Inlet", "Re-entrant Inlet"],
-            "Exits": ["Sharp Pipe Exit"]
-        }
+        st.markdown("""
+        Where:
+        - **Δz** = z₂ - z₁ (elevation difference)
+        - **H_friction** = Total head loss due to friction
         
-        for category, fittings in categories.items():
-            with st.expander(f"{category}"):
-                for fitting in fittings:
-                    matching_fittings = [k for k in fittings_db.keys() if any(f in k for f in [fitting])]
-                    for match in matching_fittings:
-                        data = fittings_db[match]
-                        st.write(f"• {data['icon']} {match}: n={data['n']}")
-
-# Helper functions
-
-def calculate_system_head_demand_equivalent_length(flow_rate_m3s, pipe_length, pipe_diameter, roughness, z1, z2, density, viscosity, selected_fittings):
-    """Calculate system head demand using equivalent length method"""
-    
-    # Basic calculations
-    pipe_area = np.pi * pipe_diameter**2 / 4
-    velocity = flow_rate_m3s / pipe_area if pipe_area > 0 else 0
-    
-    # Reynolds number
-    reynolds = velocity * pipe_diameter / viscosity if viscosity > 0 else 1e6
-    
-    # Flow regime and friction factor
-    if reynolds < 2300:
-        flow_regime = "Laminar"
-        friction_factor = 64 / reynolds if reynolds > 0 else 0.02
-    else:
-        flow_regime = "Turbulent"
-        # Churchill equation for friction factor
-        epsilon_D = roughness / pipe_diameter if pipe_diameter > 0 else 0
-        if reynolds > 0:
-            term = 0.27 * epsilon_D + (7/reynolds)**0.9
-            friction_factor = (1/(-4 * np.log10(term)))**2
-        else:
-            friction_factor = 0.02
-    
-    # Head loss components
-    static_head = z2 - z1
-    
-    # Calculate total equivalent length using Method 2
-    # Le = Lpipe + D × Σ(n × quantity)
-    total_n_value = 0
-    if selected_fittings:
-        for fitting_name, fitting_data in selected_fittings.items():
-            total_n_value += fitting_data['n'] * fitting_data['quantity']
-    
-    equivalent_length = pipe_length + pipe_diameter * total_n_value
-    
-    # Total head loss using equivalent length
-    # h_L = Cf × (4Le/D) × (V²/2g)
-    total_dynamic_loss = friction_factor * (4 * equivalent_length / pipe_diameter) * (velocity**2) / (2 * 9.81) if pipe_diameter > 0 else 0
-    
-    # Separate pipe friction and fittings losses for display
-    pipe_friction_loss = friction_factor * (4 * pipe_length / pipe_diameter) * (velocity**2) / (2 * 9.81) if pipe_diameter > 0 else 0
-    fittings_loss = total_dynamic_loss - pipe_friction_loss
-    
-    # Total head demand
-    total_head_demand = static_head + total_dynamic_loss
-    
-    # Power calculations
-    required_pressure = total_head_demand * density * 9.81
-    power_80_eff = flow_rate_m3s * required_pressure / (0.80 * 1000)  # kW
-    power_70_eff = flow_rate_m3s * required_pressure / (0.70 * 1000)  # kW
-    
-    return {
-        'velocity': velocity,
-        'reynolds': reynolds,
-        'flow_regime': flow_regime,
-        'friction_factor': friction_factor,
-        'static_head': static_head,
-        'pipe_friction_loss': pipe_friction_loss,
-        'fittings_loss': fittings_loss,
-        'total_dynamic_loss': total_dynamic_loss,
-        'total_head_demand': total_head_demand,
-        'required_pressure': required_pressure,
-        'power_80_eff': power_80_eff,
-        'power_70_eff': power_70_eff,
-        'equivalent_length': equivalent_length,
-        'total_n_value': total_n_value
-    }
-
-def create_system_diagram(z1, z2, pipe_length, pipe_diameter_mm, flow_rate, selected_fittings):
-    """Create an enhanced visual diagram of the two-reservoir system with selected fittings"""
-    
-    fig = go.Figure()
-    
-    # Add background gradient/sky
-    fig.add_shape(type="rect", x0=-2, y0=z1-5, x1=13, y1=z2+10,
-                  fillcolor="rgba(135,206,235,0.3)", line=dict(width=0))
-    
-    # Add ground/terrain
-    ground_level = z1 - 1
-    fig.add_shape(type="rect", x0=-2, y0=z1-5, x1=13, y1=ground_level,
-                  fillcolor="rgba(139,69,19,0.6)", line=dict(width=0))
-    
-    # Reservoir 1 (lower) - more realistic with water
-    reservoir1_width = 3.5
-    reservoir1_height = 3
-    
-    # Reservoir 1 structure (concrete walls)
-    fig.add_shape(type="rect", x0=-0.2, y0=z1-0.5, x1=reservoir1_width, y1=z1+reservoir1_height, 
-                  fillcolor="rgba(169,169,169,0.8)", line=dict(color="gray", width=3))
-    
-    # Water in reservoir 1
-    water_level_1 = z1 + reservoir1_height * 0.8
-    fig.add_shape(type="rect", x0=0, y0=z1, x1=reservoir1_width-0.2, y1=water_level_1, 
-                  fillcolor="rgba(0,191,255,0.7)", line=dict(color="blue", width=1))
-    
-    # Water surface animation effect (small waves)
-    wave_x = np.linspace(0, reservoir1_width-0.2, 20)
-    wave_y = water_level_1 + 0.05 * np.sin(10 * wave_x)
-    fig.add_trace(go.Scatter(x=wave_x, y=wave_y, mode='lines', 
-                           line=dict(color='navy', width=2), showlegend=False))
-    
-    # Reservoir 1 label with better styling
-    fig.add_annotation(x=reservoir1_width/2, y=z1+reservoir1_height+0.5, 
-                      text="<b>Reservoir 1</b><br>(Lower)", showarrow=False, 
-                      font=dict(size=14, color="darkblue"),
-                      bgcolor="rgba(255,255,255,0.8)", bordercolor="blue", borderwidth=1)
-    
-    # Reservoir 2 (upper) - more realistic with water
-    reservoir2_width = 3.5
-    reservoir2_height = 3
-    
-    # Reservoir 2 structure
-    fig.add_shape(type="rect", x0=6.8, y0=z2-0.5, x1=6.8+reservoir2_width, y1=z2+reservoir2_height, 
-                  fillcolor="rgba(169,169,169,0.8)", line=dict(color="gray", width=3))
-    
-    # Water in reservoir 2
-    water_level_2 = z2 + reservoir2_height * 0.6  # Lower water level
-    fig.add_shape(type="rect", x0=7, y0=z2, x1=6.8+reservoir2_width-0.2, y1=water_level_2, 
-                  fillcolor="rgba(0,191,255,0.7)", line=dict(color="blue", width=1))
-    
-    # Water surface in reservoir 2
-    wave_x2 = np.linspace(7, 6.8+reservoir2_width-0.2, 20)
-    wave_y2 = water_level_2 + 0.05 * np.sin(10 * wave_x2)
-    fig.add_trace(go.Scatter(x=wave_x2, y=wave_y2, mode='lines', 
-                           line=dict(color='navy', width=2), showlegend=False))
-    
-    # Reservoir 2 label
-    fig.add_annotation(x=6.8+reservoir2_width/2, y=z2+reservoir2_height+0.5, 
-                      text="<b>Reservoir 2</b><br>(Upper)", showarrow=False, 
-                      font=dict(size=14, color="darkblue"),
-                      bgcolor="rgba(255,255,255,0.8)", bordercolor="blue", borderwidth=1)
-    
-    # Enhanced connecting pipe with gradient effect
-    pipe_y_start = water_level_1
-    pipe_y_end = water_level_2
-    
-    # Main pipe with gradient
-    pipe_points_x = [3.2, 3.5, 4, 5, 6, 6.5, 6.8]
-    pipe_points_y = [pipe_y_start, pipe_y_start + 5, pipe_y_start + 15, 
-                     (pipe_y_start + pipe_y_end)/2, pipe_y_end - 15, pipe_y_end - 5, pipe_y_end]
-    
-    # Pipe outline (darker)
-    fig.add_trace(go.Scatter(x=pipe_points_x, y=[y + 0.2 for y in pipe_points_y], 
-                           mode='lines', line=dict(color='darkgray', width=8), showlegend=False))
-    fig.add_trace(go.Scatter(x=pipe_points_x, y=[y - 0.2 for y in pipe_points_y], 
-                           mode='lines', line=dict(color='darkgray', width=8), showlegend=False))
-    
-    # Pipe interior (lighter)
-    fig.add_trace(go.Scatter(x=pipe_points_x, y=pipe_points_y, mode='lines', 
-                           line=dict(color='lightblue', width=6), showlegend=False))
-    
-    # Enhanced pump symbol
-    pump_x = 5
-    pump_y = (pipe_y_start + pipe_y_end) / 2
-    
-    # Pump housing (main body)
-    fig.add_shape(type="rect", x0=pump_x-0.7, y0=pump_y-0.5, x1=pump_x+0.7, y1=pump_y+0.5,
-                  fillcolor="rgba(255,165,0,0.9)", line=dict(color="darkorange", width=3))
-    
-    # Pump impeller (inner circle)
-    fig.add_shape(type="circle", x0=pump_x-0.3, y0=pump_y-0.3, x1=pump_x+0.3, y1=pump_y+0.3,
-                  fillcolor="rgba(255,215,0,0.8)", line=dict(color="gold", width=2))
-    
-    # Pump motor
-    fig.add_shape(type="rect", x0=pump_x-0.4, y0=pump_y+0.5, x1=pump_x+0.4, y1=pump_y+1,
-                  fillcolor="rgba(128,128,128,0.8)", line=dict(color="black", width=2))
-    
-    # Pump label with better styling
-    fig.add_annotation(x=pump_x, y=pump_y-1.2, text="<b>🔄 PUMP</b>", showarrow=False, 
-                      font=dict(size=14, color="darkorange"),
-                      bgcolor="rgba(255,255,255,0.9)", bordercolor="orange", borderwidth=2)
-    
-    # Enhanced fittings with better visual design
-    if selected_fittings:
-        fitting_positions = np.linspace(3.8, 6.2, len(selected_fittings))
+        ### Why These Components?
         
-        i = 0
-        for fitting_name, fitting_data in selected_fittings.items():
-            if i < len(fitting_positions):
-                x_pos = fitting_positions[i]
-                y_pos = np.interp(x_pos, pipe_points_x, pipe_points_y)
-                
-                # Enhanced fitting symbols with better colors and shapes
-                if "Valve" in fitting_name:
-                    # Valve symbol - diamond shape
-                    fig.add_shape(type="rect", x0=x_pos-0.2, y0=y_pos-0.2, x1=x_pos+0.2, y1=y_pos+0.2,
-                                 fillcolor="rgba(220,20,60,0.8)", line=dict(color="darkred", width=2))
-                    # Valve stem
-                    fig.add_shape(type="line", x0=x_pos, y0=y_pos+0.2, x1=x_pos, y1=y_pos+0.5,
-                                 line=dict(color="darkred", width=3))
-                    
-                elif "Elbow" in fitting_name:
-                    # Elbow symbol - curved
-                    fig.add_shape(type="circle", x0=x_pos-0.15, y0=y_pos-0.15, x1=x_pos+0.15, y1=y_pos+0.15,
-                                 fillcolor="rgba(34,139,34,0.8)", line=dict(color="darkgreen", width=2))
-                    
-                elif "Inlet" in fitting_name:
-                    # Inlet symbol - funnel shape
-                    fig.add_shape(type="rect", x0=x_pos-0.25, y0=y_pos-0.1, x1=x_pos+0.1, y1=y_pos+0.1,
-                                 fillcolor="rgba(30,144,255,0.8)", line=dict(color="blue", width=2))
-                    
-                elif "Exit" in fitting_name:
-                    # Exit symbol - expanding
-                    fig.add_shape(type="rect", x0=x_pos-0.1, y0=y_pos-0.1, x1=x_pos+0.25, y1=y_pos+0.1,
-                                 fillcolor="rgba(138,43,226,0.8)", line=dict(color="purple", width=2))
-                
-                # Enhanced fitting labels
-                label = f"{fitting_data['icon']}"
-                if fitting_data['quantity'] > 1:
-                    label += f" ×{fitting_data['quantity']}"
-                
-                fig.add_annotation(x=x_pos, y=y_pos+0.7, text=f"<b>{label}</b>", 
-                                 showarrow=False, font=dict(size=10, color="black"),
-                                 bgcolor="rgba(255,255,255,0.8)", bordercolor="gray", borderwidth=1)
-                i += 1
+        **1. Static Head (Δz):**
+        - Work against gravity
+        - Independent of flow rate
+        - Fixed by system geometry
+        - **Cannot be reduced** without changing elevation
+        
+        **2. Dynamic Head (H_friction):**
+        - Work against friction
+        - Increases with flow rate (∝ V²)
+        - Depends on pipe roughness and length
+        - **Can be reduced** by:
+          - Larger diameter pipe
+          - Smoother pipe material
+          - Fewer/better fittings
+          - Shorter pipe length
+        """)
     
-    # Enhanced elevation annotations with better styling
-    fig.add_annotation(x=-0.5, y=water_level_1, text=f"<b>z₁ = {z1} m</b>", 
-                      showarrow=True, arrowcolor="darkblue", arrowwidth=2,
-                      font=dict(size=12, color="darkblue"),
-                      bgcolor="rgba(255,255,255,0.9)", bordercolor="blue", borderwidth=1)
+    with col_edu2:
+        st.markdown("""
+        ### Friction Loss Calculation
+        
+        The **Darcy-Weisbach equation** calculates friction loss:
+        """)
+        
+        st.latex(r'H_f = f \frac{L}{D} \frac{V^2}{2g}')
+        
+        st.markdown("""
+        Where:
+        - **f** = friction factor (depends on Re and ε/D)
+        - **L** = pipe length (m)
+        - **D** = pipe diameter (m)
+        - **V** = flow velocity (m/s)
+        - **g** = gravity (9.81 m/s²)
+        
+        ### The Equivalent Length Method
+        
+        **Minor losses** from fittings are converted to equivalent pipe length:
+        """)
+        
+        st.latex(r'L_e = L_{pipe} + D \sum (n \times quantity)')
+        
+        st.markdown("""
+        Where **n** is the **loss coefficient** (Le/D) for each fitting type.
+        
+        **Advantages:**
+        - Simple: treat all losses as pipe friction
+        - Single friction factor f for entire system
+        - Easy to add/remove fittings
+        
+        ### Friction Factor Determination
+        
+        **Laminar flow** (Re < 2300):
+        """)
+        st.latex(r'f = \frac{64}{Re}')
+        
+        st.markdown("""
+        **Turbulent flow** (Re > 4000):
+        
+        Use Moody diagram or Churchill equation:
+        - Depends on **Reynolds number** (Re)
+        - Depends on **relative roughness** (ε/D)
+        - Iterative solution required
+        
+        ### Power Requirements
+        
+        **Hydraulic power:**
+        """)
+        st.latex(r'P_{hyd} = \rho g Q H')
+        
+        st.markdown("""
+        **Actual power (with pump efficiency η):**
+        """)
+        st.latex(r'P_{actual} = \frac{P_{hyd}}{\eta}')
+        
+        st.markdown("""
+        Typical pump efficiencies:
+        - Small pumps: 50-70%
+        - Medium pumps: 70-85%
+        - Large pumps: 80-90%
+        """)
     
-    fig.add_annotation(x=11, y=water_level_2, text=f"<b>z₂ = {z2} m</b>", 
-                      showarrow=True, arrowcolor="darkblue", arrowwidth=2,
-                      font=dict(size=12, color="darkblue"),
-                      bgcolor="rgba(255,255,255,0.9)", bordercolor="blue", borderwidth=1)
+    st.markdown("---")
     
-    # Enhanced elevation difference indicator
-    fig.add_shape(type="line", x0=11.5, y0=water_level_1, x1=11.5, y1=water_level_2, 
-                  line=dict(color="red", width=3, dash="dash"))
+    st.markdown("### Key Concepts")
     
-    # Elevation difference arrows
-    fig.add_annotation(x=11.5, y=water_level_1, ax=11.5, ay=water_level_1+10,
-                      xref='x', yref='y', axref='x', ayref='y',
-                      arrowhead=2, arrowsize=1, arrowwidth=3, arrowcolor='red')
-    fig.add_annotation(x=11.5, y=water_level_2, ax=11.5, ay=water_level_2-10,
-                      xref='x', yref='y', axref='x', ayref='y',
-                      arrowhead=2, arrowsize=1, arrowwidth=3, arrowcolor='red')
+    concept_col1, concept_col2, concept_col3 = st.columns(3)
     
-    fig.add_annotation(x=12.2, y=(water_level_1+water_level_2)/2, 
-                      text=f"<b>Δz = {z2-z1} m</b>", showarrow=False, 
-                      font=dict(size=14, color="red"),
-                      bgcolor="rgba(255,255,255,0.9)", bordercolor="red", borderwidth=2,
-                      textangle=90)
+    with concept_col1:
+        st.markdown("""
+        #### Reynolds Number
+        
+        Determines flow regime:
+        """)
+        st.latex(r'Re = \frac{VD}{\nu}')
+        
+        st.markdown("""
+        - Re < 2300: Laminar
+        - 2300 < Re < 4000: Transitional
+        - Re > 4000: Turbulent
+        
+        Most pumping systems operate in **turbulent** regime.
+        """)
     
-    # Enhanced system specifications
-    spec_text = f"<b>📏 Pipe:</b> L = {pipe_length} m, D = {pipe_diameter_mm:.0f} mm"
-    if selected_fittings:
-        total_fittings = sum(data['quantity'] for data in selected_fittings.values())
-        spec_text += f"<br><b>⚙️ Fittings:</b> {total_fittings} components"
+    with concept_col2:
+        st.markdown("""
+        #### Pipe Sizing Trade-offs
+        
+        **Larger diameter:**
+        - ✅ Lower friction loss
+        - ✅ Lower velocity
+        - ✅ Reduced pump power
+        - ❌ Higher pipe cost
+        - ❌ More space required
+        
+        **Optimal diameter** balances capital cost vs operating cost.
+        """)
     
-    fig.add_annotation(x=5, y=z1-4, text=spec_text, showarrow=False, 
-                      font=dict(size=12, color="darkslategray"),
-                      bgcolor="rgba(255,255,255,0.9)", bordercolor="gray", borderwidth=1)
+    with concept_col3:
+        st.markdown("""
+        #### System Curve
+        
+        Head demand vs flow rate:
+        """)
+        st.latex(r'H = \Delta z + K Q^2')
+        
+        st.markdown("""
+        - Static head: constant
+        - Friction: quadratic with Q
+        - Intersection with **pump curve** determines operating point
+        """)
     
-    # Add title with better styling
-    fig.update_layout(
-        title={
-            'text': "<b>🏔️ Two-Reservoir Pumping System</b>",
-            'x': 0.5,
-            'font': {'size': 20, 'color': 'darkslategray'}
-        },
-        xaxis=dict(range=[-2, 13], showticklabels=False, showgrid=False, zeroline=False),
-        yaxis=dict(range=[z1-5, z2+8], showticklabels=True, title="<b>Elevation (m)</b>", 
-                  title_font=dict(size=14, color="darkblue")),
-        showlegend=False,
-        width=900, height=500,
-        plot_bgcolor='rgba(248,248,255,0.8)',
-        paper_bgcolor='white'
-    )
+    st.markdown("---")
     
-    return fig
+    st.markdown("### Common Design Mistakes")
+    
+    mistake_col1, mistake_col2 = st.columns(2)
+    
+    with mistake_col1:
+        st.error("""
+        **❌ WRONG: "Pump only needs to overcome elevation"**
+        
+        Ignoring friction losses.
+        
+        **✅ CORRECT:** Pump must overcome BOTH:
+        - Static head (elevation)
+        - Dynamic head (friction)
+        
+        Friction can be 10-50% of total head!
+        """)
+        
+        st.error("""
+        **❌ WRONG: "All fittings have similar losses"**
+        
+        Treating all fittings equally.
+        
+        **✅ CORRECT:** Fitting losses vary hugely:
+        - Ball valve: n = 3 (minimal)
+        - 90° elbow: n = 35 (moderate)
+        - Globe valve: n = 180 (large!)
+        - Gate valve (1/4 open): n = 800 (huge!)
+        
+        Partially closed valves can dominate system losses!
+        """)
+    
+    with mistake_col2:
+        st.error("""
+        **❌ WRONG: "Friction loss is proportional to length"**
+        
+        Linear thinking about losses.
+        
+        **✅ CORRECT:** Loss relationships:
+        - H_f ∝ L (linear with length)
+        - H_f ∝ 1/D (inverse with diameter)
+        - H_f ∝ V² ∝ Q² (quadratic with flow!)
+        
+        Doubling flow rate quadruples friction loss!
+        """)
+        
+        st.error("""
+        **❌ WRONG: "Pump efficiency doesn't matter much"**
+        
+        Ignoring long-term operating costs.
+        
+        **✅ CORRECT:** Over pump lifetime:
+        - Energy cost >> initial pump cost
+        - 10% efficiency improvement can save thousands
+        - Proper sizing crucial for efficiency
+        """)
 
-def create_head_loss_breakdown(calc_results):
-    """Create pie chart showing breakdown of head losses"""
+with tab3:
+    st.header("📋 Real-World Applications")
     
-    labels = ['Static Head', 'Pipe Friction', 'Fittings']
-    values = [
-        calc_results['static_head'],
-        calc_results['pipe_friction_loss'],
-        calc_results['fittings_loss']
-    ]
-    colors = ['lightblue', 'orange', 'red']
+    st.markdown("""
+    Pump systems are ubiquitous in industry, agriculture, and municipal infrastructure.
+    Understanding head demand is essential for proper pump selection and system design.
+    """)
     
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3,
-                                marker_colors=colors)])
+    app_col1, app_col2 = st.columns(2)
     
-    fig.update_layout(
-        title="Head Loss Breakdown",
-        annotations=[dict(text='Head<br>Components', x=0.5, y=0.5, font_size=12, showarrow=False)]
-    )
+    with app_col1:
+        st.markdown("""
+        ### Water Supply Systems
+        
+        **1. Municipal Water Distribution**
+        - **Typical head**: 40-100 m (4-10 bar pressure)
+        - **Pipe size**: 100-600 mm mains
+        - **Flow rates**: 50-500 m³/h
+        - **Challenges**:
+          - Variable demand throughout day
+          - Long distribution networks
+          - Aging infrastructure (increasing roughness)
+          - Pressure management
+        - **Design considerations**:
+          - Multiple pumps for redundancy
+          - Variable speed drives for efficiency
+          - Pressure zones for tall buildings
+        
+        **2. Building Water Supply**
+        - **Typical head**: 20-80 m (depending on building height)
+        - **Pipe size**: 50-150 mm
+        - **Rule of thumb**: 4 m head per floor + pressure + friction
+        - **System types**:
+          - Direct pumping (small buildings)
+          - Roof tank + gravity (medium buildings)
+          - Booster pumps on floors (tall buildings)
+        - **Key issue**: Peak demand vs average demand
+        
+        **3. Irrigation Systems**
+        - **Typical head**: 10-50 m
+        - **Pipe size**: 75-250 mm
+        - **Flow rates**: 20-200 m³/h
+        - **Special considerations**:
+          - Seasonal operation
+          - Often long horizontal runs
+          - Multiple outlets (sprinklers/drippers)
+          - Elevation changes in fields
+        - **Energy cost**: Major operating expense
+        
+        **4. Fire Protection**
+        - **Typical head**: 60-100 m minimum
+        - **Pipe size**: 100-200 mm
+        - **Flow rates**: 100-500 m³/h (very high!)
+        - **Critical requirements**:
+          - Must work during power outage (diesel backup)
+          - Regular testing mandatory
+          - Oversized for safety margin
+          - Jockey pump maintains pressure
+        
+        ### Industrial Processes
+        
+        **5. Chemical Plants**
+        - **Applications**: Reactor feed, product transfer, cooling
+        - **Challenges**:
+          - Corrosive fluids (special materials)
+          - High temperatures (thermal expansion)
+          - Precise flow control needed
+          - Safety critical (ATEX zones)
+        - **Pump types**: Centrifugal, positive displacement
+        
+        **6. Oil & Gas**
+        - **Pipeline transport**: Very high head (100-500 m)
+        - **Well injection**: Extremely high pressure
+        - **Offshore platforms**: Compact, reliable pumps needed
+        - **Considerations**:
+          - Viscosity variations
+          - Multiphase flow (oil/water/gas)
+          - Remote locations (maintenance difficulty)
+        
+        **7. Mining Dewatering**
+        - **Typical head**: 50-300 m (deep mines)
+        - **Harsh conditions**: Abrasive slurries, solids
+        - **High reliability needed**: Flooding risk
+        - **Multiple stages**: Sump pumps at different levels
+        - **Large powers**: Can exceed 1000 kW
+        """)
     
-    return fig
+    with app_col2:
+        st.markdown("""
+        ### Specialized Applications
+        
+        **8. Wastewater Treatment**
+        - **Raw sewage pumping**: Handles solids, rags
+        - **Sludge transfer**: Very viscous, high head
+        - **Aeration**: Large volume, low head
+        - **Design challenges**:
+          - Clogging prevention
+          - Corrosive environment (H₂S)
+          - Variable flow rates
+          - Energy optimization (largest operating cost)
+        
+        **9. HVAC Systems**
+        - **Chilled water**: 10-30 m head typical
+        - **Hot water**: Similar, but thermal expansion issues
+        - **Condenser water**: Cooling tower circuits
+        - **Characteristics**:
+          - Closed loop (no static head!)
+          - Only friction losses
+          - Variable speed for part-load efficiency
+        
+        **10. Hydraulic Systems**
+        - **High pressure**: 100-300 bar (1000-3000 m head!)
+        - **Small flow rates**: 1-50 L/min
+        - **Applications**: Construction equipment, manufacturing
+        - **Pumps**: Positive displacement (piston, gear)
+        
+        ### Agricultural Applications
+        
+        **11. Well Pumping**
+        - **Submersible pumps** in well
+        - **Typical depth**: 20-200 m
+        - **Domestic**: 2-5 m³/h
+        - **Agricultural**: 10-50 m³/h
+        - **Key factors**:
+          - Well yield (sustainable flow)
+          - Water table fluctuation
+          - Pump placement depth
+          - Cable run losses
+        
+        **12. Center Pivot Irrigation**
+        - **Large systems**: 50-150 ha coverage
+        - **Flow rates**: 50-200 m³/h
+        - **Low pressure**: Modern designs use <20 m
+        - **Efficiency critical**: Energy cost major expense
+        - **Design**: Minimize friction with large pipes
+        
+        ### Design Guidelines
+        
+        #### Pipe Velocity Recommendations
+        
+        | Application | Recommended Velocity |
+        |------------|---------------------|
+        | Suction lines | 0.5-1.5 m/s |
+        | Water supply | 1.0-3.0 m/s |
+        | Industrial process | 1.5-3.5 m/s |
+        | Fire protection | 3.0-6.0 m/s |
+        | Slurries | 2.0-4.0 m/s |
+        
+        #### Common Pipe Materials
+        
+        | Material | Roughness (mm) | Applications |
+        |----------|---------------|-------------|
+        | PVC | 0.0015 | Cold water, drainage |
+        | PE (polyethylene) | 0.0015 | Irrigation, gas |
+        | Steel (new) | 0.045 | General industrial |
+        | Steel (used) | 0.15 | Aging systems |
+        | Cast iron | 0.26-2.0 | Water mains |
+        | Concrete | 0.3-3.0 | Large diameter |
+        
+        #### Pump Selection Criteria
+        
+        1. **Flow rate** (Q): Maximum required
+        2. **Head** (H): Static + dynamic + safety margin
+        3. **Efficiency**: High efficiency at design point
+        4. **NPSH**: Net Positive Suction Head available
+        5. **Materials**: Compatible with fluid
+        6. **Duty cycle**: Continuous vs intermittent
+        7. **Reliability**: Criticality of application
+        8. **Cost**: Initial + operating (energy!)
+        
+        #### Energy Saving Strategies
+        
+        - **Proper sizing**: Don't oversize!
+        - **Variable speed drives**: Match demand
+        - **Parallel pumps**: Run optimal number
+        - **Pipe sizing**: Reduce friction
+        - **Reduce fittings**: Every elbow costs energy
+        - **Regular maintenance**: Keep efficiency high
+        - **System optimization**: Reduce head demand
+        """)
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    ### Case Study: Optimizing an Irrigation System
+    
+    **Initial Design:**
+    - Static head: 20 m
+    - Pipe: 100 mm diameter, 1000 m length, old steel (ε=0.15 mm)
+    - Flow: 50 m³/h
+    - Fittings: 20× 90° elbows, 5× gate valves
+    
+    **Calculated head**: 42 m, Power: 7.2 kW, Annual cost: $12,000
+    
+    **Optimized Design:**
+    - Same static head: 20 m
+    - Pipe: 125 mm diameter, same length, PVC (ε=0.0015 mm)
+    - Flow: Same 50 m³/h
+    - Fittings: 10× long radius elbows, 3× ball valves
+    
+    **New head**: 27 m, Power: 4.6 kW, Annual cost: $7,800
+    
+    **Savings**: 36% energy reduction, pays back pipe upgrade in 2-3 years!
+    """)
 
-def create_fittings_breakdown_chart(selected_fittings, calc_results):
-    """Create chart showing contribution of each fitting type"""
-    
-    fitting_contributions = []
-    labels = []
-    
-    for name, data in selected_fittings.items():
-        # Calculate individual contribution to equivalent length
-        contribution = data['n'] * data['quantity']
-        fitting_contributions.append(contribution)
-        label = f"{data['icon']} {name}"
-        if data['quantity'] > 1:
-            label += f" (×{data['quantity']})"
-        labels.append(label)
-    
-    fig = go.Figure(data=[go.Pie(labels=labels, values=fitting_contributions, hole=0.3)])
-    
-    fig.update_layout(
-        title="Fitting Contributions to Equivalent Length",
-        annotations=[dict(text='Σ(n×qty)', x=0.5, y=0.5, font_size=12, showarrow=False)]
-    )
-    
-    return fig
-
-def get_fitting_category(fitting_name):
-    """Get category for fitting organization"""
-    if "Valve" in fitting_name:
-        return "Valves"
-    elif "Elbow" in fitting_name:
-        return "Bends"
-    elif "Inlet" in fitting_name:
-        return "Inlets"
-    elif "Exit" in fitting_name:
-        return "Exits"
-    else:
-        return "Other"
-
-if __name__ == "__main__":
-    main()
+st.markdown("---")
+st.info("💡 **Tip**: Use the Interactive Simulation tab to experiment with different system configurations and see how each parameter affects total head demand!")
