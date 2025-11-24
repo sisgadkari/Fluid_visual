@@ -345,3 +345,13 @@ st.markdown("""
     <p style='margin-top: 5px;'>🏆 Funded by the <strong>Fluor Global University Sponsorship Program (GUSP) Award</strong> and <strong>Faculty of Engineering and Physical Sciences Teaching Innovation Fund</strong></p>
 </div>
 """, unsafe_allow_html=True)
+
+# --- Sidebar Developer Credit ---
+st.sidebar.markdown("---")
+st.sidebar.markdown("""
+<div style='text-align: center; padding: 10px; font-size: 0.85em; color: #64748b;'>
+    <p style='margin: 5px 0;'>💻 <strong>App developed by</strong></p>
+    <p style='margin: 5px 0; font-weight: 600; color: #1e293b;'>Dr. Siddharth Gadkari</p>
+    <p style='margin: 5px 0; font-size: 0.8em;'>University of Surrey</p>
+</div>
+""", unsafe_allow_html=True)
