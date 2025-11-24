@@ -463,25 +463,40 @@ with tab1:
         # --- 1. VELOCITY PROFILE ---
         if show_velocity_profile:
             # Generate velocity profile based on flow regime
-            r_points = np.linspace(-1, 1, 200)  # Normalized radial position
+            r_points = np.linspace(-1, 1, 200)  # Normalized radial position (-1 to 1)
             
-            if Re < 2300:  # Laminar - parabolic
+            if Re < 2300:  # Laminar - parabolic (Hagen-Poiseuille)
                 v_profile_norm = 2 * (1 - r_points**2)  # Normalized to average velocity
                 profile_color = 'green'
                 profile_name = 'Laminar (Parabolic)'
-            elif Re <= 4000:  # Transitional - blend
+            elif Re <= 4000:  # Transitional - blend between laminar and turbulent
                 trans_factor = (Re - 2300) / (4000 - 2300)
+                
+                # Laminar profile
                 v_laminar = 2 * (1 - r_points**2)
-                n = 7
-                v_turbulent = ((n+1)*(2*n+1)/(2*n**2)) * (1 - np.abs(r_points))**(1/n)
+                
+                # Turbulent profile (1/7 power law)
+                # For turbulent: v/v_max = (1 - r)^(1/n) where n=7
+                r_abs = np.abs(r_points)
+                v_turbulent = (1 - r_abs)**(1/7)
+                # Normalize so average = 1
+                # For power law: v_avg/v_max = (n+1)(2n+1)/(2n^2) = 8*15/(2*49) = 0.816
+                v_turbulent = v_turbulent / 0.816
+                
+                # Blend between laminar and turbulent
                 v_profile_norm = v_laminar * (1 - trans_factor) + v_turbulent * trans_factor
                 profile_color = 'orange'
                 profile_name = 'Transitional'
-            else:  # Turbulent - power law
-                n = 7  # Power law exponent
-                v_profile_norm = ((n+1)*(2*n+1)/(2*n**2)) * (1 - np.abs(r_points))**(1/n)
+            else:  # Turbulent - 1/7 power law
+                # Turbulent profile is MUCH flatter in the core
+                # v/v_max = (1 - r)^(1/7) where r is distance from wall
+                r_abs = np.abs(r_points)
+                v_profile_norm = (1 - r_abs)**(1/7)
+                # Normalize so average = 1
+                # For 1/7 power law: v_avg/v_max = 0.816, so v_max/v_avg = 1.225
+                v_profile_norm = v_profile_norm / 0.816
                 profile_color = 'red'
-                profile_name = 'Turbulent (Power Law)'
+                profile_name = 'Turbulent (1/7 Power Law)'
             
             v_profile = v_profile_norm * V  # Scale to actual velocity
             
@@ -500,11 +515,31 @@ with tab1:
                 row=1, col=1
             )
             
-            # Add centerline and wall annotations
+            # Add centerline and average velocity markers
             fig.add_vline(x=V, line_dash="dash", line_color="gray", row=1, col=1,
                          annotation_text=f"Avg V={V:.2f}m/s", annotation_position="top")
             fig.add_vline(x=V_max, line_dash="dot", line_color="darkred", row=1, col=1,
                          annotation_text=f"Max V={V_max:.2f}m/s", annotation_position="bottom right")
+            
+            # Add annotations explaining the profile
+            if Re < 2300:
+                fig.add_annotation(
+                    x=V*0.5, y=0,
+                    text="Parabolic profile<br>V_max = 2×V_avg",
+                    showarrow=False,
+                    font=dict(size=10, color="green"),
+                    bgcolor="rgba(255,255,255,0.8)",
+                    row=1, col=1
+                )
+            elif Re > 4000:
+                fig.add_annotation(
+                    x=V*0.7, y=0,
+                    text="Flat core<br>Steep wall gradient",
+                    showarrow=False,
+                    font=dict(size=10, color="red"),
+                    bgcolor="rgba(255,255,255,0.8)",
+                    row=1, col=1
+                )
             
             # Update axes for velocity profile
             fig.update_xaxes(title_text="Velocity (m/s)", row=1, col=1, gridcolor='lightgray')
