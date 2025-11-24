@@ -404,35 +404,48 @@ with col2:
         )
         
         # --- 3D VIEW (Right subplot) ---
-        # Create 3D wall with depth
-        wall_depth = w  # Use actual width for Z dimension
-        
-        # Define wall corners (using isometric-like positioning)
-        # Wall front face (at z=0)
-        wall_x_3d = [0, 0, 0, 0, 0]
-        wall_y_3d = [0, D, D, 0, 0]
-        wall_z_3d = [0, 0, wall_depth, wall_depth, 0]
+        # Create 3D wall with correct orientation
+        # Coordinate system: X = horizontal (left-right), Y = vertical (depth/height of fluid), Z = width (into page)
+        wall_width = w  # Use actual width for Z dimension (into the page)
         
         # Draw wall as multiple surfaces for 3D effect
-        # Front face
+        # Wall is vertical, so it extends in Y (height) and Z (width) directions at X=0
+        
+        # Front face of wall (at x=0, facing positive x direction where water is)
         fig.add_trace(go.Mesh3d(
             x=[0, 0, 0, 0],
-            y=[0, D, D, 0],
-            z=[0, 0, 0, 0],
+            y=[0, 0, D, D],  # Y is vertical (0=bottom, D=top)
+            z=[0, wall_width, wall_width, 0],  # Z is width (into page)
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
             color='gray',
+            opacity=0.6,
+            showlegend=False,
+            name='Wall (front face)',
+            hoverinfo='name'
+        ), row=1, col=2)
+        
+        # Back face of wall (wall thickness, at x=-0.3)
+        wall_thickness = 0.3
+        fig.add_trace(go.Mesh3d(
+            x=[-wall_thickness, -wall_thickness, -wall_thickness, -wall_thickness],
+            y=[0, 0, D, D],
+            z=[0, wall_width, wall_width, 0],
+            i=[0, 0],
+            j=[1, 2],
+            k=[2, 3],
+            color='dimgray',
             opacity=0.5,
             showlegend=False,
             hoverinfo='skip'
         ), row=1, col=2)
         
-        # Back face
+        # Left edge of wall (at z=0)
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0],
+            x=[0, 0, -wall_thickness, -wall_thickness],
             y=[0, D, D, 0],
-            z=[wall_depth, wall_depth, wall_depth, wall_depth],
+            z=[0, 0, 0, 0],
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
@@ -442,11 +455,25 @@ with col2:
             hoverinfo='skip'
         ), row=1, col=2)
         
-        # Bottom face
+        # Right edge of wall (at z=wall_width)
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0],
+            x=[0, 0, -wall_thickness, -wall_thickness],
+            y=[0, D, D, 0],
+            z=[wall_width, wall_width, wall_width, wall_width],
+            i=[0, 0],
+            j=[1, 2],
+            k=[2, 3],
+            color='darkgray',
+            opacity=0.5,
+            showlegend=False,
+            hoverinfo='skip'
+        ), row=1, col=2)
+        
+        # Bottom edge of wall
+        fig.add_trace(go.Mesh3d(
+            x=[0, 0, -wall_thickness, -wall_thickness],
             y=[0, 0, 0, 0],
-            z=[0, wall_depth, wall_depth, 0],
+            z=[0, wall_width, wall_width, 0],
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
@@ -456,11 +483,11 @@ with col2:
             hoverinfo='skip'
         ), row=1, col=2)
         
-        # Top face
+        # Top edge of wall
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0],
+            x=[0, 0, -wall_thickness, -wall_thickness],
             y=[D, D, D, D],
-            z=[0, wall_depth, wall_depth, 0],
+            z=[0, wall_width, wall_width, 0],
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
@@ -470,63 +497,66 @@ with col2:
             hoverinfo='skip'
         ), row=1, col=2)
         
-        # Water volume
+        # Water volume (in front of wall, from x=0 to x=5)
+        water_extent = 5  # How far water extends in positive x direction
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0, 5, 5, 5, 5],
-            y=[0, D, D, 0, 0, D, D, 0],
-            z=[0, 0, wall_depth, wall_depth, 0, 0, wall_depth, wall_depth],
+            x=[0, 0, 0, 0, water_extent, water_extent, water_extent, water_extent],
+            y=[0, 0, D, D, 0, 0, D, D],  # From bottom (0) to water surface (D)
+            z=[0, wall_width, wall_width, 0, 0, wall_width, wall_width, 0],
             i=[0, 2, 4, 6, 0, 1, 2, 3],
             j=[1, 3, 5, 7, 4, 5, 6, 7],
             k=[2, 6, 6, 5, 5, 6, 7, 7],
-            color='rgba(0, 119, 182, 0.3)',
-            opacity=0.3,
+            color='lightblue',
+            opacity=0.25,
             showlegend=False,
-            hoverinfo='skip'
+            name='Water',
+            hoverinfo='name'
         ), row=1, col=2)
         
-        # Draw pressure arrows in 3D
+        # Draw pressure arrows in 3D - distributed across height (Y) and width (Z)
         if show_pressure_arrows:
-            n_arrows_3d = max(5, n_arrows // 2)  # Fewer arrows in 3D
-            n_width_arrows = 5  # Arrows across width
+            n_arrows_height = max(6, n_arrows // 2)  # Arrows along height
+            n_arrows_width = 5  # Arrows across width
             
-            for i in range(n_arrows_3d):
-                for j in range(n_width_arrows):
-                    frac_height = (i + 0.5) / n_arrows_3d
-                    frac_width = (j + 0.5) / n_width_arrows
+            for i in range(n_arrows_height):
+                for j in range(n_arrows_width):
+                    frac_height = (i + 0.5) / n_arrows_height  # Position along height
+                    frac_width = (j + 0.5) / n_arrows_width    # Position along width
                     
-                    y_pos = frac_height * D
-                    z_pos = frac_width * wall_depth
-                    depth_from_surface = frac_height * D
+                    y_pos = frac_height * D  # Height position (vertical)
+                    z_pos = frac_width * wall_width  # Width position (into page)
+                    depth_from_surface = D - y_pos  # Depth below water surface
                     pressure = rho * g * depth_from_surface
-                    arrow_length_3d = 2 * (pressure / max_pressure)
+                    arrow_length_3d = 2 * (pressure / max_pressure) if pressure > 0 else 0
                     
-                    # Draw arrow
-                    fig.add_trace(go.Scatter3d(
-                        x=[arrow_length_3d, 0],
-                        y=[y_pos, y_pos],
-                        z=[z_pos, z_pos],
-                        mode='lines',
-                        line=dict(color='red', width=4),
-                        showlegend=False,
-                        hoverinfo='text',
-                        text=f"Pressure: {pressure/1000:.1f} kPa"
-                    ), row=1, col=2)
-                    
-                    # Arrow head (cone)
-                    fig.add_trace(go.Cone(
-                        x=[0.1],
-                        y=[y_pos],
-                        z=[z_pos],
-                        u=[-1],
-                        v=[0],
-                        w=[0],
-                        sizemode="absolute",
-                        sizeref=0.3,
-                        colorscale=[[0, 'red'], [1, 'red']],
-                        showscale=False,
-                        showlegend=False,
-                        hoverinfo='skip'
-                    ), row=1, col=2)
+                    if arrow_length_3d > 0:  # Only draw arrows below water surface
+                        # Draw arrow line (pointing in positive X direction)
+                        fig.add_trace(go.Scatter3d(
+                            x=[0, arrow_length_3d],
+                            y=[y_pos, y_pos],
+                            z=[z_pos, z_pos],
+                            mode='lines',
+                            line=dict(color='red', width=4),
+                            showlegend=False,
+                            hoverinfo='text',
+                            text=f"Height: {y_pos:.1f} m<br>Depth: {depth_from_surface:.1f} m<br>Pressure: {pressure/1000:.1f} kPa"
+                        ), row=1, col=2)
+                        
+                        # Arrow head (cone pointing in +X direction)
+                        fig.add_trace(go.Cone(
+                            x=[arrow_length_3d],
+                            y=[y_pos],
+                            z=[z_pos],
+                            u=[1],  # Point in +X direction
+                            v=[0],
+                            w=[0],
+                            sizemode="absolute",
+                            sizeref=0.3,
+                            colorscale=[[0, 'red'], [1, 'red']],
+                            showscale=False,
+                            showlegend=False,
+                            hoverinfo='skip'
+                        ), row=1, col=2)
         
         # Show width dimension if enabled
         if show_width_dimension:
@@ -548,22 +578,22 @@ with col2:
             # Grid lines on wall
             for i in range(6):
                 frac = i / 5
-                # Horizontal lines
+                # Horizontal lines (constant Y, varying Z)
                 fig.add_trace(go.Scatter3d(
                     x=[0, 0],
                     y=[frac * D, frac * D],
-                    z=[0, wall_depth],
+                    z=[0, wall_width],
                     mode='lines',
                     line=dict(color='rgba(0,0,0,0.2)', width=1),
                     showlegend=False,
                     hoverinfo='skip'
                 ), row=1, col=2)
                 
-                # Vertical lines
+                # Vertical lines (constant Z, varying Y)
                 fig.add_trace(go.Scatter3d(
                     x=[0, 0],
                     y=[0, D],
-                    z=[frac * wall_depth, frac * wall_depth],
+                    z=[frac * wall_width, frac * wall_width],
                     mode='lines',
                     line=dict(color='rgba(0,0,0,0.2)', width=1),
                     showlegend=False,
@@ -584,12 +614,12 @@ with col2:
         
         # Update 3D layout
         fig.update_scenes(
-            xaxis=dict(title="", showgrid=False, showticklabels=False, range=[-1, 6]),
-            yaxis=dict(title="Height (m)", showgrid=True, range=[0, D*1.2]),
-            zaxis=dict(title="Width (m)", showgrid=True, range=[0, wall_depth*1.2]),
+            xaxis=dict(title="Distance from Wall (m)", showgrid=False, showticklabels=False, range=[-1, 6]),
+            yaxis=dict(title="Height - Fluid Depth (m)", showgrid=True, range=[0, D*1.2]),
+            zaxis=dict(title="Width of Wall (m)", showgrid=True, range=[0, wall_width*1.2]),
             camera=dict(
                 eye=dict(x=1.5, y=-1.5, z=1.2),
-                center=dict(x=0, y=0, z=0)
+                center=dict(x=0, y=0.5, z=0.5)
             ),
             aspectmode='manual',
             aspectratio=dict(x=1, y=1.5, z=0.8),
@@ -605,48 +635,49 @@ with col2:
         )
         
     elif view_mode == "3D Isometric View":
-        # Pure 3D view
+        # Pure 3D view with correct orientation
+        # X = horizontal (direction pressure acts), Y = vertical (fluid depth/height), Z = width (into page)
         fig = go.Figure()
         
-        wall_depth = w
+        wall_width = w  # Width extends in Z direction
+        wall_thickness = 0.3  # Thickness in X direction
         
-        # Wall surfaces
-        # Front face
+        # Wall surfaces - vertical wall at x=0, extending in Y (height) and Z (width)
+        # Front face (facing positive X where water is)
         fig.add_trace(go.Mesh3d(
             x=[0, 0, 0, 0],
-            y=[0, D, D, 0],
-            z=[0, 0, 0, 0],
+            y=[0, 0, D, D],  # Y is vertical (bottom to top)
+            z=[0, wall_width, wall_width, 0],  # Z is width
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
             color='gray',
-            opacity=0.5,
+            opacity=0.6,
             showlegend=False,
-            name='Wall Front',
+            name='Wall (front)',
             hoverinfo='name'
         ))
         
-        # Back face
+        # Back face (wall thickness)
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0],
-            y=[0, D, D, 0],
-            z=[wall_depth, wall_depth, wall_depth, wall_depth],
+            x=[-wall_thickness, -wall_thickness, -wall_thickness, -wall_thickness],
+            y=[0, 0, D, D],
+            z=[0, wall_width, wall_width, 0],
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
-            color='darkgray',
+            color='dimgray',
             opacity=0.5,
             showlegend=False,
-            name='Wall Back',
+            name='Wall (back)',
             hoverinfo='name'
         ))
         
-        # Bottom, top, and side faces
-        # Bottom
+        # Bottom edge
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0],
+            x=[0, 0, -wall_thickness, -wall_thickness],
             y=[0, 0, 0, 0],
-            z=[0, wall_depth, wall_depth, 0],
+            z=[0, wall_width, wall_width, 0],
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
@@ -656,11 +687,11 @@ with col2:
             hoverinfo='skip'
         ))
         
-        # Top
+        # Top edge
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0],
+            x=[0, 0, -wall_thickness, -wall_thickness],
             y=[D, D, D, D],
-            z=[0, wall_depth, wall_depth, 0],
+            z=[0, wall_width, wall_width, 0],
             i=[0, 0],
             j=[1, 2],
             k=[2, 3],
@@ -670,84 +701,115 @@ with col2:
             hoverinfo='skip'
         ))
         
-        # Water volume (transparent)
+        # Left edge (at z=0)
         fig.add_trace(go.Mesh3d(
-            x=[0, 0, 0, 0, 5, 5, 5, 5],
-            y=[0, D, D, 0, 0, D, D, 0],
-            z=[0, 0, wall_depth, wall_depth, 0, 0, wall_depth, wall_depth],
+            x=[0, 0, -wall_thickness, -wall_thickness],
+            y=[0, D, D, 0],
+            z=[0, 0, 0, 0],
+            i=[0, 0],
+            j=[1, 2],
+            k=[2, 3],
+            color='darkgray',
+            opacity=0.5,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Right edge (at z=wall_width)
+        fig.add_trace(go.Mesh3d(
+            x=[0, 0, -wall_thickness, -wall_thickness],
+            y=[0, D, D, 0],
+            z=[wall_width, wall_width, wall_width, wall_width],
+            i=[0, 0],
+            j=[1, 2],
+            k=[2, 3],
+            color='darkgray',
+            opacity=0.5,
+            showlegend=False,
+            hoverinfo='skip'
+        ))
+        
+        # Water volume (in front of wall)
+        water_extent = 5
+        fig.add_trace(go.Mesh3d(
+            x=[0, 0, 0, 0, water_extent, water_extent, water_extent, water_extent],
+            y=[0, 0, D, D, 0, 0, D, D],  # From bottom (0) to surface (D)
+            z=[0, wall_width, wall_width, 0, 0, wall_width, wall_width, 0],
             i=[0, 2, 4, 6, 0, 1, 2, 3],
             j=[1, 3, 5, 7, 4, 5, 6, 7],
             k=[2, 6, 6, 5, 5, 6, 7, 7],
             color='lightblue',
-            opacity=0.3,
+            opacity=0.25,
             showlegend=False,
             name='Water',
             hoverinfo='name'
         ))
         
-        # Pressure arrows in 3D
+        # Pressure arrows in 3D - distributed across height and width
         if show_pressure_arrows:
-            n_arrows_3d = max(8, n_arrows // 2)
-            n_width_arrows = 7
+            n_arrows_height = max(8, n_arrows // 2)
+            n_arrows_width = 7
             
-            for i in range(n_arrows_3d):
-                for j in range(n_width_arrows):
-                    frac_height = (i + 0.5) / n_arrows_3d
-                    frac_width = (j + 0.5) / n_width_arrows
+            for i in range(n_arrows_height):
+                for j in range(n_arrows_width):
+                    frac_height = (i + 0.5) / n_arrows_height
+                    frac_width = (j + 0.5) / n_arrows_width
                     
-                    y_pos = frac_height * D
-                    z_pos = frac_width * wall_depth
-                    depth_from_surface = frac_height * D
+                    y_pos = frac_height * D  # Height from bottom
+                    z_pos = frac_width * wall_width  # Position across width
+                    depth_from_surface = D - y_pos  # Depth below water surface
                     pressure = rho * g * depth_from_surface
-                    arrow_length_3d = 2.5 * (pressure / max_pressure)
+                    arrow_length_3d = 2.5 * (pressure / max_pressure) if pressure > 0 else 0
                     
-                    # Arrow line
-                    fig.add_trace(go.Scatter3d(
-                        x=[arrow_length_3d, 0.05],
-                        y=[y_pos, y_pos],
-                        z=[z_pos, z_pos],
-                        mode='lines',
-                        line=dict(color='red', width=5),
-                        showlegend=False,
-                        hoverinfo='text',
-                        text=f"Depth: {depth_from_surface:.1f} m<br>Pressure: {pressure/1000:.1f} kPa"
-                    ))
-                    
-                    # Arrow head
-                    fig.add_trace(go.Cone(
-                        x=[0.15],
-                        y=[y_pos],
-                        z=[z_pos],
-                        u=[-1],
-                        v=[0],
-                        w=[0],
-                        sizemode="absolute",
-                        sizeref=0.4,
-                        colorscale=[[0, 'red'], [1, 'red']],
-                        showscale=False,
-                        showlegend=False,
-                        hoverinfo='skip'
-                    ))
+                    if arrow_length_3d > 0:  # Only draw where pressure exists
+                        # Arrow line (pointing in +X direction)
+                        fig.add_trace(go.Scatter3d(
+                            x=[0, arrow_length_3d],
+                            y=[y_pos, y_pos],
+                            z=[z_pos, z_pos],
+                            mode='lines',
+                            line=dict(color='red', width=5),
+                            showlegend=False,
+                            hoverinfo='text',
+                            text=f"Height: {y_pos:.1f} m<br>Depth from surface: {depth_from_surface:.1f} m<br>Pressure: {pressure/1000:.1f} kPa"
+                        ))
+                        
+                        # Arrow head (cone pointing in +X)
+                        fig.add_trace(go.Cone(
+                            x=[arrow_length_3d],
+                            y=[y_pos],
+                            z=[z_pos],
+                            u=[1],  # Point in +X direction
+                            v=[0],
+                            w=[0],
+                            sizemode="absolute",
+                            sizeref=0.4,
+                            colorscale=[[0, 'red'], [1, 'red']],
+                            showscale=False,
+                            showlegend=False,
+                            hoverinfo='skip'
+                        ))
         
-        # Center of pressure marker (3D line across width)
-        y_cp_3d = (2/3) * D
+        # Center of pressure marker (line across width at correct height)
+        y_cp_3d = D - y_cp  # Convert from "depth from surface" to "height from bottom"
         fig.add_trace(go.Scatter3d(
             x=[0, 0],
             y=[y_cp_3d, y_cp_3d],
-            z=[0, wall_depth],
+            z=[0, wall_width],
             mode='lines',
             line=dict(color='green', width=8, dash='dot'),
             name='Center of Pressure',
-            hoverinfo='name'
+            hoverinfo='text',
+            text=f'Center of Pressure<br>{y_cp:.2f} m from surface<br>{y_cp_3d:.2f} m from bottom'
         ))
         
         # Dimension arrows
         if show_width_dimension:
-            # Width dimension
+            # Width dimension (along Z axis)
             fig.add_trace(go.Scatter3d(
                 x=[-0.8, -0.8],
-                y=[-0.5, -0.5],
-                z=[0, wall_depth],
+                y=[-0.3, -0.3],
+                z=[0, wall_width],
                 mode='lines+text',
                 line=dict(color='black', width=4),
                 text=['', f'Width = {w} m'],
@@ -757,14 +819,14 @@ with col2:
                 hoverinfo='skip'
             ))
             
-            # Height dimension
+            # Height dimension (along Y axis)
             fig.add_trace(go.Scatter3d(
                 x=[-0.8, -0.8],
                 y=[0, D],
-                z=[-0.5, -0.5],
+                z=[-0.3, -0.3],
                 mode='lines+text',
                 line=dict(color='black', width=4),
-                text=['', f'Depth = {D} m'],
+                text=['', f'Fluid Depth = {D} m'],
                 textposition='top center',
                 textfont=dict(size=14, color='black'),
                 showlegend=False,
@@ -775,33 +837,44 @@ with col2:
         if show_3d_grid:
             for i in range(11):
                 frac = i / 10
-                # Horizontal lines
+                # Horizontal lines (constant Y, varying Z)
                 fig.add_trace(go.Scatter3d(
                     x=[0, 0],
                     y=[frac * D, frac * D],
-                    z=[0, wall_depth],
+                    z=[0, wall_width],
                     mode='lines',
                     line=dict(color='rgba(0,0,0,0.15)', width=1),
                     showlegend=False,
                     hoverinfo='skip'
                 ))
                 
-                # Vertical lines
+                # Vertical lines (constant Z, varying Y)
                 fig.add_trace(go.Scatter3d(
                     x=[0, 0],
                     y=[0, D],
-                    z=[frac * wall_depth, frac * wall_depth],
+                    z=[frac * wall_width, frac * wall_width],
                     mode='lines',
                     line=dict(color='rgba(0,0,0,0.15)', width=1),
                     showlegend=False,
                     hoverinfo='skip'
                 ))
         
+        # Water surface indicator
+        fig.add_trace(go.Scatter3d(
+            x=[0, water_extent],
+            y=[D, D],
+            z=[wall_width/2, wall_width/2],
+            mode='lines',
+            line=dict(color='blue', width=6, dash='dash'),
+            name='Water Surface',
+            hoverinfo='name'
+        ))
+        
         # Annotations
         fig.add_trace(go.Scatter3d(
-            x=[0],
+            x=[1],
             y=[D + 0.5],
-            z=[wall_depth / 2],
+            z=[wall_width / 2],
             mode='text',
             text=[f'Total Force: {F_kN:.2f} kN'],
             textfont=dict(size=16, color='darkred'),
@@ -811,12 +884,12 @@ with col2:
         
         fig.update_layout(
             scene=dict(
-                xaxis=dict(title="", showgrid=False, showticklabels=False, range=[-1.5, 6]),
-                yaxis=dict(title="Height (m)", showgrid=True, range=[-0.5, D*1.3]),
-                zaxis=dict(title="Width (m)", showgrid=True, range=[-0.5, wall_depth*1.3]),
+                xaxis=dict(title="Distance from Wall (m)", showgrid=False, showticklabels=True, range=[-1.5, water_extent+1]),
+                yaxis=dict(title="Height - Fluid Depth (m)", showgrid=True, range=[-0.5, D*1.3]),
+                zaxis=dict(title="Width of Wall (m)", showgrid=True, range=[-0.5, wall_width*1.3]),
                 camera=dict(
                     eye=dict(x=1.8, y=-1.8, z=1.3),
-                    center=dict(x=0, y=0, z=0)
+                    center=dict(x=0, y=0.5, z=0.5)
                 ),
                 aspectmode='manual',
                 aspectratio=dict(x=1.2, y=1.5, z=1)
