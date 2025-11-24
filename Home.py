@@ -194,70 +194,80 @@ modules = [
         "icon": "💧",
         "title": "Capillary Rise",
         "description": "Watch liquid defy gravity! Explore how surface tension pulls fluids up narrow tubes. Experiment with water, mercury, and ethanol.",
-        "key_concept": "Surface Tension & Contact Angles"
+        "key_concept": "Surface Tension & Contact Angles",
+        "page": "1_Capillary_Rise_Enhanced"
     },
     {
         "number": "2",
         "icon": "📏",
         "title": "Open Manometer",
         "description": "Master pressure measurement with U-tube manometers. See how fluid heights reveal pressure differences in real-time.",
-        "key_concept": "Pressure Measurement & Fluid Statics"
+        "key_concept": "Pressure Measurement & Fluid Statics",
+        "page": "2_Open_Manometer_Enhanced"
     },
     {
         "number": "3",
         "icon": "🔒",
         "title": "Closed Manometer",
         "description": "Unlock the secrets of closed-system pressure measurements. Perfect for understanding vacuum and absolute pressure.",
-        "key_concept": "Absolute vs Gauge Pressure"
+        "key_concept": "Absolute vs Gauge Pressure",
+        "page": "3_Closed_Manometer_Enhanced"
     },
     {
         "number": "4",
         "icon": "✈️",
         "title": "Pitot-Static Tube",
         "description": "Discover how aircraft measure airspeed! Learn the principles behind one of aviation's most important instruments.",
-        "key_concept": "Dynamic Pressure & Flow Velocity"
+        "key_concept": "Dynamic Pressure & Flow Velocity",
+        "page": "4_Pitot-Static_Tube_Enhanced"
     },
     {
         "number": "5",
         "icon": "🏗️",
         "title": "Hydrostatic Force - Straight Wall",
         "description": "Calculate massive forces on dams and tanks! Visualize pressure distribution and find the center of pressure on vertical walls.",
-        "key_concept": "Hydrostatic Force & Pressure Distribution"
+        "key_concept": "Hydrostatic Force & Pressure Distribution",
+        "page": "5_Hydrostatic_Pressure_Straight_wall_Enhanced"
     },
     {
         "number": "6",
         "icon": "📐",
         "title": "Hydrostatic Force - Inclined Wall",
         "description": "See how tilting a surface changes everything! Master force calculations on inclined gates and surfaces.",
-        "key_concept": "Forces on Inclined Surfaces"
+        "key_concept": "Forces on Inclined Surfaces",
+        "page": "6_Hydrostatic_Pressure_Inclined_wall_Enhanced"
     },
     {
         "number": "7",
         "icon": "🔄",
         "title": "Reducing Pipe Bend",
         "description": "Witness momentum in action! Calculate forces on pipe bends and understand why pipelines need support structures.",
-        "key_concept": "Momentum Equation & Reaction Forces"
+        "key_concept": "Momentum Equation & Reaction Forces",
+        "page": "7_Reducing_Bend_Enhanced"
     },
     {
         "number": "8",
         "icon": "🌊",
         "title": "Laminar vs Turbulent Flow",
         "description": "Inject virtual dye and watch flow patterns emerge! Cross the Reynolds number threshold and see chaos unfold.",
-        "key_concept": "Reynolds Number & Flow Regimes"
+        "key_concept": "Reynolds Number & Flow Regimes",
+        "page": "8_Laminar-and-Turbulent-Flow_Enhanced"
     },
     {
         "number": "9",
         "icon": "⚡",
         "title": "Pump Head & Power",
         "description": "Design pumping systems like a pro! Calculate required pump power for any piping configuration.",
-        "key_concept": "Bernoulli Equation & Energy Analysis"
+        "key_concept": "Bernoulli Equation & Energy Analysis",
+        "page": "9_Pump_head_demand_Enhanced"
     },
     {
         "number": "10",
         "icon": "⚙️",
         "title": "Turbine Power",
         "description": "Extract energy from flowing fluids! Explore how turbines convert fluid power into mechanical work.",
-        "key_concept": "Energy Extraction & Efficiency"
+        "key_concept": "Energy Extraction & Efficiency",
+        "page": "10_Turbine_Power"
     }
 ]
 
@@ -275,6 +285,9 @@ for i, module in enumerate(modules):
             </p>
         </div>
         """, unsafe_allow_html=True)
+        
+        # Add a button to navigate to the module using st.page_link
+        st.page_link(f"pages/{module['page']}.py", label=f"🚀 Launch {module['title']}", use_container_width=True)
 
 st.markdown("---")
 
