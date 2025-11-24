@@ -391,68 +391,151 @@ with tab1:
         # Create system diagram
         fig = go.Figure()
         
-        # Scale factors for visualization
-        pipe_height = z2
+        # Scale factors for visualization - make reservoirs scale with elevation
         pipe_width = 10
         
+        # Calculate reservoir dimensions that scale appropriately
+        # Base size for low elevations, scale up for high elevations
+        elevation_range = z2 - z1
+        reservoir_width = 2.5
+        
+        # Scale reservoir height based on elevation difference
+        # Minimum 8% of elevation range, maximum 15%
+        reservoir_height = max(elevation_range * 0.10, 5)  # At least 5m high
+        reservoir_height = min(reservoir_height, 30)  # Cap at 30m for very tall systems
+        
+        # Water levels inside reservoirs (80% full)
+        water_level_1 = z1 + reservoir_height * 0.8
+        water_level_2 = z2 + reservoir_height * 0.8
+        
         # Draw Reservoir 1 (ground level)
-        reservoir1_width = 3
-        reservoir1_height = 2
-        fig.add_shape(type="rect", x0=0, y0=z1, x1=reservoir1_width, y1=z1+reservoir1_height,
-                     fillcolor="lightblue", line=dict(color="darkblue", width=2))
-        fig.add_annotation(x=reservoir1_width/2, y=z1+reservoir1_height/2, text="<b>Reservoir 1</b>",
-                          showarrow=False, font=dict(size=12, color="darkblue"))
+        # Tank structure
+        fig.add_shape(type="rect", x0=0, y0=z1, x1=reservoir_width, y1=z1+reservoir_height,
+                     fillcolor="rgba(200,200,200,0.3)", line=dict(color="darkblue", width=3))
         
-        # Draw pipe from reservoir 1 to reservoir 2
-        pipe_x = [reservoir1_width, reservoir1_width, pipe_width-reservoir1_width, pipe_width-reservoir1_width]
-        pipe_y = [z1+reservoir1_height/2, z2+reservoir1_height/2, z2+reservoir1_height/2, z1+reservoir1_height/2]
-        fig.add_trace(go.Scatter(x=pipe_x, y=pipe_y, fill="toself", fillcolor="gray",
-                                line=dict(color="black", width=2), mode='lines', showlegend=False))
+        # Water inside reservoir 1
+        fig.add_shape(type="rect", x0=0.1, y0=z1+0.1, x1=reservoir_width-0.1, y1=water_level_1,
+                     fillcolor="rgba(100,150,255,0.6)", line=dict(color="blue", width=1))
         
-        # Add pump symbol
-        pump_x = reservoir1_width + 1
-        pump_y = z1 + reservoir1_height/2
-        fig.add_shape(type="circle", x0=pump_x-0.3, y0=pump_y-0.3, x1=pump_x+0.3, y1=pump_y+0.3,
-                     fillcolor="orange", line=dict(color="darkorange", width=2))
-        fig.add_annotation(x=pump_x, y=pump_y, text="⚡<br>PUMP", showarrow=False,
-                          font=dict(size=10, color="white"))
+        # Reservoir 1 label
+        fig.add_annotation(x=reservoir_width/2, y=z1+reservoir_height/2, 
+                          text="<b>Reservoir 1</b><br>(Lower)",
+                          showarrow=False, font=dict(size=12, color="darkblue", family="Arial Black"),
+                          bgcolor="rgba(255,255,255,0.8)", borderpad=4)
         
-        # Draw Reservoir 2
-        fig.add_shape(type="rect", x0=pipe_width-reservoir1_width, y0=z2, 
-                     x1=pipe_width, y1=z2+reservoir1_height,
-                     fillcolor="lightblue", line=dict(color="darkblue", width=2))
-        fig.add_annotation(x=pipe_width-reservoir1_width/2, y=z2+reservoir1_height/2,
-                          text="<b>Reservoir 2</b>", showarrow=False,
-                          font=dict(size=12, color="darkblue"))
+        # Draw Reservoir 2 (elevated)
+        # Tank structure
+        fig.add_shape(type="rect", x0=pipe_width-reservoir_width, y0=z2, 
+                     x1=pipe_width, y1=z2+reservoir_height,
+                     fillcolor="rgba(200,200,200,0.3)", line=dict(color="darkblue", width=3))
         
-        # Elevation annotations
-        fig.add_annotation(x=-0.5, y=z1, text=f"z₁ = {z1} m", showarrow=False,
-                          font=dict(size=11, color="blue"))
-        fig.add_annotation(x=pipe_width+0.5, y=z2, text=f"z₂ = {z2} m", showarrow=False,
-                          font=dict(size=11, color="blue"))
+        # Water inside reservoir 2
+        fig.add_shape(type="rect", x0=pipe_width-reservoir_width+0.1, y0=z2+0.1, 
+                     x1=pipe_width-0.1, y1=water_level_2,
+                     fillcolor="rgba(100,150,255,0.6)", line=dict(color="blue", width=1))
         
-        # Elevation difference arrow
-        fig.add_shape(type="line", x0=pipe_width+1, y0=z1, x1=pipe_width+1, y1=z2,
+        # Reservoir 2 label
+        fig.add_annotation(x=pipe_width-reservoir_width/2, y=z2+reservoir_height/2,
+                          text="<b>Reservoir 2</b><br>(Upper)", showarrow=False,
+                          font=dict(size=12, color="darkblue", family="Arial Black"),
+                          bgcolor="rgba(255,255,255,0.8)", borderpad=4)
+        
+        # Draw pipe connecting reservoirs at water level
+        pipe_start_x = reservoir_width
+        pipe_end_x = pipe_width - reservoir_width
+        pipe_thickness = 0.15
+        
+        # Horizontal section at bottom
+        fig.add_shape(type="rect", 
+                     x0=pipe_start_x, y0=water_level_1-pipe_thickness/2,
+                     x1=pipe_start_x+1.5, y1=water_level_1+pipe_thickness/2,
+                     fillcolor="gray", line=dict(color="black", width=2))
+        
+        # Vertical riser section
+        fig.add_shape(type="rect",
+                     x0=pipe_start_x+1.5-pipe_thickness/2, y0=water_level_1,
+                     x1=pipe_start_x+1.5+pipe_thickness/2, y1=water_level_2,
+                     fillcolor="gray", line=dict(color="black", width=2))
+        
+        # Horizontal section at top
+        fig.add_shape(type="rect",
+                     x0=pipe_start_x+1.5, y0=water_level_2-pipe_thickness/2,
+                     x1=pipe_end_x, y1=water_level_2+pipe_thickness/2,
+                     fillcolor="gray", line=dict(color="black", width=2))
+        
+        # Add pump symbol on the horizontal pipe section at bottom
+        pump_x = pipe_start_x + 0.75
+        pump_y = water_level_1
+        pump_size = 0.4
+        
+        fig.add_shape(type="circle", 
+                     x0=pump_x-pump_size, y0=pump_y-pump_size, 
+                     x1=pump_x+pump_size, y1=pump_y+pump_size,
+                     fillcolor="orange", line=dict(color="darkorange", width=3))
+        
+        fig.add_annotation(x=pump_x, y=pump_y, text="<b>⚡<br>PUMP</b>", showarrow=False,
+                          font=dict(size=11, color="white", family="Arial Black"))
+        
+        # Elevation annotations with better positioning
+        fig.add_annotation(x=-0.8, y=z1+reservoir_height/2, text=f"<b>z₁ = {z1:.0f} m</b>", 
+                          showarrow=True, arrowhead=2, arrowcolor="blue", arrowwidth=2,
+                          font=dict(size=12, color="blue"),
+                          bgcolor="rgba(255,255,255,0.9)", bordercolor="blue", borderwidth=2)
+        
+        fig.add_annotation(x=pipe_width+0.8, y=z2+reservoir_height/2, text=f"<b>z₂ = {z2:.0f} m</b>",
+                          showarrow=True, arrowhead=2, arrowcolor="blue", arrowwidth=2,
+                          font=dict(size=12, color="blue"),
+                          bgcolor="rgba(255,255,255,0.9)", bordercolor="blue", borderwidth=2)
+        
+        # Elevation difference indicator
+        arrow_x = pipe_width + 1.5
+        fig.add_shape(type="line", x0=arrow_x, y0=z1, x1=arrow_x, y1=z2,
                      line=dict(color="red", width=3, dash="dash"))
-        fig.add_annotation(x=pipe_width+1.5, y=(z1+z2)/2, text=f"<b>Δz = {z2-z1} m</b>",
-                          showarrow=False, font=dict(size=13, color="red"),
-                          textangle=90, bgcolor="rgba(255,255,255,0.8)")
         
-        # System specs
-        specs_text = f"<b>Pipe:</b> L={L}m, D={D_mm}mm, ε={epsilon*1000:.3f}mm<br>"
-        specs_text += f"<b>Flow:</b> Q={Q_m3h:.1f} m³/h, V={results['velocity']:.2f} m/s<br>"
-        specs_text += f"<b>Head:</b> H={results['total_head_demand']:.2f} m"
-        fig.add_annotation(x=pipe_width/2, y=z1-3, text=specs_text, showarrow=False,
-                          font=dict(size=10), bgcolor="rgba(255,255,255,0.9)",
-                          bordercolor="gray", borderwidth=1)
+        # Add arrows at both ends
+        fig.add_annotation(x=arrow_x, y=z1, ax=arrow_x, ay=z1+reservoir_height*0.3,
+                          xref='x', yref='y', axref='x', ayref='y',
+                          arrowhead=2, arrowsize=1.5, arrowwidth=3, arrowcolor='red', showarrow=True)
         
+        fig.add_annotation(x=arrow_x, y=z2, ax=arrow_x, ay=z2-reservoir_height*0.3,
+                          xref='x', yref='y', axref='x', ayref='y',
+                          arrowhead=2, arrowsize=1.5, arrowwidth=3, arrowcolor='red', showarrow=True)
+        
+        # Elevation difference label
+        fig.add_annotation(x=arrow_x+0.7, y=(z1+z2)/2, 
+                          text=f"<b>Δz = {z2-z1:.0f} m</b>",
+                          showarrow=False, font=dict(size=14, color="red", family="Arial Black"),
+                          bgcolor="rgba(255,255,200,0.9)", bordercolor="red", borderwidth=2,
+                          textangle=90, borderpad=6)
+        
+        # System specifications box at bottom
+        specs_text = f"<b>📏 Pipe:</b> L = {L} m, D = {D_mm} mm, ε = {epsilon*1000:.4f} mm<br>"
+        specs_text += f"<b>💧 Flow:</b> Q = {Q_m3h:.1f} m³/h ({Q_Ls:.2f} L/s), V = {results['velocity']:.2f} m/s<br>"
+        specs_text += f"<b>⚡ Head:</b> H<sub>total</sub> = {results['total_head_demand']:.2f} m, P = {results['power_80']:.2f} kW (η=80%)"
+        
+        fig.add_annotation(x=pipe_width/2, y=z1-reservoir_height*0.4, text=specs_text,
+                          showarrow=False, font=dict(size=11),
+                          bgcolor="rgba(255,255,255,0.95)", bordercolor="gray", borderwidth=2,
+                          borderpad=8)
+        
+        # Update layout with appropriate ranges
+        y_padding = reservoir_height * 0.6
         fig.update_layout(
-            title="<b>Two-Reservoir Pumping System</b>",
-            xaxis=dict(range=[-1, pipe_width+2], showticklabels=False, showgrid=False, zeroline=False),
-            yaxis=dict(range=[z1-4, z2+3], title="<b>Elevation (m)</b>"),
+            title={
+                'text': "<b>🏔️ Two-Reservoir Pumping System</b>",
+                'x': 0.5,
+                'xanchor': 'center',
+                'font': {'size': 18, 'color': 'darkslategray', 'family': 'Arial Black'}
+            },
+            xaxis=dict(range=[-1.5, pipe_width+2.5], showticklabels=False, showgrid=False, zeroline=False),
+            yaxis=dict(range=[z1-y_padding, z2+reservoir_height+y_padding*0.5], 
+                      title="<b>Elevation (m)</b>",
+                      title_font=dict(size=14, color="darkblue"),
+                      showgrid=True, gridcolor='rgba(200,200,200,0.3)'),
             showlegend=False,
-            height=500,
-            plot_bgcolor='rgba(240,248,255,0.5)'
+            height=600,
+            plot_bgcolor='rgba(240,248,255,0.5)',
+            paper_bgcolor='white'
         )
         
         st.plotly_chart(fig, use_container_width=True)
