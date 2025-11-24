@@ -132,8 +132,6 @@ with tab1:
                 if use_static_view == "Static (full path)":
                     highlight_center = st.checkbox("Highlight center streamline", value=False,
                                                    help="Emphasize the centerline particle path")
-        
-        show_turbulence_eddies = st.checkbox("Show turbulence intensity", value=True)
 
         # --- Calculations ---
         # Reynolds number
@@ -453,14 +451,13 @@ with tab1:
     with col2:
         st.header("🖼️ Visualization")
         
-        # Create subplot figure with multiple visualizations
+        # Create subplot figure with two visualizations
         fig = make_subplots(
-            rows=3, cols=1,
-            row_heights=[0.4, 0.35, 0.25],
+            rows=2, cols=1,
+            row_heights=[0.45, 0.55],
             subplot_titles=("Velocity Profile Across Pipe", 
-                          "Particle Streamlines" if show_particle_paths else "",
-                          "Turbulence Intensity Distribution" if show_turbulence_eddies else ""),
-            vertical_spacing=0.12
+                          "Particle Streamlines" if show_particle_paths else ""),
+            vertical_spacing=0.15
         )
         
         # --- 1. VELOCITY PROFILE ---
@@ -656,44 +653,9 @@ with tab1:
             fig.update_xaxes(title_text="Axial Distance", row=2, col=1, showgrid=False, range=[0, 100])
             fig.update_yaxes(title_text="Radial Position", row=2, col=1, range=[-1.3, 1.3], showgrid=False)
         
-        # --- 3. TURBULENCE INTENSITY ---
-        if show_turbulence_eddies:
-            r_turb = np.linspace(-1, 1, 100)
-            
-            if Re < 2300:  # Laminar - no turbulence
-                turb_intensity_profile = np.zeros_like(r_turb)
-                turb_color = 'green'
-            elif Re <= 4000:  # Transitional
-                trans_factor = (Re - 2300) / (4000 - 2300)
-                turb_intensity_profile = trans_factor * 0.15 * (1 - r_turb**2)
-                turb_color = 'orange'
-            else:  # Turbulent
-                base_intensity = min(0.05 + (Re - 4000)/100000, 0.25)
-                turb_intensity_profile = base_intensity * (1 - r_turb**4)  # Peak at center, reduce at walls
-                turb_color = 'red'
-            
-            fig.add_trace(
-                go.Scatter(
-                    x=turb_intensity_profile * 100,  # Convert to percentage
-                    y=r_turb,
-                    mode='lines',
-                    fill='tozerox',
-                    fillcolor=f'rgba({"0,255,0" if turb_color=="green" else ("255,165,0" if turb_color=="orange" else "255,0,0")}, 0.4)',
-                    line=dict(color=turb_color, width=2),
-                    name='Turbulence Intensity',
-                    showlegend=False,
-                    hovertemplate='Intensity: %{x:.1f}%<br>Radial position: %{y:.2f}<extra></extra>'
-                ),
-                row=3, col=1
-            )
-            
-            # Update axes for turbulence
-            fig.update_xaxes(title_text="Turbulence Intensity (%)", row=3, col=1, gridcolor='lightgray')
-            fig.update_yaxes(title_text="r/R", row=3, col=1, range=[-1.2, 1.2], gridcolor='lightgray')
-        
         # Update overall layout
         fig.update_layout(
-            height=1000,
+            height=800,
             showlegend=False,
             plot_bgcolor='white',
             margin=dict(l=50, r=50, t=80, b=50)
