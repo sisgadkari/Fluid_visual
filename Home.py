@@ -286,8 +286,23 @@ for i, module in enumerate(modules):
         </div>
         """, unsafe_allow_html=True)
         
-        # Add a button to navigate to the module using st.page_link
-        st.page_link(f"pages/{module['page']}.py", label=f"🚀 Launch {module['title']}", use_container_width=True)
+        # Add a styled markdown link that acts as a button
+        st.markdown(f"""
+        <a href="/{module['page']}" target="_self" style="
+            display: block;
+            text-align: center;
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        ">
+            🚀 Launch {module['title']} →
+        </a>
+        """, unsafe_allow_html=True)
 
 st.markdown("---")
 
