@@ -80,7 +80,7 @@ st.markdown("""
     .stat-box {
         text-align: center;
         padding: 20px;
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
         border-radius: 10px;
         color: white;
         margin: 10px;
@@ -345,5 +345,3 @@ st.markdown("""
     <p style='margin-top: 5px;'>🏆 Funded by the <strong>Fluor Global University Sponsorship Program (GUSP) Award</strong> and <strong>Faculty of Engineering and Physical Sciences Teaching Innovation Fund</strong></p>
 </div>
 """, unsafe_allow_html=True)
-
-
