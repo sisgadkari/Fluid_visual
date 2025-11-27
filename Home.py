@@ -146,6 +146,31 @@ with col_viz3:
 
 st.markdown("---")
 
+# --- How to Use Section ---
+st.markdown("## 🚀 Getting Started")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown("""
+    ### 1️⃣ Choose Your Topic
+    Use the sidebar to navigate to any module that interests you. Start with basics or jump to advanced topics!
+    """)
+
+with col2:
+    st.markdown("""
+    ### 2️⃣ Adjust & Experiment
+    Play with sliders and input fields. Watch real-time updates as you change parameters. No wrong answers here!
+    """)
+
+with col3:
+    st.markdown("""
+    ### 3️⃣ Learn & Apply
+    Study the formulas, read the theory, and understand the calculations. Apply what you learn to solve real problems!
+    """)
+
+st.markdown("---")
+
 # --- What Makes This Special Section ---
 st.markdown("## 🚀 What Makes This Learning Experience Special")
 
@@ -275,31 +300,6 @@ for i, module in enumerate(modules):
             </p>
         </div>
         """, unsafe_allow_html=True)
-
-st.markdown("---")
-
-# --- How to Use Section ---
-st.markdown("## 🚀 Getting Started")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("""
-    ### 1️⃣ Choose Your Topic
-    Use the sidebar to navigate to any module that interests you. Start with basics or jump to advanced topics!
-    """)
-
-with col2:
-    st.markdown("""
-    ### 2️⃣ Adjust & Experiment
-    Play with sliders and input fields. Watch real-time updates as you change parameters. No wrong answers here!
-    """)
-
-with col3:
-    st.markdown("""
-    ### 3️⃣ Learn & Apply
-    Study the formulas, read the theory, and understand the calculations. Apply what you learn to solve real problems!
-    """)
 
 st.markdown("---")
 
