@@ -367,10 +367,10 @@ with tab1:
             # Always show gauge pressure result prominently
             fig.add_annotation(
                 x=0,  # Center of the plot
-                y=0.85,  # Top of the plot
+                y=0.95,  # Higher up on the plot
                 text=f"<b>Gauge Pressure: {delta_P_kPa:.3f} kPa</b>",
                 showarrow=False,
-                font=dict(size=16, color="white", family="Arial Black"),
+                font=dict(size=48, color="white", family="Arial Black"),
                 bgcolor="rgba(0, 100, 200, 0.9)",
                 bordercolor="darkblue",
                 borderwidth=3,
