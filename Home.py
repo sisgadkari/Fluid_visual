@@ -147,7 +147,7 @@ with col_viz3:
 st.markdown("---")
 
 # --- How to Use Section ---
-st.markdown("## 🚀 Getting Started")
+st.markdown("## 📖 How to Use this App")
 
 col1, col2, col3 = st.columns(3)
 
