@@ -147,7 +147,7 @@ with col_viz3:
 st.markdown("---")
 
 # --- What Makes This Special Section ---
-st.markdown("## 🌟 Why This App is Different")
+st.markdown("## 🚀 What Makes This Learning Experience Special")
 
 col1, col2 = st.columns(2)
 
