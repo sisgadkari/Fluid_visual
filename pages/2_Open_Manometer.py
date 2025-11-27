@@ -363,6 +363,19 @@ with tab1:
                                   text=f"P₁ = {P1_abs:.2f} kPa (abs)<br>{delta_P_kPa:.3f} kPa (gauge)",
                                   showarrow=False, font=dict(size=10), 
                                   bgcolor="rgba(255,255,255,0.8)", bordercolor="blue", borderwidth=1)
+            
+            # Always show gauge pressure result prominently
+            fig.add_annotation(
+                x=0,  # Center of the plot
+                y=0.85,  # Top of the plot
+                text=f"<b>Gauge Pressure: {delta_P_kPa:.3f} kPa</b>",
+                showarrow=False,
+                font=dict(size=16, color="white", family="Arial Black"),
+                bgcolor="rgba(0, 100, 200, 0.9)",
+                bordercolor="darkblue",
+                borderwidth=3,
+                borderpad=10
+            )
 
             fig.update_layout(
                 xaxis=dict(range=fixed_xaxis_range, visible=False),
