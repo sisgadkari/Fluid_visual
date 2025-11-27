@@ -370,7 +370,7 @@ with tab1:
                 y=0.95,  # Higher up on the plot
                 text=f"<b>Gauge Pressure: {delta_P_kPa:.3f} kPa</b>",
                 showarrow=False,
-                font=dict(size=48, color="white", family="Arial Black"),
+                font=dict(size=65, color="white", family="Arial Black"),
                 bgcolor="rgba(0, 100, 200, 0.9)",
                 bordercolor="darkblue",
                 borderwidth=3,
@@ -719,3 +719,4 @@ with comp_col3:
     
     if h_water > 2.0:
         st.error("❌ Water manometer impractical (> 2 m height)")
+
