@@ -361,23 +361,10 @@ with tab1:
             fig.add_shape(type="line", x0=tube_radius_vis, y0=beaker_bottom, x1=tube_radius_vis, y1=plot_height, line=dict(color="darkgrey", width=3))
 
             meniscus_x = np.linspace(-tube_radius_vis, tube_radius_vis, 100)
-            curvature_direction = -1 if theta_deg < 90 else 1
-            
-            # Calculate meniscus curvature safely
             if tube_radius_vis > 0:
-                if theta_deg == 90:
-                    # Flat meniscus at 90 degrees
-                    meniscus_y = np.full_like(meniscus_x, instant_h)
-                else:
-                    # Calculate angle for curvature
-                    angle_from_90 = abs(90 - theta_deg)
-                    if angle_from_90 > 0:
-                        tan_angle = np.tan(np.deg2rad(angle_from_90))
-                        meniscus_y = instant_h - curvature_direction * (meniscus_x**2 / (tube_radius_vis * 2)) * tan_angle
-                        # Normalize to ensure center is at instant_h
-                        meniscus_y -= (meniscus_y[len(meniscus_y)//2] - instant_h)
-                    else:
-                        meniscus_y = np.full_like(meniscus_x, instant_h)
+                curvature_direction = -1 if theta_deg < 90 else 1
+                meniscus_y = instant_h - curvature_direction * (meniscus_x**2 / (tube_radius_vis * 2)) * np.tan(np.deg2rad(90 - theta_deg if theta_deg < 90 else theta_deg - 90))
+                meniscus_y -= (meniscus_y[-1] - instant_h)
             else:
                 meniscus_y = np.full_like(meniscus_x, instant_h)
             
