@@ -357,20 +357,31 @@ with tab1:
             
             # Add pressure values if enabled
             if show_pressure_labels:
+                # Calculate instantaneous pressure
+                pressure_from_h_inst = rho_m * g * h_inst
+                pressure_from_b_inst = rho_f * g * b_inst
+                delta_P_inst = pressure_from_h_inst - pressure_from_b_inst
+                delta_P_kPa_inst = delta_P_inst / 1000
+                
                 # Calculate pressures at key points
-                P1_abs = 101.325 + delta_P_kPa  # Approximate absolute pressure
+                P1_abs = 101.325 + delta_P_kPa_inst  # Approximate absolute pressure
                 fig.add_annotation(x=vessel_right_edge - vessel_width/2, y=vessel_top + 0.05,
-                                  text=f"P₁ = {P1_abs:.2f} kPa (abs)<br>{delta_P_kPa:.3f} kPa (gauge)",
+                                  text=f"P₁ = {P1_abs:.2f} kPa (abs)<br>{delta_P_kPa_inst:.3f} kPa (gauge)",
                                   showarrow=False, font=dict(size=10), 
                                   bgcolor="rgba(255,255,255,0.8)", bordercolor="blue", borderwidth=1)
             
-            # Always show gauge pressure result prominently
+            # Always show gauge pressure result prominently - calculate from instantaneous values
+            pressure_from_h_inst = rho_m * g * h_inst
+            pressure_from_b_inst = rho_f * g * b_inst
+            delta_P_inst = pressure_from_h_inst - pressure_from_b_inst
+            delta_P_kPa_inst = delta_P_inst / 1000
+            
             fig.add_annotation(
                 x=0,  # Center of the plot
                 y=0.95,  # Higher up on the plot
-                text=f"<b>Gauge Pressure: {delta_P_kPa:.3f} kPa</b>",
+                text=f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa</b>",
                 showarrow=False,
-                font=dict(size=65, color="white", family="Arial Black"),
+                font=dict(size=48, color="white", family="Arial Black"),
                 bgcolor="rgba(0, 100, 200, 0.9)",
                 bordercolor="darkblue",
                 borderwidth=3,
@@ -719,4 +730,3 @@ with comp_col3:
     
     if h_water > 2.0:
         st.error("❌ Water manometer impractical (> 2 m height)")
-
