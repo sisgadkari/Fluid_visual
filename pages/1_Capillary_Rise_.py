@@ -290,17 +290,24 @@ with tab1:
                     viscosity_estimate = 0.00155
                 
                 # Washburn time constant: t ∝ η·h/(σ·cos(θ))
-                time_constant = (8 * viscosity_estimate * abs(h)) / (sigma * abs(np.cos(theta_rad))) if np.cos(theta_rad) != 0 else float('inf')
-                
-                st.write(f"• **Estimated rise time**: ~{time_constant:.2f} seconds")
-                st.caption(f"(Assuming viscosity ≈ {viscosity_estimate*1000:.1f} mPa·s)")
-                
-                if time_constant < 1:
-                    st.success("⚡ Very fast - nearly instantaneous")
-                elif time_constant < 10:
-                    st.info("💡 Fast - observable in real-time")
+                cos_theta = np.cos(theta_rad)
+                if abs(cos_theta) > 0.001:  # Avoid division by very small numbers
+                    time_constant = (8 * viscosity_estimate * abs(h)) / (sigma * abs(cos_theta))
                 else:
-                    st.warning("⏱️ Slow - may take significant time")
+                    time_constant = float('inf')
+                
+                if time_constant != float('inf'):
+                    st.write(f"• **Estimated rise time**: ~{time_constant:.2f} seconds")
+                    st.caption(f"(Assuming viscosity ≈ {viscosity_estimate*1000:.1f} mPa·s)")
+                    
+                    if time_constant < 1:
+                        st.success("⚡ Very fast - nearly instantaneous")
+                    elif time_constant < 10:
+                        st.info("💡 Fast - observable in real-time")
+                    else:
+                        st.warning("⏱️ Slow - may take significant time")
+                else:
+                    st.info("⚡ At this contact angle, capillary effects are minimal")
             
             # Maximum theoretical height
             st.markdown("#### Theoretical Limits")
@@ -355,9 +362,24 @@ with tab1:
 
             meniscus_x = np.linspace(-tube_radius_vis, tube_radius_vis, 100)
             curvature_direction = -1 if theta_deg < 90 else 1
-            meniscus_y = instant_h - curvature_direction * (meniscus_x**2 / (tube_radius_vis * 2)) * np.tan(np.deg2rad(90 - theta_deg if theta_deg < 90 else theta_deg - 90)) if tube_radius_vis > 0 else instant_h
+            
+            # Calculate meniscus curvature safely
             if tube_radius_vis > 0:
-                meniscus_y -= (meniscus_y[-1] - instant_h)
+                if theta_deg == 90:
+                    # Flat meniscus at 90 degrees
+                    meniscus_y = np.full_like(meniscus_x, instant_h)
+                else:
+                    # Calculate angle for curvature
+                    angle_from_90 = abs(90 - theta_deg)
+                    if angle_from_90 > 0:
+                        tan_angle = np.tan(np.deg2rad(angle_from_90))
+                        meniscus_y = instant_h - curvature_direction * (meniscus_x**2 / (tube_radius_vis * 2)) * tan_angle
+                        # Normalize to ensure center is at instant_h
+                        meniscus_y -= (meniscus_y[len(meniscus_y)//2] - instant_h)
+                    else:
+                        meniscus_y = np.full_like(meniscus_x, instant_h)
+            else:
+                meniscus_y = np.full_like(meniscus_x, instant_h)
             
             x_fill = np.concatenate([meniscus_x, [tube_radius_vis, -tube_radius_vis]])
             y_fill = np.concatenate([meniscus_y, [beaker_bottom, beaker_bottom]])
