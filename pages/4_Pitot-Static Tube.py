@@ -782,6 +782,28 @@ with tab1:
                                  showarrow=False, xanchor="left", font=dict(size=14))
             
             # 5. Annotations and labels
+            # Result box at top of visualization (matching Capillary Rise style)
+            if velocity > 0:
+                result_text = f"<b>Flow Velocity: {velocity:.2f} m/s ({velocity*3.6:.1f} km/h)</b>"
+                bg_color = "rgba(0, 100, 200, 0.9)"
+                border_color = "darkblue"
+            else:
+                result_text = f"<b>Flow Velocity: 0.00 m/s</b>"
+                bg_color = "rgba(100, 100, 100, 0.9)"
+                border_color = "gray"
+            
+            fig.add_annotation(
+                x=4,
+                y=2.7,
+                text=result_text,
+                showarrow=False,
+                font=dict(size=20, color="white"),
+                bgcolor=bg_color,
+                bordercolor=border_color,
+                borderwidth=2,
+                borderpad=8
+            )
+            
             # Velocity annotation with arrow
             if velocity > 0:
                 fig.add_annotation(x=-1, y=field_height/2+0.3,
