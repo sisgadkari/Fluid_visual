@@ -355,7 +355,7 @@ with tab1:
             fig.add_annotation(x=h_line_x + tick_len, y=(datum_y+level_right_mano)/2, 
                               text=f"h={h_inst:.2f}m", showarrow=False, xanchor="left")
             
-            # Add pressure values if enabled
+            # Add pressure values if enabled (main result display)
             if show_pressure_labels:
                 # Calculate instantaneous pressure
                 pressure_from_h_inst = rho_m * g * h_inst
@@ -363,40 +363,27 @@ with tab1:
                 delta_P_inst = pressure_from_h_inst - pressure_from_b_inst
                 delta_P_kPa_inst = delta_P_inst / 1000
                 
-                # Calculate pressures at key points
-                P1_abs = 101.325 + delta_P_kPa_inst  # Approximate absolute pressure
-                fig.add_annotation(x=0, y=0.75,
-                                  text=f"P₁ = {P1_abs:.2f} kPa (abs)<br>{delta_P_kPa_inst:.3f} kPa (gauge)",
-                                  showarrow=False, font=dict(size=20), 
-                                  bgcolor="rgba(255,255,255,0.8)", bordercolor="blue", borderwidth=1)
-            
-            # Always show gauge pressure result prominently - calculate from instantaneous values
-            pressure_from_h_inst = rho_m * g * h_inst
-            pressure_from_b_inst = rho_f * g * b_inst
-            delta_P_inst = pressure_from_h_inst - pressure_from_b_inst
-            delta_P_kPa_inst = delta_P_inst / 1000
-            
-            # Result label at top of visualization
-            if delta_P_kPa_inst >= 0:
-                result_text = f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa</b>"
-                bg_color = "rgba(0, 100, 200, 0.9)"
-                border_color = "darkblue"
-            else:
-                result_text = f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa (Vacuum)</b>"
-                bg_color = "rgba(200, 100, 0, 0.9)"
-                border_color = "darkorange"
-            
-            fig.add_annotation(
-                x=0,  # Center of the plot
-                y=0.75,  # Near top of visible range (y-axis is -0.2 to 0.8)
-                text=result_text,
-                showarrow=False,
-                font=dict(size=20, color="white"),
-                bgcolor=bg_color,
-                bordercolor=border_color,
-                borderwidth=2,
-                borderpad=8
-            )
+                # Result label at top of visualization (matching Capillary Rise style)
+                if delta_P_kPa_inst >= 0:
+                    result_text = f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa</b>"
+                    bg_color = "rgba(0, 100, 200, 0.9)"
+                    border_color = "darkblue"
+                else:
+                    result_text = f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa (Vacuum)</b>"
+                    bg_color = "rgba(200, 100, 0, 0.9)"
+                    border_color = "darkorange"
+                
+                fig.add_annotation(
+                    x=0,
+                    y=0.75,
+                    text=result_text,
+                    showarrow=False,
+                    font=dict(size=20, color="white"),
+                    bgcolor=bg_color,
+                    bordercolor=border_color,
+                    borderwidth=2,
+                    borderpad=8
+                )
 
             fig.update_layout(
                 xaxis=dict(range=fixed_xaxis_range, visible=False),
