@@ -528,7 +528,7 @@ with tab1:
                 'font': {'size': 18, 'color': 'darkslategray', 'family': 'Arial Black'}
             },
             xaxis=dict(range=[-1.5, pipe_width+2.5], showticklabels=False, showgrid=False, zeroline=False),
-            yaxis=dict(range=[z1-y_padding, z2+reservoir_height+y_padding*0.5], 
+            yaxis=dict(range=[z1-y_padding, z2+reservoir_height+y_padding*1.2], 
                       title="<b>Elevation (m)</b>",
                       title_font=dict(size=14, color="darkblue"),
                       showgrid=True, gridcolor='rgba(200,200,200,0.3)'),
@@ -538,10 +538,10 @@ with tab1:
             paper_bgcolor='white'
         )
         
-        # Add result box at top of visualization (matching other modules' style)
+        # Add result box at top of visualization (above the figure)
         fig.add_annotation(
             x=pipe_width/2,
-            y=z2+reservoir_height+y_padding*0.3,
+            y=z2+reservoir_height+y_padding*0.95,
             text=f"<b>Pump Head Required: {results['total_head_demand']:.2f} m | Power: {results['power_80']:.2f} kW</b>",
             showarrow=False,
             font=dict(size=18, color="white"),
