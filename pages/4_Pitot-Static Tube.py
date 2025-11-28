@@ -835,7 +835,7 @@ with tab1:
                               showarrow=False, font=dict(size=16, color="black", family="Arial Black"))
             
             # Manometer fluid label
-            fig.add_annotation(x=(left_tube_x + right_tube_x) / 2, y=mano_bend_y_center - 0.05,
+            fig.add_annotation(x=(left_tube_x + right_tube_x) / 2, y=mano_bend_y_center - 0.4,
                               text=f"Manometer Fluid<br>(ρ = {rho_m:.0f} kg/m³)",
                               showarrow=False, font=dict(size=10), yanchor="top")
             
