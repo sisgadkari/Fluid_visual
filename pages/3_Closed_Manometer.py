@@ -501,7 +501,7 @@ with tab1:
                                  showarrow=False, xanchor="left", font=dict(size=14))
             
             # Fluid labels
-            fig.add_annotation(x=0, y=bend_y_center - 0.02, 
+            fig.add_annotation(x=0, y=tube_bottom - 0.05, 
                               text=f"Manometer Fluid<br>(ρ = {rho_m:.0f} kg/m³)", 
                               showarrow=False, yanchor="top", font=dict(size=10))
             fig.add_annotation(x=0, y=pipe_y + pipe_radius + 0.08, 
