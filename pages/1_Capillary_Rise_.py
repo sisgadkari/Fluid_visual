@@ -32,7 +32,7 @@ with tab1:
         # --- Interactive Scenarios ---
         SCENARIOS = {
             "Custom...": {
-                "sigma": 0.0728, "rho": 998, "theta": 0, "d_mm": 1.0,
+                "sigma": 0.0728, "rho": 998, "theta": 90, "d_mm": 1.0,
                 "color": 'rgba(100, 170, 255, 0.7)',
                 "desc": "Manually adjust all parameters below."
             },
@@ -99,7 +99,7 @@ with tab1:
         st.subheader("Tube and Contact Properties")
         
         if scenario_choice == "Custom...":
-            theta_deg = st.slider("Contact Angle (θ) [degrees]", 0, 180, 0,
+            theta_deg = st.slider("Contact Angle (θ) [degrees]", 0, 180, 90,
                                  help="0° = perfect wetting, 90° = neutral, >90° = non-wetting")
             d_mm = st.slider("Capillary Diameter (d) [mm]", 0.1, 10.0, 1.0, 0.1,
                             help="Smaller diameter = greater capillary rise")
