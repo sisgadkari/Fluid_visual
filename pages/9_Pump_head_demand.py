@@ -538,6 +538,19 @@ with tab1:
             paper_bgcolor='white'
         )
         
+        # Add result box at top of visualization (matching other modules' style)
+        fig.add_annotation(
+            x=pipe_width/2,
+            y=z2+reservoir_height+y_padding*0.3,
+            text=f"<b>Pump Head Required: {results['total_head_demand']:.2f} m | Power: {results['power_80']:.2f} kW</b>",
+            showarrow=False,
+            font=dict(size=18, color="white"),
+            bgcolor="rgba(0, 100, 200, 0.9)",
+            bordercolor="darkblue",
+            borderwidth=2,
+            borderpad=8
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
         
         # Pie chart of head loss breakdown
