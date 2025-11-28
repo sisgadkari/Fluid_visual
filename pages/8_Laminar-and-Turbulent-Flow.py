@@ -693,7 +693,7 @@ with tab1:
             height=800,
             showlegend=False,
             plot_bgcolor='white',
-            margin=dict(l=50, r=50, t=80, b=50)
+            margin=dict(l=50, r=50, t=100, b=50)  # Increased top margin for result box
         )
         
         # Add result box at top of visualization (matching other modules' style)
@@ -709,7 +709,7 @@ with tab1:
         
         fig.add_annotation(
             x=0.5,
-            y=1.02,
+            y=1.08,
             xref="paper",
             yref="paper",
             text=f"<b>Re = {Re:,.0f} ({flow_regime} Flow)</b>",
