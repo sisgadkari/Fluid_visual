@@ -449,14 +449,37 @@ with tab1:
             fig.add_annotation(x=conn_right_x, y=pipe_y, text="<b>P₂</b>", 
                               showarrow=False, font=dict(size=18, color="blue" if h_inst > 0 else "red"))
             
-            # Show pressure values if enabled
-            if show_p_values and abs(delta_P_kPa) > 0.001:
-                # Pressure difference indicator
-                mid_x = (conn_left_x + conn_right_x) / 2
-                fig.add_annotation(x=mid_x, y=pipe_y + pipe_radius + 0.08,
-                                  text=f"ΔP = {delta_P_kPa:.3f} kPa",
-                                  showarrow=False, font=dict(size=12, color="darkgreen"),
-                                  bgcolor="rgba(255,255,255,0.9)", bordercolor="green", borderwidth=2)
+            # Show pressure values if enabled (main result display matching Capillary Rise style)
+            if show_p_values:
+                # Calculate instantaneous pressure difference
+                delta_P_inst = (rho_m - rho_f) * g * h_inst
+                delta_P_kPa_inst = delta_P_inst / 1000
+                
+                # Result label at top of visualization
+                if delta_P_kPa_inst > 0:
+                    result_text = f"<b>ΔP (P₁ - P₂): {delta_P_kPa_inst:.3f} kPa</b>"
+                    bg_color = "rgba(0, 100, 200, 0.9)"
+                    border_color = "darkblue"
+                elif delta_P_kPa_inst < 0:
+                    result_text = f"<b>ΔP (P₁ - P₂): {delta_P_kPa_inst:.3f} kPa</b>"
+                    bg_color = "rgba(200, 100, 0, 0.9)"
+                    border_color = "darkorange"
+                else:
+                    result_text = f"<b>ΔP (P₁ - P₂): 0.000 kPa</b>"
+                    bg_color = "rgba(100, 100, 100, 0.9)"
+                    border_color = "gray"
+                
+                fig.add_annotation(
+                    x=0,
+                    y=fixed_yaxis_range[1] - 0.02,
+                    text=result_text,
+                    showarrow=False,
+                    font=dict(size=20, color="white"),
+                    bgcolor=bg_color,
+                    bordercolor=border_color,
+                    borderwidth=2,
+                    borderpad=8
+                )
             
             # Height dimension
             if abs(h_inst) > 0.01:  # Only show if there's a significant difference
