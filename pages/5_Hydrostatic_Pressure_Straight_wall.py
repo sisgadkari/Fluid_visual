@@ -462,13 +462,16 @@ with tab1:
 
         fig = go.Figure()
         
-        # --- Visualization Constants ---
+        # --- Visualization Constants - Scale with fluid depth ---
         wall_x = 0
         fluid_x_end = 10
-        vessel_depth = 10.0
-
-        y_surface = vessel_depth - D
-        y_bottom = vessel_depth
+        
+        # Make vessel depth scale with fluid depth (add some freeboard)
+        freeboard = max(1.0, D * 0.1)  # At least 1m or 10% of depth
+        vessel_depth = D + freeboard
+        
+        y_surface = freeboard  # Water surface is at the freeboard level
+        y_bottom = vessel_depth  # Bottom of vessel
 
         # 1. Draw the Wall/Vessel Outline
         fig.add_shape(
@@ -739,7 +742,7 @@ with tab1:
                 showgrid=True, 
                 gridcolor='rgba(0,0,0,0.1)',
                 zeroline=False,
-                dtick=1
+                dtick=max(1, D // 10)  # Dynamic tick spacing based on depth
             ),
             plot_bgcolor="white",
             margin=dict(l=10, r=10, t=20, b=10),
