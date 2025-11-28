@@ -9,6 +9,8 @@ st.set_page_config(layout="wide", page_title="Capillary Rise Simulator")
 # --- Initialize Session State ---
 if 'previous_h' not in st.session_state:
     st.session_state.previous_h = None
+if 'previous_theta' not in st.session_state:
+    st.session_state.previous_theta = 90  # Always start from neutral (90°)
 
 # --- Title and Introduction ---
 st.markdown("<h1 style='text-align: center;'>💧 Interactive Capillary Rise Simulator</h1>", unsafe_allow_html=True)
@@ -285,8 +287,8 @@ with tab1:
         
         plot_placeholder = st.empty()
 
-        # This function creates the plot for a given instantaneous height
-        def generate_plot(instant_h=0):
+        # This function creates the plot for a given instantaneous height and theta
+        def generate_plot(instant_h=0, instant_theta=90):
             tube_radius_vis = d_mm / 2
             h_vis_target = h * 1000
             max_y_val = max(abs(h_vis_target), 10)
@@ -307,13 +309,13 @@ with tab1:
             fig.add_trace(go.Scatter(x=[-beaker_radius, -tube_radius_vis, -tube_radius_vis, -beaker_radius], y=[beaker_bottom, beaker_bottom, 0, 0], fill='toself', fillcolor=liquid_color, mode='none', hoverinfo='none'))
             fig.add_trace(go.Scatter(x=[tube_radius_vis, beaker_radius, beaker_radius, tube_radius_vis], y=[beaker_bottom, beaker_bottom, 0, 0], fill='toself', fillcolor=liquid_color, mode='none', hoverinfo='none'))
 
-            # 2. Draw tube and meniscus
+            # 2. Draw tube and meniscus (using instant_theta for animation)
             fig.add_shape(type="line", x0=-tube_radius_vis, y0=beaker_bottom, x1=-tube_radius_vis, y1=plot_height, line=dict(color="darkgrey", width=3))
             fig.add_shape(type="line", x0=tube_radius_vis, y0=beaker_bottom, x1=tube_radius_vis, y1=plot_height, line=dict(color="darkgrey", width=3))
 
             meniscus_x = np.linspace(-tube_radius_vis, tube_radius_vis, 100)
-            curvature_direction = -1 if theta_deg < 90 else 1
-            meniscus_y = instant_h - curvature_direction * (meniscus_x**2 / (tube_radius_vis * 2)) * np.tan(np.deg2rad(90 - theta_deg if theta_deg < 90 else theta_deg - 90)) if tube_radius_vis > 0 else instant_h
+            curvature_direction = -1 if instant_theta < 90 else 1
+            meniscus_y = instant_h - curvature_direction * (meniscus_x**2 / (tube_radius_vis * 2)) * np.tan(np.deg2rad(90 - instant_theta if instant_theta < 90 else instant_theta - 90)) if tube_radius_vis > 0 else instant_h
             if tube_radius_vis > 0:
                 meniscus_y -= (meniscus_y[-1] - instant_h)
             
@@ -351,7 +353,7 @@ with tab1:
             if show_forces and instant_h != 0:
                 # Surface tension force (upward arrows at tube walls)
                 arrow_scale = min(5, max(2, abs(instant_h) / 5))
-                if theta_deg < 90:
+                if instant_theta < 90:
                     # Upward arrows for wetting
                     fig.add_annotation(x=-tube_radius_vis, y=instant_h, ax=-tube_radius_vis, ay=instant_h + arrow_scale,
                                       showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2, arrowcolor="green")
@@ -359,7 +361,7 @@ with tab1:
                                       showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2, arrowcolor="green")
                     fig.add_annotation(x=-tube_radius_vis - 3, y=instant_h + arrow_scale/2, text="F_σ", 
                                       showarrow=False, font=dict(size=12, color="green"))
-                else:
+                elif instant_theta > 90:
                     # Downward arrows for non-wetting
                     fig.add_annotation(x=-tube_radius_vis, y=instant_h, ax=-tube_radius_vis, ay=instant_h - arrow_scale,
                                       showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2, arrowcolor="red")
@@ -396,27 +398,35 @@ with tab1:
 
         # --- Main Visualization and Animation Logic ---
         h_vis_target = h * 1000
-        start_h = st.session_state.previous_h
         end_h = h_vis_target
+        end_theta = theta_deg
         
-        # On the very first run, start_h is None. Set it to the target to prevent animation.
+        # Always start from 90° (neutral position) for the first frame
+        start_h = st.session_state.previous_h
+        start_theta = st.session_state.previous_theta
+        
+        # On the very first run, start from neutral (90°, h=0)
         if start_h is None:
-            start_h = end_h
+            start_h = 0  # Start from zero height (neutral)
+            start_theta = 90  # Start from 90° contact angle
 
-        # Animate if the height has changed.
-        if not np.isclose(start_h, end_h):
-            animation_steps = 15
+        # Animate if either height or theta has changed
+        if not (np.isclose(start_h, end_h) and np.isclose(start_theta, end_theta)):
+            animation_steps = 20
             for i in range(animation_steps + 1):
-                intermediate_h = start_h + (end_h - start_h) * (i / animation_steps)
-                fig = generate_plot(intermediate_h)
+                progress = i / animation_steps
+                intermediate_h = start_h + (end_h - start_h) * progress
+                intermediate_theta = start_theta + (end_theta - start_theta) * progress
+                fig = generate_plot(intermediate_h, intermediate_theta)
                 plot_placeholder.plotly_chart(fig, use_container_width=True)
-                time.sleep(0.03)
+                time.sleep(0.025)
         else:
-            fig = generate_plot(end_h)
+            fig = generate_plot(end_h, end_theta)
             plot_placeholder.plotly_chart(fig, use_container_width=True)
         
-        # Always update the previous height for the next run
+        # Always update the previous values for the next run
         st.session_state.previous_h = end_h
+        st.session_state.previous_theta = end_theta
 
 with tab2:
     st.header("📚 Understanding Capillary Action")
