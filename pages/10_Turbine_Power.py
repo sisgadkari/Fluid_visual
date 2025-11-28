@@ -510,6 +510,19 @@ with tab1:
             paper_bgcolor='white'
         )
         
+        # Add result box at top of visualization (matching other modules' style)
+        fig.add_annotation(
+            x=6,
+            y=reservoir_top+y_padding*0.7,
+            text=f"<b>Turbine Shaft Power: {results['shaft_power']:.1f} kW</b>",
+            showarrow=False,
+            font=dict(size=20, color="white"),
+            bgcolor="rgba(0, 100, 200, 0.9)",
+            bordercolor="darkblue",
+            borderwidth=2,
+            borderpad=8
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
         
         # Energy breakdown pie chart
