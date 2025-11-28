@@ -408,6 +408,9 @@ with tab1:
         water_level_1 = z1 + reservoir_height * 0.8
         water_level_2 = z2 + reservoir_height * 0.8
         
+        # Pipe thickness scales with diameter (visual representation)
+        pipe_thickness_visual = 0.1 + (D_mm / 500) * 0.3  # Scale from 0.1 to 0.4 based on diameter
+        
         # Draw Reservoir 1 (ground level)
         # Tank structure
         fig.add_shape(type="rect", x0=0, y0=z1, x1=reservoir_width, y1=z1+reservoir_height,
@@ -443,30 +446,75 @@ with tab1:
         # Draw pipe connecting reservoirs at water level
         pipe_start_x = reservoir_width
         pipe_end_x = pipe_width - reservoir_width
-        pipe_thickness = 0.15
         
-        # Horizontal section at bottom
+        # Horizontal section at bottom (with scaled thickness)
         fig.add_shape(type="rect", 
-                     x0=pipe_start_x, y0=water_level_1-pipe_thickness/2,
-                     x1=pipe_start_x+1.5, y1=water_level_1+pipe_thickness/2,
-                     fillcolor="gray", line=dict(color="black", width=2))
+                     x0=pipe_start_x, y0=water_level_1-pipe_thickness_visual/2,
+                     x1=pipe_start_x+1.5, y1=water_level_1+pipe_thickness_visual/2,
+                     fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
         
         # Vertical riser section
         fig.add_shape(type="rect",
-                     x0=pipe_start_x+1.5-pipe_thickness/2, y0=water_level_1,
-                     x1=pipe_start_x+1.5+pipe_thickness/2, y1=water_level_2,
-                     fillcolor="gray", line=dict(color="black", width=2))
+                     x0=pipe_start_x+1.5-pipe_thickness_visual/2, y0=water_level_1,
+                     x1=pipe_start_x+1.5+pipe_thickness_visual/2, y1=water_level_2,
+                     fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
         
         # Horizontal section at top
         fig.add_shape(type="rect",
-                     x0=pipe_start_x+1.5, y0=water_level_2-pipe_thickness/2,
-                     x1=pipe_end_x, y1=water_level_2+pipe_thickness/2,
-                     fillcolor="gray", line=dict(color="black", width=2))
+                     x0=pipe_start_x+1.5, y0=water_level_2-pipe_thickness_visual/2,
+                     x1=pipe_end_x, y1=water_level_2+pipe_thickness_visual/2,
+                     fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
+        
+        # Add flow arrows inside pipe (animated appearance)
+        # Color based on velocity
+        if results['velocity'] < 1:
+            flow_color = "lightblue"
+        elif results['velocity'] < 2:
+            flow_color = "deepskyblue"
+        elif results['velocity'] < 3:
+            flow_color = "dodgerblue"
+        else:
+            flow_color = "blue"
+        
+        # Flow arrows in horizontal bottom section
+        n_arrows_h1 = 3
+        for i in range(n_arrows_h1):
+            arrow_x = pipe_start_x + 0.3 + i * 0.35
+            if arrow_x < pipe_start_x + 1.2:  # Before pump
+                fig.add_annotation(
+                    x=arrow_x + 0.15, y=water_level_1,
+                    ax=arrow_x, ay=water_level_1,
+                    showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                    arrowcolor=flow_color
+                )
+        
+        # Flow arrows in vertical section
+        n_arrows_v = max(3, int((water_level_2 - water_level_1) / 10))
+        for i in range(n_arrows_v):
+            arrow_y = water_level_1 + (i + 0.5) * (water_level_2 - water_level_1) / n_arrows_v
+            fig.add_annotation(
+                x=pipe_start_x + 1.5, y=arrow_y + 2,
+                ax=pipe_start_x + 1.5, ay=arrow_y,
+                showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                arrowcolor=flow_color
+            )
+        
+        # Flow arrows in horizontal top section
+        n_arrows_h2 = 4
+        for i in range(n_arrows_h2):
+            arrow_x = pipe_start_x + 2 + i * (pipe_end_x - pipe_start_x - 2) / n_arrows_h2
+            fig.add_annotation(
+                x=arrow_x + 0.3, y=water_level_2,
+                ax=arrow_x, ay=water_level_2,
+                showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                arrowcolor=flow_color
+            )
         
         # Add pump symbol on the horizontal pipe section at bottom
         pump_x = pipe_start_x + 0.75
         pump_y = water_level_1
-        pump_size = 0.4
+        pump_size = 0.4 + (results['power_80'] / 100) * 0.2  # Scale pump size with power
+        pump_size = min(pump_size, 0.8)  # Cap size
         
         fig.add_shape(type="circle", 
                      x0=pump_x-pump_size, y0=pump_y-pump_size, 
@@ -475,6 +523,90 @@ with tab1:
         
         fig.add_annotation(x=pump_x, y=pump_y, text="<b>⚡<br>PUMP</b>", showarrow=False,
                           font=dict(size=11, color="white", family="Arial Black"))
+        
+        # Add Energy Grade Line (EGL) showing head loss
+        egl_x = [pipe_start_x, pipe_start_x + 0.75, pipe_start_x + 1.5, pipe_end_x]
+        
+        # EGL starts at water level 1, pump adds head, then drops due to friction
+        pump_head_added = results['total_head_demand']
+        friction_loss_vertical = results['pipe_friction_loss'] * 0.3  # Approximate split
+        friction_loss_horizontal = results['pipe_friction_loss'] * 0.7
+        
+        egl_y = [
+            water_level_1,  # Start at reservoir 1
+            water_level_1 + pump_head_added,  # After pump (full head added)
+            water_level_1 + pump_head_added - friction_loss_vertical,  # After vertical rise
+            water_level_2  # End at reservoir 2
+        ]
+        
+        fig.add_trace(go.Scatter(
+            x=egl_x, y=egl_y,
+            mode='lines+markers',
+            line=dict(color='green', width=3, dash='dash'),
+            marker=dict(size=8, color='green'),
+            name='Energy Grade Line',
+            showlegend=False,
+            hovertemplate='EGL: %{y:.1f} m<extra></extra>'
+        ))
+        
+        # EGL label
+        fig.add_annotation(
+            x=pipe_start_x + 1.0, y=water_level_1 + pump_head_added + 3,
+            text="<b>EGL</b>",
+            showarrow=True, arrowhead=2, arrowcolor="green",
+            font=dict(size=10, color="green"),
+            bgcolor="rgba(255,255,255,0.8)"
+        )
+        
+        # Head loss indicators along pipe
+        # Show friction loss as red gradient
+        if results['pipe_friction_loss'] > 0.1:
+            fig.add_annotation(
+                x=(pipe_start_x + 1.5 + pipe_end_x) / 2,
+                y=water_level_2 + 2,
+                text=f"<b>Friction Loss: {results['pipe_friction_loss']:.2f} m</b>",
+                showarrow=True, arrowhead=2,
+                ay=water_level_2 + pipe_thickness_visual,
+                font=dict(size=10, color="red"),
+                bgcolor="rgba(255,255,200,0.9)",
+                bordercolor="red"
+            )
+        
+        # Velocity indicator
+        velocity_text = f"V = {results['velocity']:.2f} m/s"
+        if results['velocity'] > 3:
+            velocity_color = "red"
+            velocity_note = " ⚠️ High"
+        elif results['velocity'] < 0.5:
+            velocity_color = "orange"
+            velocity_note = " 🐌 Low"
+        else:
+            velocity_color = "green"
+            velocity_note = " ✓"
+        
+        fig.add_annotation(
+            x=pipe_start_x + 1.5,
+            y=(water_level_1 + water_level_2) / 2,
+            text=f"<b>{velocity_text}{velocity_note}</b>",
+            showarrow=False,
+            font=dict(size=11, color=velocity_color),
+            bgcolor="rgba(255,255,255,0.9)",
+            bordercolor=velocity_color,
+            borderwidth=1,
+            textangle=-90
+        )
+        
+        # Pipe diameter annotation
+        fig.add_annotation(
+            x=pipe_end_x - 0.5,
+            y=water_level_2 - 1.5,
+            text=f"<b>D = {D_mm} mm</b>",
+            showarrow=True,
+            ay=water_level_2,
+            arrowhead=2,
+            font=dict(size=10, color="gray"),
+            bgcolor="rgba(255,255,255,0.8)"
+        )
         
         # Elevation annotations with better positioning
         fig.add_annotation(x=-0.8, y=z1+reservoir_height/2, text=f"<b>z₁ = {z1:.0f} m</b>", 
