@@ -718,6 +718,19 @@ with tab1:
         )
 
         # --- Layout and Axes Configuration ---
+        # Add result box at top of visualization (matching other modules' style)
+        fig.add_annotation(
+            x=(wall_x + fluid_x_end) / 2,
+            y=-0.3,
+            text=f"<b>Hydrostatic Force: {F_kN:.2f} kN</b>",
+            showarrow=False,
+            font=dict(size=20, color="white"),
+            bgcolor="rgba(0, 100, 200, 0.9)",
+            bordercolor="darkblue",
+            borderwidth=2,
+            borderpad=8
+        )
+        
         fig.update_layout(
             xaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-2, fluid_x_end + 2]),
             yaxis=dict(
