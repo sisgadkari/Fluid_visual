@@ -365,7 +365,7 @@ with tab1:
                 
                 # Calculate pressures at key points
                 P1_abs = 101.325 + delta_P_kPa_inst  # Approximate absolute pressure
-                fig.add_annotation(x=vessel_right_edge - vessel_width/2, y=vessel_top + 0.05,
+                fig.add_annotation(x=0, y=0.75,
                                   text=f"P₁ = {P1_abs:.2f} kPa (abs)<br>{delta_P_kPa_inst:.3f} kPa (gauge)",
                                   showarrow=False, font=dict(size=20), 
                                   bgcolor="rgba(255,255,255,0.8)", bordercolor="blue", borderwidth=1)
