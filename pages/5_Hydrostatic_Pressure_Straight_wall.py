@@ -472,13 +472,60 @@ with tab1:
         
         y_surface = freeboard  # Water surface is at the freeboard level
         y_bottom = vessel_depth  # Bottom of vessel
+        
+        # 3D isometric offset for showing width (scaled to be visible but not overwhelming)
+        iso_offset_x = min(2.0, w * 0.15)  # X offset for 3D effect
+        iso_offset_y = min(1.0, w * 0.08)  # Y offset for 3D effect
 
-        # 1. Draw the Wall/Vessel Outline
+        # 1. Draw the Wall with 3D isometric effect to show width
+        # Back face of wall (darker)
+        fig.add_shape(
+            type="rect", 
+            x0=wall_x - 0.5 - iso_offset_x, y0=0 - iso_offset_y, 
+            x1=wall_x - iso_offset_x, y1=vessel_depth - iso_offset_y,
+            fillcolor="rgba(80, 80, 80, 0.5)",
+            line=dict(color="black", width=1),
+            layer="below"
+        )
+        
+        # Top face of wall (showing width going into page)
+        fig.add_trace(go.Scatter(
+            x=[wall_x - 0.5, wall_x - 0.5 - iso_offset_x, wall_x - iso_offset_x, wall_x, wall_x - 0.5],
+            y=[0, 0 - iso_offset_y, 0 - iso_offset_y, 0, 0],
+            fill="toself",
+            fillcolor="rgba(160, 160, 160, 0.6)",
+            line=dict(color="black", width=1),
+            mode='lines',
+            showlegend=False,
+            hoverinfo='none'
+        ))
+        
+        # Front face of wall
         fig.add_shape(
             type="rect", x0=wall_x-0.5, y0=0, x1=wall_x, y1=vessel_depth,
-            fillcolor="rgba(128, 128, 128, 0.3)",
+            fillcolor="rgba(128, 128, 128, 0.4)",
             line=dict(color="black", width=2),
             layer="below"
+        )
+        
+        # Side connecting lines for 3D effect
+        fig.add_trace(go.Scatter(
+            x=[wall_x - 0.5, wall_x - 0.5 - iso_offset_x],
+            y=[vessel_depth, vessel_depth - iso_offset_y],
+            mode='lines',
+            line=dict(color="black", width=1),
+            showlegend=False,
+            hoverinfo='none'
+        ))
+        
+        # Add width dimension annotation
+        fig.add_annotation(
+            x=wall_x - 0.25 - iso_offset_x/2,
+            y=-iso_offset_y/2 - 0.3,
+            text=f"<b>w = {w} m</b>",
+            showarrow=False,
+            font=dict(size=11, color="darkblue"),
+            bgcolor="rgba(255,255,255,0.8)"
         )
         
         # Add wall label
@@ -491,7 +538,31 @@ with tab1:
             xanchor="center"
         )
         
-        # 2. Draw the Fluid
+        # Add depth dimension on the side
+        fig.add_annotation(
+            x=wall_x - 0.5 - iso_offset_x - 0.3,
+            y=(y_surface + y_bottom) / 2,
+            text=f"<b>D = {D} m</b>",
+            textangle=-90,
+            showarrow=False,
+            font=dict(size=11, color="darkblue"),
+            bgcolor="rgba(255,255,255,0.8)"
+        )
+        
+        # 2. Draw the Fluid with 3D effect
+        # Back water surface
+        fig.add_trace(go.Scatter(
+            x=[wall_x, wall_x - iso_offset_x, fluid_x_end - iso_offset_x, fluid_x_end, wall_x],
+            y=[y_surface, y_surface - iso_offset_y, y_surface - iso_offset_y, y_surface, y_surface],
+            fill="toself",
+            fillcolor="rgba(0, 119, 182, 0.2)",
+            line=dict(color="rgba(0, 119, 182, 0.5)", width=1),
+            mode='lines',
+            showlegend=False,
+            hoverinfo='none'
+        ))
+        
+        # Front fluid
         fig.add_shape(
             type="rect", x0=wall_x, y0=y_surface, x1=fluid_x_end, y1=y_bottom,
             fillcolor="rgba(0, 119, 182, 0.3)",
@@ -724,7 +795,7 @@ with tab1:
         # Add result box at top of visualization (matching other modules' style)
         fig.add_annotation(
             x=(wall_x + fluid_x_end) / 2,
-            y=-0.3,
+            y=-iso_offset_y - 0.8,
             text=f"<b>Hydrostatic Force: {F_kN:.2f} kN</b>",
             showarrow=False,
             font=dict(size=20, color="white"),
@@ -735,10 +806,11 @@ with tab1:
         )
         
         fig.update_layout(
-            xaxis=dict(showgrid=False, zeroline=False, visible=False, range=[-2, fluid_x_end + 2]),
+            xaxis=dict(showgrid=False, zeroline=False, visible=False, 
+                      range=[-3 - iso_offset_x, fluid_x_end + 2]),
             yaxis=dict(
                 title="Vertical Position (m)",
-                range=[vessel_depth + 1, -0.5],
+                range=[vessel_depth + 1, -iso_offset_y - 1.5],
                 showgrid=True, 
                 gridcolor='rgba(0,0,0,0.1)',
                 zeroline=False,
