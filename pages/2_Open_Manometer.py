@@ -376,16 +376,26 @@ with tab1:
             delta_P_inst = pressure_from_h_inst - pressure_from_b_inst
             delta_P_kPa_inst = delta_P_inst / 1000
             
+            # Result label at top of visualization
+            if delta_P_kPa_inst >= 0:
+                result_text = f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa</b>"
+                bg_color = "rgba(0, 100, 200, 0.9)"
+                border_color = "darkblue"
+            else:
+                result_text = f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa (Vacuum)</b>"
+                bg_color = "rgba(200, 100, 0, 0.9)"
+                border_color = "darkorange"
+            
             fig.add_annotation(
                 x=0,  # Center of the plot
-                y=0.95,  # Higher up on the plot
-                text=f"<b>Gauge Pressure: {delta_P_kPa_inst:.3f} kPa</b>",
+                y=0.75,  # Near top of visible range (y-axis is -0.2 to 0.8)
+                text=result_text,
                 showarrow=False,
-                font=dict(size=120, color="white", family="Arial Black"),
-                bgcolor="rgba(0, 100, 200, 0.9)",
-                bordercolor="darkblue",
-                borderwidth=3,
-                borderpad=10
+                font=dict(size=20, color="white"),
+                bgcolor=bg_color,
+                bordercolor=border_color,
+                borderwidth=2,
+                borderpad=8
             )
 
             fig.update_layout(
