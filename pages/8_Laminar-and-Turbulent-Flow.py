@@ -696,6 +696,31 @@ with tab1:
             margin=dict(l=50, r=50, t=80, b=50)
         )
         
+        # Add result box at top of visualization (matching other modules' style)
+        if Re < 2300:
+            bg_color = "rgba(0, 150, 0, 0.9)"
+            border_color = "darkgreen"
+        elif Re <= 4000:
+            bg_color = "rgba(200, 150, 0, 0.9)"
+            border_color = "darkorange"
+        else:
+            bg_color = "rgba(200, 0, 0, 0.9)"
+            border_color = "darkred"
+        
+        fig.add_annotation(
+            x=0.5,
+            y=1.02,
+            xref="paper",
+            yref="paper",
+            text=f"<b>Re = {Re:,.0f} ({flow_regime} Flow)</b>",
+            showarrow=False,
+            font=dict(size=20, color="white"),
+            bgcolor=bg_color,
+            bordercolor=border_color,
+            borderwidth=2,
+            borderpad=8
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
         
         # Caption
