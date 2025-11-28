@@ -831,6 +831,19 @@ with tab1:
             hovermode='closest'
         )
         
+        # Add result box at top of visualization (matching other modules' style)
+        fig.add_annotation(
+            x=0,
+            y=plot_height - 0.3,
+            text=f"<b>Normal Force: {F_N_kN:.2f} kN</b>",
+            showarrow=False,
+            font=dict(size=20, color="white"),
+            bgcolor="rgba(0, 100, 200, 0.9)",
+            bordercolor="darkblue",
+            borderwidth=2,
+            borderpad=8
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
         
         # Dynamic caption
