@@ -548,105 +548,168 @@ with tab1:
         
         # --- 2. PARTICLE STREAMLINES ---
         if show_particle_paths:
-            # Use the original file's approach for particle path generation
-            # This cache prevents regenerating paths every interaction
+            # Improved particle path generation with more realistic physics
             @st.cache_data
-            def generate_particle_paths(n_particles, pipe_length, turb_intensity, turb_start_pos):
-                """Generate particle paths with turbulence (from original file)"""
+            def generate_particle_paths_improved(n_particles, pipe_length, Re_value, seed=42):
+                """Generate more realistic particle paths based on flow regime"""
+                np.random.seed(seed)
                 paths = {}
-                pipe_radius = 10  # Normalized units for visualization
-                initial_y = np.linspace(-pipe_radius * 0.9, pipe_radius * 0.9, n_particles)
+                pipe_radius = 1.0  # Normalized
+                initial_y = np.linspace(-pipe_radius * 0.85, pipe_radius * 0.85, n_particles)
+                n_steps = 200
                 
                 for i in range(n_particles):
-                    path = [(0, initial_y[i])]
-                    for x_step in range(1, pipe_length):
-                        _, last_y = path[-1]
-                        perturbation = 0
-                        
-                        if x_step > turb_start_pos:
-                            # Turbulence model: random perturbations
-                            perturbation = np.random.normal(0, turb_intensity)
-                        
-                        new_y = np.clip(last_y + perturbation, -pipe_radius, pipe_radius)
-                        path.append((x_step, new_y))
+                    x_coords = []
+                    y_coords = []
+                    y = initial_y[i]
+                    x = 0
                     
-                    paths[i] = np.array(path)
+                    # Velocity profile factor (parabolic for laminar, flatter for turbulent)
+                    if Re_value < 2300:
+                        # Laminar: parabolic velocity profile
+                        v_factor = 1 - (initial_y[i] / pipe_radius) ** 2
+                    else:
+                        # Turbulent: flatter profile (1/7 power law approximation)
+                        v_factor = (1 - abs(initial_y[i] / pipe_radius)) ** (1/7)
+                    
+                    v_factor = max(0.1, v_factor)  # Minimum velocity
+                    
+                    for step in range(n_steps):
+                        x_coords.append(x)
+                        y_coords.append(y)
+                        
+                        # Base x advancement (faster in center due to velocity profile)
+                        dx = 0.5 * v_factor
+                        
+                        if Re_value < 2300:
+                            # LAMINAR: Smooth parallel flow, no radial movement
+                            dy = 0
+                        elif Re_value <= 4000:
+                            # TRANSITIONAL: Some waviness develops
+                            trans_factor = (Re_value - 2300) / 1700
+                            # Waves that grow along the pipe
+                            wave_amp = 0.02 * trans_factor * (x / pipe_length) ** 0.5
+                            dy = wave_amp * np.sin(x * 0.3 + i * 0.5) 
+                            # Add some random perturbation
+                            if x > pipe_length * 0.3:
+                                dy += np.random.normal(0, 0.01 * trans_factor)
+                        else:
+                            # TURBULENT: Chaotic eddies and mixing
+                            turb_factor = min(1.0, (Re_value - 4000) / 10000)
+                            
+                            # Multiple frequency components for realistic turbulence
+                            eddy_large = 0.03 * np.sin(x * 0.1 + i * 1.2 + np.random.uniform(0, 2*np.pi))
+                            eddy_medium = 0.02 * np.sin(x * 0.3 + i * 0.7)
+                            eddy_small = 0.015 * np.sin(x * 0.8 + i * 2.1)
+                            
+                            # Random walk component (Brownian-like motion)
+                            random_walk = np.random.normal(0, 0.025 * (1 + turb_factor))
+                            
+                            # Combine all components
+                            dy = (eddy_large + eddy_medium + eddy_small + random_walk) * (1 + turb_factor)
+                            
+                            # Wall interaction - bounce back from walls
+                            if abs(y) > pipe_radius * 0.85:
+                                dy = -np.sign(y) * abs(dy) * 1.5
+                        
+                        x += dx
+                        y = np.clip(y + dy, -pipe_radius * 0.95, pipe_radius * 0.95)
+                        
+                        if x > pipe_length:
+                            break
+                    
+                    paths[i] = np.array(list(zip(x_coords, y_coords)))
+                
                 return paths, pipe_radius
             
-            # Determine turbulence parameters (matching original logic)
+            # Generate particle paths
             pipe_length = 100
             n_particles_actual = n_particles if n_particles % 2 == 1 else n_particles + 1
             
-            if Re < 2300:  # Laminar
-                turb_intensity = 0
-                turb_start_position = pipe_length + 1  # No turbulence
-            elif Re <= 4000:  # Transitional
-                trans_factor = (Re - 2300) / (4000 - 2300)
-                turb_intensity = 0.1 + trans_factor * 0.4
-                turb_start_position = pipe_length * (1 - trans_factor * 0.7)
-            else:  # Turbulent
-                # Increased base intensity for more visible turbulence
-                turb_intensity = 0.8 + (Re - 4000) / 20000
-                turb_intensity = min(turb_intensity, 2.5)  # Cap at reasonable value
-                turb_start_position = 10
-            
-            # Generate particle paths
-            particle_paths, pipe_radius = generate_particle_paths(
-                n_particles_actual, pipe_length, turb_intensity, int(turb_start_position)
+            particle_paths, pipe_radius = generate_particle_paths_improved(
+                n_particles_actual, pipe_length, Re
             )
             
             # Determine center particle for highlighting
             center_particle_idx = n_particles_actual // 2
             
-            # Create color scheme
-            colors = [f'hsl({int(h)}, 80%, 60%)' for h in np.linspace(0, 360, n_particles_actual, endpoint=False)]
+            # Create color scheme - blue tones for better visibility
+            if Re < 2300:
+                colors = [f'rgba(0, 100, 200, 0.8)' for _ in range(n_particles_actual)]
+            elif Re <= 4000:
+                colors = [f'rgba(200, 120, 0, 0.8)' for _ in range(n_particles_actual)]
+            else:
+                # Varied colors for turbulent to show mixing
+                colors = [f'hsl({int(h)}, 70%, 50%)' for h in np.linspace(200, 360, n_particles_actual, endpoint=False)]
             
             # Plot particle paths
             if use_static_view == "Static (full path)":
-                # Show complete paths
+                # Show complete paths with particle markers
                 for i in range(n_particles_actual):
                     path = particle_paths[i]
                     
-                    # Normalize to -1 to 1 range for consistency
-                    x_data = path[:, 0] / pipe_length * 100
-                    y_data = path[:, 1] / pipe_radius
+                    x_data = path[:, 0]
+                    y_data = path[:, 1]
                     
                     # Determine line properties
                     if highlight_center and i == center_particle_idx:
                         line_color = 'magenta'
                         line_width = 4
+                        opacity = 1.0
                     else:
                         if highlight_center:
-                            line_color = 'rgba(200, 200, 200, 0.2)'  # Faded
-                            line_width = 2
+                            line_color = 'rgba(180, 180, 180, 0.3)'
+                            line_width = 1.5
+                            opacity = 0.3
                         else:
                             line_color = colors[i]
                             line_width = 2
+                            opacity = 0.8
                     
+                    # Draw streamline
                     fig.add_trace(
                         go.Scatter(
                             x=x_data,
                             y=y_data,
                             mode='lines',
                             line=dict(color=line_color, width=line_width),
+                            opacity=opacity,
                             name=f'Particle {i+1}',
                             showlegend=False,
                             hovertemplate='Position: %{y:.2f}<extra></extra>'
                         ),
                         row=2, col=1
                     )
+                    
+                    # Add particle marker at the end
+                    if not highlight_center or i == center_particle_idx:
+                        fig.add_trace(
+                            go.Scatter(
+                                x=[x_data[-1]],
+                                y=[y_data[-1]],
+                                mode='markers',
+                                marker=dict(
+                                    size=8 if (highlight_center and i == center_particle_idx) else 6,
+                                    color=line_color,
+                                    symbol='circle',
+                                    line=dict(width=1, color='white')
+                                ),
+                                showlegend=False,
+                                hoverinfo='skip'
+                            ),
+                            row=2, col=1
+                        )
             else:
-                # Animated/developing view - show frames
-                # For simplicity in static view, show progressive reveal
+                # Animated/developing view - show frames with arrows
                 for i in range(n_particles_actual):
                     path = particle_paths[i]
                     
-                    # Show only part of the path (simulating animation frame)
-                    reveal_fraction = 0.6  # Show 60% of path
+                    # Show portion of path
+                    reveal_fraction = 0.7
                     n_points = int(len(path) * reveal_fraction)
                     
-                    x_data = path[:n_points, 0] / pipe_length * 100
-                    y_data = path[:n_points, 1] / pipe_radius
+                    x_data = path[:n_points, 0]
+                    y_data = path[:n_points, 1]
                     
                     fig.add_trace(
                         go.Scatter(
@@ -660,24 +723,65 @@ with tab1:
                         ),
                         row=2, col=1
                     )
+                    
+                    # Add arrowhead marker at end
+                    if n_points > 1:
+                        fig.add_trace(
+                            go.Scatter(
+                                x=[x_data[-1]],
+                                y=[y_data[-1]],
+                                mode='markers',
+                                marker=dict(
+                                    size=8,
+                                    color=colors[i],
+                                    symbol='triangle-right',
+                                    line=dict(width=1, color='white')
+                                ),
+                                showlegend=False,
+                                hoverinfo='skip'
+                            ),
+                            row=2, col=1
+                        )
             
-            # Add pipe walls
-            fig.add_hline(y=1, line_dash="solid", line_color="black", line_width=3, row=2, col=1)
-            fig.add_hline(y=-1, line_dash="solid", line_color="black", line_width=3, row=2, col=1)
+            # Add pipe walls with better styling
+            fig.add_shape(type="rect", x0=0, y0=0.95, x1=100, y1=1.05,
+                         fillcolor="rgba(100, 100, 100, 0.8)", line_width=0, row=2, col=1)
+            fig.add_shape(type="rect", x0=0, y0=-1.05, x1=100, y1=-0.95,
+                         fillcolor="rgba(100, 100, 100, 0.8)", line_width=0, row=2, col=1)
+            
+            # Add flow direction arrow
+            fig.add_annotation(
+                x=10, y=-1.2,
+                ax=-5, ay=-1.2,
+                xref="x2", yref="y2",
+                axref="x2", ayref="y2",
+                showarrow=True,
+                arrowhead=2,
+                arrowsize=1.5,
+                arrowwidth=2,
+                arrowcolor="darkblue"
+            )
+            fig.add_annotation(
+                x=15, y=-1.2,
+                text="Flow Direction",
+                showarrow=False,
+                font=dict(size=10, color="darkblue"),
+                xref="x2", yref="y2"
+            )
             
             # Add flow regime annotation
             if Re < 2300:
                 regime_text = "LAMINAR: Smooth, parallel streamlines"
                 regime_color = "green"
             elif Re <= 4000:
-                regime_text = "TRANSITIONAL: Developing turbulence"
+                regime_text = "TRANSITIONAL: Developing instabilities"
                 regime_color = "orange"
             else:
-                regime_text = "TURBULENT: Chaotic, mixing flow"
+                regime_text = "TURBULENT: Chaotic eddies & mixing"
                 regime_color = "red"
             
             fig.add_annotation(
-                x=50, y=1.15,
+                x=50, y=1.2,
                 text=f"<b>{regime_text}</b>",
                 showarrow=False,
                 font=dict(size=12, color=regime_color),
@@ -685,8 +789,8 @@ with tab1:
             )
             
             # Update axes for streamlines
-            fig.update_xaxes(title_text="Axial Distance", row=2, col=1, showgrid=False, range=[0, 100])
-            fig.update_yaxes(title_text="Radial Position", row=2, col=1, range=[-1.3, 1.3], showgrid=False)
+            fig.update_xaxes(title_text="Axial Distance", row=2, col=1, showgrid=False, range=[0, 105])
+            fig.update_yaxes(title_text="Radial Position (r/R)", row=2, col=1, range=[-1.4, 1.4], showgrid=False)
         
         # Update overall layout
         fig.update_layout(
