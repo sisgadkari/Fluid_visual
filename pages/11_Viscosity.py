@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import pandas as pd
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Understanding Viscosity")
@@ -276,93 +277,264 @@ with tab1:
             """)
         
         with viz_tab3:
-            # --- Falling Ball Viscometer Simulation ---
-            st.markdown("#### Falling Ball Viscometer")
+            # --- Falling Ball Viscometer Simulation with Animation ---
+            st.markdown("#### Falling Ball Viscometer - Animated")
             
-            fig3 = go.Figure()
+            # Ball material selection
+            st.markdown("**Select Ball Material:**")
+            ball_col1, ball_col2 = st.columns(2)
             
-            # Container
-            container_width = 4
-            container_height = 10
+            BALL_MATERIALS = {
+                "Steel": {'rho': 7800, 'color': 'rgba(120, 120, 130, 0.95)', 'name': 'Steel'},
+                "Iron": {'rho': 7874, 'color': 'rgba(90, 90, 100, 0.95)', 'name': 'Iron'},
+                "Aluminum": {'rho': 2700, 'color': 'rgba(180, 180, 190, 0.95)', 'name': 'Aluminum'},
+                "Plastic (PVC)": {'rho': 1400, 'color': 'rgba(200, 200, 220, 0.9)', 'name': 'PVC'},
+                "Rubber": {'rho': 1100, 'color': 'rgba(50, 50, 50, 0.95)', 'name': 'Rubber'},
+                "Glass": {'rho': 2500, 'color': 'rgba(200, 220, 255, 0.7)', 'name': 'Glass'},
+                "Wood (Oak)": {'rho': 750, 'color': 'rgba(180, 130, 80, 0.95)', 'name': 'Oak'},
+                "Copper": {'rho': 8960, 'color': 'rgba(184, 115, 51, 0.95)', 'name': 'Copper'},
+            }
             
-            # Draw container
-            fig3.add_shape(type="rect", x0=0, y0=0, x1=container_width, y1=container_height,
-                          fillcolor=fluid_color, line=dict(color="black", width=3))
+            with ball_col1:
+                ball_choice = st.selectbox("Ball Material", list(BALL_MATERIALS.keys()))
             
-            # Ball position (based on viscosity - higher viscosity = ball higher up = slower fall)
-            # Terminal velocity is inversely proportional to viscosity
-            ball_radius = 0.3
-            rho_ball = 7800  # Steel ball density
+            with ball_col2:
+                ball_radius_mm = st.slider("Ball Radius (mm)", 1.0, 10.0, 5.0, 0.5)
+            
+            ball_props = BALL_MATERIALS[ball_choice]
+            rho_ball = ball_props['rho']
+            ball_color = ball_props['color']
+            ball_radius = ball_radius_mm / 1000  # Convert to meters
+            
+            # Display ball properties
+            st.info(f"**{ball_choice}**: Density = {rho_ball} kg/m³ | Radius = {ball_radius_mm} mm")
+            
+            # Check if ball will float or sink
+            if rho_ball < rho:
+                st.warning(f"⚠️ This ball will **FLOAT**! Ball density ({rho_ball} kg/m³) < Fluid density ({rho} kg/m³)")
+                will_sink = False
+            else:
+                st.success(f"✓ Ball will **SINK**. Ball density ({rho_ball} kg/m³) > Fluid density ({rho} kg/m³)")
+                will_sink = True
             
             # Calculate terminal velocity (Stokes' law)
-            if mu > 0:
+            # V_t = (2r²(ρ_ball - ρ_fluid)g) / (9μ)
+            if mu > 0 and will_sink:
                 v_terminal = (2 * ball_radius**2 * (rho_ball - rho) * 9.81) / (9 * mu)
-                v_terminal = max(0.001, min(v_terminal, 100))  # Clamp values
+                v_terminal = max(0.0001, min(v_terminal, 50))  # Clamp values
+            elif mu > 0 and not will_sink:
+                # Ball floats - calculate rise velocity
+                v_terminal = (2 * ball_radius**2 * (rho - rho_ball) * 9.81) / (9 * mu)
+                v_terminal = max(0.0001, min(v_terminal, 50))
             else:
-                v_terminal = 100
+                v_terminal = 50
             
-            # Ball position (simulate where ball would be after some time)
-            # Higher viscosity = ball hasn't fallen as far
-            fall_distance = min(container_height - 2, v_terminal * 0.5)
-            ball_y = container_height - 1 - fall_distance
-            ball_y = max(1, ball_y)
+            # Display terminal velocity
+            v_col1, v_col2, v_col3 = st.columns(3)
+            with v_col1:
+                st.metric("Terminal Velocity", f"{v_terminal:.4f} m/s")
+            with v_col2:
+                st.metric("In cm/s", f"{v_terminal * 100:.2f} cm/s")
+            with v_col3:
+                # Time to fall 10 cm
+                if v_terminal > 0:
+                    time_10cm = 0.1 / v_terminal
+                    st.metric("Time for 10 cm", f"{time_10cm:.2f} s")
             
-            # Draw ball
-            fig3.add_shape(type="circle",
-                          x0=container_width/2 - ball_radius, y0=ball_y - ball_radius,
-                          x1=container_width/2 + ball_radius, y1=ball_y + ball_radius,
-                          fillcolor="rgba(100,100,100,0.9)", line=dict(color="black", width=2))
+            # Container dimensions (in visualization units)
+            container_width = 6
+            container_height = 12
+            ball_viz_radius = 0.4  # Visual radius
             
-            # Velocity arrow
-            arrow_length = min(2, v_terminal / 10)
-            if arrow_length > 0.1:
-                fig3.add_annotation(
-                    x=container_width/2, y=ball_y - ball_radius - arrow_length,
-                    ax=container_width/2, ay=ball_y - ball_radius,
-                    showarrow=True, arrowhead=2, arrowsize=2, arrowwidth=3,
-                    arrowcolor="red"
-                )
+            # Animation parameters
+            n_frames = 60
             
-            # Labels
-            fig3.add_annotation(x=container_width/2, y=ball_y,
-                              text="<b>Ball</b>", showarrow=False,
-                              font=dict(size=10, color="white"))
+            # Calculate positions for animation
+            start_y = container_height - 1.5 if will_sink else 1.5
             
-            fig3.add_annotation(x=container_width + 0.5, y=container_height/2,
-                              text=f"<b>{fluid_choice}</b>", showarrow=False,
-                              font=dict(size=12), textangle=-90)
+            # Normalize velocity for animation (faster terminal velocity = faster animation)
+            # Map terminal velocity to animation speed
+            animation_speed = min(1.0, v_terminal / 0.1)  # Normalize to max speed at 0.1 m/s
+            animation_speed = max(0.02, animation_speed)  # Minimum speed for very viscous fluids
             
-            # Terminal velocity annotation
-            fig3.add_annotation(x=container_width/2, y=0.5,
-                              text=f"<b>V_terminal ≈ {v_terminal:.3f} m/s</b>",
-                              showarrow=False, font=dict(size=12, color="darkblue"),
-                              bgcolor="rgba(255,255,255,0.9)")
+            if will_sink:
+                end_y = 1.5
+                positions = [start_y - (start_y - end_y) * (min(1.0, i * animation_speed / 30)) for i in range(n_frames)]
+            else:
+                end_y = container_height - 1.5
+                positions = [start_y + (end_y - start_y) * (min(1.0, i * animation_speed / 30)) for i in range(n_frames)]
+            
+            # Create frames for animation
+            frames = []
+            for i, ball_y in enumerate(positions):
+                frame_data = []
+                
+                # Ball trace
+                theta_circle = np.linspace(0, 2*np.pi, 30)
+                ball_x = container_width/2 + ball_viz_radius * np.cos(theta_circle)
+                ball_y_circle = ball_y + ball_viz_radius * np.sin(theta_circle)
+                
+                frame_data.append(go.Scatter(
+                    x=ball_x, y=ball_y_circle,
+                    fill='toself', fillcolor=ball_color,
+                    line=dict(color='black', width=2),
+                    mode='lines',
+                    showlegend=False
+                ))
+                
+                frames.append(go.Frame(data=frame_data, name=str(i)))
+            
+            # Create figure with initial state
+            fig3 = go.Figure()
+            
+            # Draw container (glass walls)
+            # Left wall
+            fig3.add_shape(type="rect", x0=-0.2, y0=0, x1=0, y1=container_height,
+                          fillcolor="rgba(200, 220, 255, 0.5)", line=dict(color="darkblue", width=2))
+            # Right wall
+            fig3.add_shape(type="rect", x0=container_width, y0=0, x1=container_width+0.2, y1=container_height,
+                          fillcolor="rgba(200, 220, 255, 0.5)", line=dict(color="darkblue", width=2))
+            # Bottom
+            fig3.add_shape(type="rect", x0=-0.2, y0=-0.3, x1=container_width+0.2, y1=0,
+                          fillcolor="rgba(150, 150, 160, 0.8)", line=dict(color="black", width=2))
+            
+            # Fill with fluid
+            fig3.add_shape(type="rect", x0=0, y0=0, x1=container_width, y1=container_height,
+                          fillcolor=fluid_color, line_width=0, layer="below")
+            
+            # Fluid surface line
+            fig3.add_shape(type="line", x0=0, y0=container_height, x1=container_width, y1=container_height,
+                          line=dict(color="darkblue", width=3))
+            
+            # Initial ball position
+            theta_circle = np.linspace(0, 2*np.pi, 30)
+            ball_x_init = container_width/2 + ball_viz_radius * np.cos(theta_circle)
+            ball_y_init = positions[0] + ball_viz_radius * np.sin(theta_circle)
+            
+            fig3.add_trace(go.Scatter(
+                x=ball_x_init, y=ball_y_init,
+                fill='toself', fillcolor=ball_color,
+                line=dict(color='black', width=2),
+                mode='lines',
+                showlegend=False,
+                name='Ball'
+            ))
+            
+            # Add frames
+            fig3.frames = frames
+            
+            # Labels and annotations
+            fig3.add_annotation(x=container_width + 1, y=container_height/2,
+                              text=f"<b>{fluid_choice}</b><br>μ = {mu:.4f} Pa·s",
+                              showarrow=False, font=dict(size=11, color="darkblue"),
+                              bgcolor="rgba(255,255,255,0.9)", borderpad=5)
+            
+            fig3.add_annotation(x=container_width/2, y=container_height + 0.5,
+                              text=f"<b>{ball_choice} Ball</b><br>ρ = {rho_ball} kg/m³",
+                              showarrow=False, font=dict(size=11),
+                              bgcolor="rgba(255,255,255,0.9)", borderpad=5)
+            
+            # Direction indicator
+            if will_sink:
+                fig3.add_annotation(x=container_width/2, y=container_height - 3,
+                                  text="⬇️ SINKING", showarrow=False,
+                                  font=dict(size=14, color="darkred"))
+            else:
+                fig3.add_annotation(x=container_width/2, y=3,
+                                  text="⬆️ FLOATING UP", showarrow=False,
+                                  font=dict(size=14, color="darkgreen"))
             
             # Result box
             fig3.add_annotation(
-                x=container_width/2, y=container_height + 0.8,
-                text=f"<b>Higher μ = Slower Fall</b>",
+                x=container_width/2, y=-1.0,
+                text=f"<b>V_terminal = {v_terminal:.4f} m/s ({v_terminal*100:.2f} cm/s)</b>",
                 showarrow=False,
-                font=dict(size=16, color="white"),
+                font=dict(size=14, color="white"),
                 bgcolor="rgba(0, 100, 200, 0.9)",
                 bordercolor="darkblue",
                 borderwidth=2,
                 borderpad=8
             )
             
+            # Animation controls
             fig3.update_layout(
-                xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, container_width+2]),
-                yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.5, container_height+1.5]),
-                height=500,
+                updatemenus=[
+                    dict(
+                        type="buttons",
+                        showactive=False,
+                        y=1.15,
+                        x=0.5,
+                        xanchor="center",
+                        buttons=[
+                            dict(label="▶ Drop Ball",
+                                 method="animate",
+                                 args=[None, {
+                                     "frame": {"duration": 50, "redraw": True},
+                                     "fromcurrent": True,
+                                     "transition": {"duration": 0}
+                                 }]),
+                            dict(label="⏸ Pause",
+                                 method="animate",
+                                 args=[[None], {
+                                     "frame": {"duration": 0, "redraw": False},
+                                     "mode": "immediate",
+                                     "transition": {"duration": 0}
+                                 }]),
+                            dict(label="🔄 Reset",
+                                 method="animate",
+                                 args=[[str(0)], {
+                                     "frame": {"duration": 0, "redraw": True},
+                                     "mode": "immediate",
+                                     "transition": {"duration": 0}
+                                 }])
+                        ]
+                    )
+                ],
+                xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, 
+                          range=[-1, container_width+2.5]),
+                yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, 
+                          range=[-1.8, container_height+1.5],
+                          scaleanchor="x", scaleratio=1),
+                height=600,
                 showlegend=False,
-                plot_bgcolor='white'
+                plot_bgcolor='white',
+                margin=dict(t=80)
             )
             
             st.plotly_chart(fig3, use_container_width=True)
             
+            # Comparison table
+            st.markdown("---")
+            st.markdown("##### 📊 Compare Different Materials in This Fluid")
+            
+            comparison_data = []
+            for mat_name, mat_props in BALL_MATERIALS.items():
+                mat_rho = mat_props['rho']
+                if mat_rho > rho:
+                    mat_v = (2 * ball_radius**2 * (mat_rho - rho) * 9.81) / (9 * mu)
+                    mat_v = min(mat_v, 50)
+                    status = "Sinks"
+                else:
+                    mat_v = (2 * ball_radius**2 * (rho - mat_rho) * 9.81) / (9 * mu)
+                    mat_v = min(mat_v, 50)
+                    status = "Floats"
+                
+                comparison_data.append({
+                    "Material": mat_name,
+                    "Density (kg/m³)": mat_rho,
+                    "Status": status,
+                    "Terminal Velocity (cm/s)": f"{mat_v * 100:.3f}"
+                })
+            
+            import pandas as pd
+            df_comparison = pd.DataFrame(comparison_data)
+            st.dataframe(df_comparison, use_container_width=True, hide_index=True)
+            
             st.caption(f"""
-            **Falling Ball Viscometer**: A ball falls through the fluid under gravity. The terminal velocity depends on viscosity.
-            Using Stokes' Law: V = (2r²(ρ_ball - ρ_fluid)g) / (9μ). For this fluid, V_terminal ≈ {v_terminal:.4f} m/s.
+            **Stokes' Law**: V_terminal = (2r²Δρg) / (9μ) where Δρ = |ρ_ball - ρ_fluid|
+            
+            This experiment is commonly used to measure fluid viscosity. By timing how long a ball 
+            takes to fall a known distance, we can calculate the fluid's viscosity!
             """)
 
 # =====================================================
