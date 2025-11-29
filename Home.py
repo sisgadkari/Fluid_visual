@@ -10,64 +10,20 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS for Enhanced Styling with Animations ---
+# --- Custom CSS for Enhanced Styling ---
 st.markdown("""
 <style>
-    /* Animated water wave background */
+    /* Animated droplet keyframes */
+    @keyframes droplet {
+        0% { transform: translateY(-20px); opacity: 0; }
+        20% { opacity: 1; }
+        100% { transform: translateY(100px); opacity: 0; }
+    }
+    
     @keyframes wave {
         0% { transform: translateX(0) translateY(0); }
         50% { transform: translateX(-25px) translateY(5px); }
         100% { transform: translateX(0) translateY(0); }
-    }
-    
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.05); opacity: 0.8; }
-        100% { transform: scale(1); opacity: 1; }
-    }
-    
-    @keyframes shimmer {
-        0% { background-position: -200% center; }
-        100% { background-position: 200% center; }
-    }
-    
-    @keyframes droplet {
-        0% { transform: translateY(-20px); opacity: 0; }
-        50% { opacity: 1; }
-        100% { transform: translateY(20px); opacity: 0; }
-    }
-    
-    @keyframes flow {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-    
-    .main-header {
-        font-size: 3.5em;
-        font-weight: bold;
-        text-align: center;
-        background: linear-gradient(120deg, #1e3a8a, #3b82f6, #06b6d4, #3b82f6, #1e3a8a);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        padding: 20px 0;
-        margin-bottom: 10px;
-        animation: shimmer 3s linear infinite;
-    }
-    
-    .subtitle {
-        text-align: center;
-        font-size: 1.3em;
-        color: #64748b;
-        margin-bottom: 30px;
-        font-weight: 300;
     }
     
     /* Animated wave container */
@@ -104,7 +60,27 @@ st.markdown("""
     .droplet {
         position: absolute;
         font-size: 1.5em;
-        animation: droplet 3s ease-in-out infinite;
+        animation: droplet 4s ease-in-out infinite;
+    }
+
+    .main-header {
+        font-size: 3.5em;
+        font-weight: bold;
+        text-align: center;
+        background: linear-gradient(120deg, #1e3a8a, #3b82f6, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        padding: 20px 0;
+        margin-bottom: 10px;
+    }
+    
+    .subtitle {
+        text-align: center;
+        font-size: 1.3em;
+        color: #64748b;
+        margin-bottom: 30px;
+        font-weight: 300;
     }
     
     .feature-card {
@@ -114,12 +90,6 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin: 15px 0;
         color: white;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 20px rgba(102, 126, 234, 0.4);
     }
     
     .feature-card h3 {
@@ -136,23 +106,6 @@ st.markdown("""
         margin: 10px 0;
         transition: all 0.3s ease;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .module-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-        transition: left 0.5s ease;
-    }
-    
-    .module-card:hover::before {
-        left: 100%;
     }
     
     .module-card:hover {
@@ -176,148 +129,59 @@ st.markdown("""
     
     .stat-box {
         text-align: center;
-        padding: 25px;
+        padding: 20px;
         background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
-        border-radius: 15px;
+        border-radius: 10px;
         color: white;
         margin: 10px;
-        animation: float 4s ease-in-out infinite;
-        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
-    }
-    
-    .stat-box:nth-child(2) {
-        animation-delay: 0.5s;
-    }
-    
-    .stat-box:nth-child(3) {
-        animation-delay: 1s;
     }
     
     .stat-number {
-        font-size: 2.8em;
+        font-size: 2.5em;
         font-weight: bold;
         display: block;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     
     .stat-label {
-        font-size: 1em;
-        opacity: 0.95;
-        margin-top: 5px;
+        font-size: 0.9em;
+        opacity: 0.9;
     }
     
-    /* Animated pipe with flowing water */
-    .pipe-container {
-        position: relative;
-        width: 100%;
-        height: 60px;
-        background: linear-gradient(180deg, #475569 0%, #334155 50%, #475569 100%);
-        border-radius: 30px;
-        margin: 30px 0;
-        overflow: hidden;
-        box-shadow: inset 0 5px 15px rgba(0,0,0,0.3);
-    }
-    
-    .pipe-water {
-        position: absolute;
-        top: 10px;
-        left: 0;
-        width: 200%;
-        height: 40px;
-        background: linear-gradient(90deg, #0ea5e9, #06b6d4, #22d3ee, #06b6d4, #0ea5e9);
-        background-size: 50% 100%;
-        border-radius: 20px;
-        animation: flow 2s linear infinite;
-    }
-    
-    .pipe-label {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+    .cta-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
+        padding: 15px 30px;
+        border-radius: 25px;
+        text-align: center;
+        font-size: 1.2em;
         font-weight: bold;
-        font-size: 1.1em;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        z-index: 10;
-    }
-    
-    /* Bubble animation */
-    @keyframes bubble {
-        0% { transform: translateY(100%) scale(0); opacity: 0; }
-        50% { opacity: 1; }
-        100% { transform: translateY(-100%) scale(1); opacity: 0; }
-    }
-    
-    .bubble {
-        position: absolute;
-        background: rgba(255,255,255,0.6);
-        border-radius: 50%;
-        animation: bubble 4s ease-in-out infinite;
-    }
-    
-    /* How to use cards */
-    .how-to-card {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border-radius: 15px;
-        padding: 25px;
-        text-align: center;
-        border: 2px solid #bae6fd;
-        transition: all 0.3s ease;
-    }
-    
-    .how-to-card:hover {
-        transform: scale(1.02);
-        box-shadow: 0 10px 25px rgba(14, 165, 233, 0.2);
-    }
-    
-    .how-to-number {
-        font-size: 3em;
-        margin-bottom: 10px;
-    }
-    
-    .cta-section {
-        text-align: center;
-        padding: 50px 30px;
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-        border-radius: 20px;
-        margin: 30px 0;
-        border: 2px solid #667eea30;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .cta-section::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(102,126,234,0.1) 0%, transparent 70%);
-        animation: pulse 4s ease-in-out infinite;
+        margin: 20px auto;
+        display: block;
+        width: fit-content;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Hero Section with Animation ---
+# --- Hero Section ---
 st.markdown("<h1 class='main-header'>💧 Fluid Mechanics Interactive Learning Hub</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Transform Complex Concepts into Visual Understanding • Learn by Doing • Master Fluid Mechanics</p>", unsafe_allow_html=True)
 
-# --- Animated Wave Banner ---
+# --- Animated Wave Banner with Droplets ---
 st.markdown("""
 <div class='wave-container'>
     <div class='wave'></div>
     <div class='wave wave2'></div>
-    <span class='droplet' style='left: 10%; top: 20%; animation-delay: 0s;'>💧</span>
-    <span class='droplet' style='left: 30%; top: 10%; animation-delay: 0.5s;'>💧</span>
-    <span class='droplet' style='left: 50%; top: 25%; animation-delay: 1s;'>💧</span>
-    <span class='droplet' style='left: 70%; top: 15%; animation-delay: 1.5s;'>💧</span>
-    <span class='droplet' style='left: 90%; top: 20%; animation-delay: 2s;'>💧</span>
+    <span class='droplet' style='left: 10%; top: 10%; animation-delay: 0s;'>💧</span>
+    <span class='droplet' style='left: 25%; top: 5%; animation-delay: 0.7s;'>💧</span>
+    <span class='droplet' style='left: 40%; top: 15%; animation-delay: 1.4s;'>💧</span>
+    <span class='droplet' style='left: 55%; top: 8%; animation-delay: 2.1s;'>💧</span>
+    <span class='droplet' style='left: 70%; top: 12%; animation-delay: 2.8s;'>💧</span>
+    <span class='droplet' style='left: 85%; top: 6%; animation-delay: 3.5s;'>💧</span>
 </div>
 """, unsafe_allow_html=True)
 
-# --- Create animated stats ---
+# --- Create a simple animated visualization ---
 col_viz1, col_viz2, col_viz3 = st.columns(3)
 
 with col_viz1:
@@ -330,7 +194,7 @@ with col_viz1:
 
 with col_viz2:
     st.markdown("""
-    <div class='stat-box' style='animation-delay: 0.5s;'>
+    <div class='stat-box'>
         <span class='stat-number'>∞</span>
         <span class='stat-label'>Parameter Combinations</span>
     </div>
@@ -338,112 +202,36 @@ with col_viz2:
 
 with col_viz3:
     st.markdown("""
-    <div class='stat-box' style='animation-delay: 1s;'>
+    <div class='stat-box'>
         <span class='stat-number'>100%</span>
         <span class='stat-label'>Visual Learning</span>
     </div>
     """, unsafe_allow_html=True)
 
-# --- Animated Pipe Flow ---
-st.markdown("""
-<div class='pipe-container'>
-    <div class='pipe-water'></div>
-    <span class='pipe-label'>⟶ Explore the Flow of Knowledge ⟶</span>
-</div>
-""", unsafe_allow_html=True)
-
 st.markdown("---")
 
-# --- Interactive Fluid Animation using Plotly ---
-st.markdown("## 🌊 See Fluid Mechanics in Action")
-
-# Create an animated plotly figure showing fluid concepts
-fig = go.Figure()
-
-# Create wave animation data
-x = np.linspace(0, 4*np.pi, 100)
-frames = []
-for i in range(30):
-    phase = i * 0.2
-    y1 = np.sin(x + phase) * 0.5 + 1
-    y2 = np.sin(x + phase + np.pi/4) * 0.3 + 0.5
-    frames.append(go.Frame(data=[
-        go.Scatter(x=x, y=y1, fill='tozeroy', fillcolor='rgba(14, 165, 233, 0.6)',
-                  line=dict(color='#0284c7', width=3), name='Surface Wave'),
-        go.Scatter(x=x, y=y2, fill='tozeroy', fillcolor='rgba(6, 182, 212, 0.4)',
-                  line=dict(color='#06b6d4', width=2), name='Pressure Wave')
-    ]))
-
-# Initial frame
-fig.add_trace(go.Scatter(x=x, y=np.sin(x)*0.5+1, fill='tozeroy', 
-                         fillcolor='rgba(14, 165, 233, 0.6)',
-                         line=dict(color='#0284c7', width=3), name='Surface Wave'))
-fig.add_trace(go.Scatter(x=x, y=np.sin(x+np.pi/4)*0.3+0.5, fill='tozeroy',
-                         fillcolor='rgba(6, 182, 212, 0.4)',
-                         line=dict(color='#06b6d4', width=2), name='Pressure Wave'))
-
-fig.frames = frames
-
-fig.update_layout(
-    title=dict(text="<b>Dynamic Wave Visualization</b>", x=0.5, font=dict(size=18)),
-    xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, title=""),
-    yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[0, 2], title=""),
-    plot_bgcolor='rgba(240,249,255,0.5)',
-    paper_bgcolor='rgba(0,0,0,0)',
-    height=250,
-    margin=dict(l=20, r=20, t=50, b=20),
-    showlegend=False,
-    updatemenus=[dict(
-        type="buttons",
-        showactive=False,
-        y=1.15,
-        x=0.5,
-        xanchor="center",
-        buttons=[
-            dict(label="▶ Play Wave Animation",
-                 method="animate",
-                 args=[None, {"frame": {"duration": 100, "redraw": True},
-                             "fromcurrent": True,
-                             "transition": {"duration": 50}}])
-        ]
-    )]
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("---")
-
-# --- How to Use Section with animated cards ---
+# --- How to Use Section ---
 st.markdown("## 📖 How to Use this App")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("""
-    <div class='how-to-card'>
-        <div class='how-to-number'>1️⃣</div>
-        <h3>Choose Your Topic</h3>
-        <p>Use the sidebar to navigate to any module that interests you. Start with basics or jump to advanced topics!</p>
-    </div>
-    """, unsafe_allow_html=True)
+    ### 1️⃣ Choose Your Topic
+    Use the sidebar to navigate to any module that interests you. Start with basics or jump to advanced topics!
+    """)
 
 with col2:
     st.markdown("""
-    <div class='how-to-card'>
-        <div class='how-to-number'>2️⃣</div>
-        <h3>Adjust & Experiment</h3>
-        <p>Play with sliders and input fields. Watch real-time updates as you change parameters. No wrong answers here!</p>
-    </div>
-    """, unsafe_allow_html=True)
+    ### 2️⃣ Adjust & Experiment
+    Play with sliders and input fields. Watch real-time updates as you change parameters. No wrong answers here!
+    """)
 
 with col3:
     st.markdown("""
-    <div class='how-to-card'>
-        <div class='how-to-number'>3️⃣</div>
-        <h3>Learn & Apply</h3>
-        <p>Study the formulas, read the theory, and understand the calculations. Apply what you learn to solve real problems!</p>
-    </div>
-    """, unsafe_allow_html=True)
+    ### 3️⃣ Learn & Apply
+    Study the formulas, read the theory, and understand the calculations. Apply what you learn to solve real problems!
+    """)
 
 st.markdown("---")
 
@@ -579,14 +367,14 @@ for i, module in enumerate(modules):
 
 st.markdown("---")
 
-# --- Call to Action with animation ---
+# --- Call to Action ---
 st.markdown("""
-<div class='cta-section'>
-    <h2 style='color: #1e293b; margin-bottom: 15px; position: relative; z-index: 1;'>🚀 Ready to Master Fluid Mechanics?</h2>
-    <p style='font-size: 1.1em; color: #475569; margin-bottom: 25px; position: relative; z-index: 1;'>
+<div style='text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%); border-radius: 15px; margin: 20px 0;'>
+    <h2 style='color: #1e293b; margin-bottom: 15px;'>Ready to Master Fluid Mechanics?</h2>
+    <p style='font-size: 1.1em; color: #475569; margin-bottom: 25px;'>
         Choose your first module from the sidebar and start your interactive learning journey today!
     </p>
-    <p style='font-size: 1.5em; position: relative; z-index: 1;'>👈 <strong>Start exploring now!</strong></p>
+    <p style='font-size: 1.3em;'>👈 <strong>Start exploring now!</strong></p>
 </div>
 """, unsafe_allow_html=True)
 
