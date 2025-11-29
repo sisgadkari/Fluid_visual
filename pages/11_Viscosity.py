@@ -329,40 +329,75 @@ with tab1:
             else:
                 v_terminal = 50
             
-            # Display terminal velocity
+            # Container dimensions (in visualization units)
+            container_width = 6
+            container_height = 12
+            ball_viz_radius = 0.4  # Visual radius
+            
+            # Calculate the fall distance (in real units - assuming container is ~20cm tall)
+            real_container_height = 0.20  # 20 cm in meters
+            fall_distance = real_container_height - 2 * (ball_radius)  # Account for ball radius at top and bottom
+            
+            # Time to sink/float the full distance
+            if v_terminal > 0:
+                time_to_sink = fall_distance / v_terminal
+            else:
+                time_to_sink = float('inf')
+            
+            # Display terminal velocity and time
             v_col1, v_col2, v_col3 = st.columns(3)
             with v_col1:
                 st.metric("Terminal Velocity", f"{v_terminal:.4f} m/s")
             with v_col2:
                 st.metric("In cm/s", f"{v_terminal * 100:.2f} cm/s")
             with v_col3:
-                # Time to fall 10 cm
-                if v_terminal > 0:
-                    time_10cm = 0.1 / v_terminal
-                    st.metric("Time for 10 cm", f"{time_10cm:.2f} s")
+                if time_to_sink < 1000:
+                    st.metric("Time to Sink", f"{time_to_sink:.2f} s")
+                else:
+                    st.metric("Time to Sink", "Very long!")
             
-            # Container dimensions (in visualization units)
-            container_width = 6
-            container_height = 12
-            ball_viz_radius = 0.4  # Visual radius
-            
-            # Animation parameters
-            n_frames = 60
+            # Animation parameters - more frames for smoother animation
+            n_frames = 80
             
             # Calculate positions for animation
-            start_y = container_height - 1.5 if will_sink else 1.5
+            # Ball starts just below surface, ends resting on bottom
+            start_y = container_height - ball_viz_radius - 0.3  # Just below fluid surface
+            end_y = ball_viz_radius  # Resting on bottom (ball center at radius height)
             
-            # Normalize velocity for animation (faster terminal velocity = faster animation)
-            # Map terminal velocity to animation speed
-            animation_speed = min(1.0, v_terminal / 0.1)  # Normalize to max speed at 0.1 m/s
-            animation_speed = max(0.02, animation_speed)  # Minimum speed for very viscous fluids
+            if not will_sink:
+                # Floating: starts at bottom, rises to top
+                start_y = ball_viz_radius + 0.3
+                end_y = container_height - ball_viz_radius - 0.3
             
-            if will_sink:
-                end_y = 1.5
-                positions = [start_y - (start_y - end_y) * (min(1.0, i * animation_speed / 30)) for i in range(n_frames)]
+            # Animation speed based on terminal velocity
+            # Higher viscosity = slower terminal velocity = more frames to reach bottom
+            # Scale: water (mu=0.001) should be fast, honey (mu=2) should be slow
+            if v_terminal > 0.1:
+                # Fast falling - complete in fewer frames
+                frames_to_complete = 25
+            elif v_terminal > 0.01:
+                # Medium speed
+                frames_to_complete = 45
+            elif v_terminal > 0.001:
+                # Slow
+                frames_to_complete = 60
             else:
-                end_y = container_height - 1.5
-                positions = [start_y + (end_y - start_y) * (min(1.0, i * animation_speed / 30)) for i in range(n_frames)]
+                # Very slow (very viscous)
+                frames_to_complete = 78
+            
+            # Generate positions - ball always reaches the end
+            positions = []
+            for i in range(n_frames):
+                # Progress from 0 to 1 over frames_to_complete frames
+                progress = min(1.0, i / frames_to_complete)
+                # Use ease-out curve for more natural motion (starts fast, slows down)
+                eased_progress = 1 - (1 - progress) ** 2
+                
+                if will_sink:
+                    pos = start_y - (start_y - end_y) * eased_progress
+                else:
+                    pos = start_y + (end_y - start_y) * eased_progress
+                positions.append(pos)
             
             # Create frames for animation
             frames = []
