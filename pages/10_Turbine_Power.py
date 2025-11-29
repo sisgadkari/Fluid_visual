@@ -500,7 +500,7 @@ with tab1:
                 'font': {'size': 18, 'color': 'darkslategray', 'family': 'Arial Black'}
             },
             xaxis=dict(range=[-0.5, 12], showticklabels=False, showgrid=False, zeroline=False),
-            yaxis=dict(range=[discharge_y-2, reservoir_top+y_padding],
+            yaxis=dict(range=[discharge_y-2, reservoir_top+y_padding*2.5],
                       title="<b>Elevation (m)</b>",
                       title_font=dict(size=14, color="darkblue"),
                       showgrid=True, gridcolor='rgba(200,200,200,0.3)'),
@@ -510,10 +510,10 @@ with tab1:
             paper_bgcolor='white'
         )
         
-        # Add result box at top of visualization (matching other modules' style)
+        # Add result box at top of visualization (above the figure)
         fig.add_annotation(
             x=6,
-            y=reservoir_top+y_padding*0.7,
+            y=reservoir_top+y_padding*2.0,
             text=f"<b>Turbine Shaft Power: {results['shaft_power']:.1f} kW</b>",
             showarrow=False,
             font=dict(size=20, color="white"),
