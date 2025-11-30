@@ -613,7 +613,7 @@ with main_tab2:
         actual_weight_per_length = mass_per_length * g
         
         # Safety factor (how much margin before sinking)
-        if max_weight_per_length > 0:
+        if max_weight_per_length > 0 and actual_weight_per_length > 0:
             safety_factor = max_weight_per_length / actual_weight_per_length
         else:
             safety_factor = 0
@@ -631,8 +631,10 @@ with main_tab2:
         
         if can_float:
             st.success(f"✓ **FLOATS!** Safety factor: {safety_factor:.2f}x")
-        else:
+        elif safety_factor > 0:
             st.error(f"✗ **SINKS!** Need {1/safety_factor:.1f}x more surface tension")
+        else:
+            st.error(f"✗ **SINKS!** Contact angle too high (θ ≥ 90°) - no upward surface tension force")
         
         # Surface tension comparison
         st.markdown("---")
