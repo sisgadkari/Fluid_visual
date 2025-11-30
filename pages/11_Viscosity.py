@@ -347,17 +347,33 @@ with tab1:
             # Display terminal velocity and time
             v_col1, v_col2, v_col3 = st.columns(3)
             with v_col1:
-                st.metric("Terminal Velocity", f"{v_terminal:.4f} m/s")
+                st.metric("Terminal Velocity", f"{v_terminal:.6f} m/s")
             with v_col2:
-                st.metric("In cm/s", f"{v_terminal * 100:.2f} cm/s")
+                st.metric("In cm/s", f"{v_terminal * 100:.4f} cm/s")
             with v_col3:
-                if time_to_sink < 1000:
-                    st.metric("Time to Sink", f"{time_to_sink:.2f} s")
+                if time_to_sink < 10000:
+                    st.metric("Time to Sink/Rise", f"{time_to_sink:.6f} s")
                 else:
-                    st.metric("Time to Sink", "Very long!")
+                    st.metric("Time to Sink/Rise", "Very long!")
             
-            # Animation parameters - more frames for smoother animation
-            n_frames = 80
+            # Animation parameters
+            # We want the animation to take exactly time_to_sink seconds
+            # Plotly frame duration is in milliseconds
+            # Cap the animation time between 0.5s and 30s for usability
+            animation_time = max(0.5, min(30.0, time_to_sink))
+            
+            # Number of frames - more frames for longer animations for smoothness
+            if animation_time < 1:
+                n_frames = 30
+            elif animation_time < 5:
+                n_frames = 60
+            elif animation_time < 15:
+                n_frames = 90
+            else:
+                n_frames = 120
+            
+            # Frame duration in milliseconds to achieve real-time animation
+            frame_duration_ms = (animation_time * 1000) / n_frames
             
             # Calculate positions for animation
             # Ball starts just below surface, ends resting on bottom
@@ -369,34 +385,15 @@ with tab1:
                 start_y = ball_viz_radius + 0.3
                 end_y = container_height - ball_viz_radius - 0.3
             
-            # Animation speed based on terminal velocity
-            # Higher viscosity = slower terminal velocity = more frames to reach bottom
-            # Scale: water (mu=0.001) should be fast, honey (mu=2) should be slow
-            if v_terminal > 0.1:
-                # Fast falling - complete in fewer frames
-                frames_to_complete = 25
-            elif v_terminal > 0.01:
-                # Medium speed
-                frames_to_complete = 45
-            elif v_terminal > 0.001:
-                # Slow
-                frames_to_complete = 60
-            else:
-                # Very slow (very viscous)
-                frames_to_complete = 78
-            
-            # Generate positions - ball always reaches the end
+            # Generate positions - linear motion (constant terminal velocity)
             positions = []
             for i in range(n_frames):
-                # Progress from 0 to 1 over frames_to_complete frames
-                progress = min(1.0, i / frames_to_complete)
-                # Use ease-out curve for more natural motion (starts fast, slows down)
-                eased_progress = 1 - (1 - progress) ** 2
+                progress = i / (n_frames - 1)  # 0 to 1
                 
                 if will_sink:
-                    pos = start_y - (start_y - end_y) * eased_progress
+                    pos = start_y - (start_y - end_y) * progress
                 else:
-                    pos = start_y + (end_y - start_y) * eased_progress
+                    pos = start_y + (end_y - start_y) * progress
                 positions.append(pos)
             
             # Create frames for animation
@@ -504,7 +501,7 @@ with tab1:
                             dict(label="▶ Drop Ball",
                                  method="animate",
                                  args=[None, {
-                                     "frame": {"duration": 50, "redraw": True},
+                                     "frame": {"duration": frame_duration_ms, "redraw": True},
                                      "fromcurrent": True,
                                      "transition": {"duration": 0}
                                  }]),
@@ -554,22 +551,36 @@ with tab1:
                     mat_v = min(mat_v, 50)
                     status = "Floats"
                 
+                # Calculate time to sink/rise
+                if mat_v > 0:
+                    mat_time = fall_distance / mat_v
+                else:
+                    mat_time = float('inf')
+                
                 comparison_data.append({
                     "Material": mat_name,
                     "Density (kg/m³)": mat_rho,
                     "Status": status,
-                    "Terminal Velocity (cm/s)": f"{mat_v * 100:.3f}"
+                    "Terminal Velocity (cm/s)": f"{mat_v * 100:.4f}",
+                    "Time to Sink/Rise (s)": f"{mat_time:.6f}" if mat_time < 10000 else "Very long"
                 })
             
-            import pandas as pd
             df_comparison = pd.DataFrame(comparison_data)
             st.dataframe(df_comparison, use_container_width=True, hide_index=True)
+            
+            # Show animation time info
+            if time_to_sink != animation_time:
+                st.info(f"⏱️ **Note**: Real sink time is {time_to_sink:.6f} s. Animation is capped at {animation_time:.2f} s for usability.")
+            else:
+                st.success(f"⏱️ **Animation runs in real-time**: {animation_time:.6f} s")
             
             st.caption(f"""
             **Stokes' Law**: V_terminal = (2r²Δρg) / (9μ) where Δρ = |ρ_ball - ρ_fluid|
             
             This experiment is commonly used to measure fluid viscosity. By timing how long a ball 
             takes to fall a known distance, we can calculate the fluid's viscosity!
+            
+            **Container height**: {real_container_height*100:.0f} cm | **Fall distance**: {fall_distance*100:.2f} cm
             """)
 
 # =====================================================
