@@ -160,6 +160,43 @@ st.markdown("""
         width: fit-content;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
+    
+    .concept-card {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 2px solid #86efac;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 10px 0;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .concept-card:hover {
+        border-color: #22c55e;
+        box-shadow: 0 8px 16px rgba(34, 197, 94, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .concept-number {
+        display: inline-block;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 35px;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%);
+        border-left: 5px solid #22c55e;
+        padding: 15px 20px;
+        border-radius: 0 10px 10px 0;
+        margin: 30px 0 20px 0;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -361,6 +398,55 @@ for i, module in enumerate(modules):
             <p style='color: #475569; margin: 10px 0;'>{module['description']}</p>
             <p style='color: #3b82f6; font-weight: 600; font-size: 0.9em; margin-top: 10px;'>
                 🎯 Key Concept: {module['key_concept']}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# --- Fundamental Concepts Section ---
+st.markdown("""
+<div class='section-header'>
+    <h2 style='margin: 0; color: #166534;'>📖 Fundamental Concepts</h2>
+    <p style='margin: 5px 0 0 0; color: #15803d; font-size: 0.95em;'>Master the building blocks of fluid mechanics</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("Before diving into complex applications, understand these essential concepts that form the foundation of fluid mechanics.")
+
+# Fundamental concepts list
+concepts = [
+    {
+        "number": "1",
+        "icon": "🍯",
+        "title": "Viscosity",
+        "description": "Understand how fluids resist flow and deformation. Explore the difference between honey and water, learn about Newtonian vs Non-Newtonian fluids, and see the falling ball viscometer in action.",
+        "key_concept": "Newton's Law of Viscosity & Fluid Resistance"
+    },
+    {
+        "number": "2",
+        "icon": "💧",
+        "title": "Surface Tension",
+        "description": "Coming soon! Discover why water forms droplets, how insects walk on water, and the molecular forces at fluid interfaces.",
+        "key_concept": "Cohesive Forces & Capillary Effects",
+        "coming_soon": True
+    },
+]
+
+# Display concepts in two columns
+col1, col2 = st.columns(2)
+
+for i, concept in enumerate(concepts):
+    with col1 if i % 2 == 0 else col2:
+        opacity_style = "opacity: 0.6;" if concept.get('coming_soon') else ""
+        badge = "<span style='background: #fbbf24; color: #78350f; padding: 2px 8px; border-radius: 10px; font-size: 0.7em; margin-left: 10px;'>COMING SOON</span>" if concept.get('coming_soon') else ""
+        
+        st.markdown(f"""
+        <div class='concept-card' style='{opacity_style}'>
+            <h3><span class='concept-number'>{concept['number']}</span> {concept['icon']} {concept['title']}{badge}</h3>
+            <p style='color: #475569; margin: 10px 0;'>{concept['description']}</p>
+            <p style='color: #22c55e; font-weight: 600; font-size: 0.9em; margin-top: 10px;'>
+                📚 Key Concept: {concept['key_concept']}
             </p>
         </div>
         """, unsafe_allow_html=True)
