@@ -205,21 +205,25 @@ st.sidebar.title("📚 Navigation")
 
 # Interactive Modules Section
 st.sidebar.markdown("### 🔬 Interactive Modules")
-st.sidebar.page_link("pages/1_Capillary_Rise_.py", label="💧 Capillary Rise")
-st.sidebar.page_link("pages/2_Open_Manometer.py", label="📏 Open Manometer")
-st.sidebar.page_link("pages/3_Closed_Manometer.py", label="🔒 Closed Manometer")
-st.sidebar.page_link("pages/4_Pitot-Static_Tube.py", label="✈️ Pitot-Static Tube")
-st.sidebar.page_link("pages/5_Hydrostatic_Pressure_Straight_wall.py", label="🏗️ Hydrostatic Force - Straight Wall")
-st.sidebar.page_link("pages/6_Hydrostatic_Pressure_Inclined_wall.py", label="📐 Hydrostatic Force - Inclined Wall")
-st.sidebar.page_link("pages/7_Reducing_Bend.py", label="🔄 Reducing Pipe Bend")
-st.sidebar.page_link("pages/8_Laminar-and-Turbulent-Flow.py", label="🌊 Laminar & Turbulent Flow")
-st.sidebar.page_link("pages/9_Pump_head_demand.py", label="⚡ Pump Head & Power")
-st.sidebar.page_link("pages/10_Turbine_Power.py", label="⚙️ Turbine Power")
+st.sidebar.markdown("""
+- [💧 Capillary Rise](./1_Capillary_Rise_)
+- [📏 Open Manometer](./2_Open_Manometer)
+- [🔒 Closed Manometer](./3_Closed_Manometer)
+- [✈️ Pitot-Static Tube](./4_Pitot-Static_Tube)
+- [🏗️ Hydrostatic Force - Straight Wall](./5_Hydrostatic_Pressure_Straight_wall)
+- [📐 Hydrostatic Force - Inclined Wall](./6_Hydrostatic_Pressure_Inclined_wall)
+- [🔄 Reducing Pipe Bend](./7_Reducing_Bend)
+- [🌊 Laminar & Turbulent Flow](./8_Laminar-and-Turbulent-Flow)
+- [⚡ Pump Head & Power](./9_Pump_head_demand)
+- [⚙️ Turbine Power](./10_Turbine_Power)
+""")
 
 # Fundamental Concepts Section
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📖 Fundamental Concepts")
-st.sidebar.page_link("pages/Fundamental_Concepts/1_Viscosity.py", label="🍯 Viscosity")
+st.sidebar.markdown("""
+- [🍯 Viscosity](./Fundamental_Concepts/1_Viscosity)
+""")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
