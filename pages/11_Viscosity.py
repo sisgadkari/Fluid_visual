@@ -101,182 +101,9 @@ with tab1:
         st.header("🖼️ Visualization")
         
         # Create visualization tabs
-        viz_tab1, viz_tab2, viz_tab3 = st.tabs(["🌊 Fluid Flow", "📊 Velocity Profile", "🍯 Falling Ball"])
+        viz_tab1, viz_tab2 = st.tabs(["🍯 Falling Ball", "🌊 Fluid Flow"])
         
         with viz_tab1:
-            # --- Parallel Plate Flow Visualization ---
-            st.markdown("#### Couette Flow (Fluid Between Parallel Plates)")
-            
-            fig = go.Figure()
-            
-            # Plate dimensions
-            plate_length = 10
-            plate_gap = 2
-            
-            # Top plate (moving)
-            fig.add_shape(type="rect", x0=0, y0=plate_gap, x1=plate_length, y1=plate_gap+0.3,
-                         fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
-            fig.add_annotation(x=plate_length/2, y=plate_gap+0.5, text="<b>Moving Plate (V)</b>",
-                             showarrow=False, font=dict(size=12))
-            
-            # Bottom plate (stationary)
-            fig.add_shape(type="rect", x0=0, y0=-0.3, x1=plate_length, y1=0,
-                         fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
-            fig.add_annotation(x=plate_length/2, y=-0.5, text="<b>Stationary Plate</b>",
-                             showarrow=False, font=dict(size=12))
-            
-            # Fluid between plates
-            fig.add_shape(type="rect", x0=0, y0=0, x1=plate_length, y1=plate_gap,
-                         fillcolor=fluid_color, line=dict(color="blue", width=1))
-            
-            # Velocity profile arrows (linear for Couette flow)
-            n_arrows = 8
-            max_arrow_length = 2.5 - (mu / 3)  # Shorter arrows for more viscous fluids
-            max_arrow_length = max(0.5, max_arrow_length)
-            
-            for i in range(n_arrows + 1):
-                y_pos = i * plate_gap / n_arrows
-                velocity_fraction = y_pos / plate_gap
-                arrow_length = velocity_fraction * max_arrow_length
-                
-                if arrow_length > 0.1:
-                    fig.add_annotation(
-                        x=2 + arrow_length, y=y_pos,
-                        ax=2, ay=y_pos,
-                        showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
-                        arrowcolor="darkblue"
-                    )
-            
-            # Add velocity profile line
-            y_profile = np.linspace(0, plate_gap, 20)
-            x_profile = 2 + (y_profile / plate_gap) * max_arrow_length
-            fig.add_trace(go.Scatter(x=x_profile, y=y_profile, mode='lines',
-                                    line=dict(color='red', width=3, dash='dash'),
-                                    name='Velocity Profile'))
-            
-            # Shear stress indicator
-            fig.add_annotation(x=7, y=plate_gap/2, 
-                             text=f"<b>τ = μ × (du/dy)</b><br>τ = {tau:.2f} Pa",
-                             showarrow=False, font=dict(size=14, color="darkred"),
-                             bgcolor="rgba(255,255,255,0.9)", bordercolor="red", borderwidth=2)
-            
-            # Add "High viscosity = more resistance" annotation
-            resistance_text = "High resistance" if mu > 0.1 else "Low resistance" if mu < 0.01 else "Medium resistance"
-            fig.add_annotation(x=plate_length/2, y=plate_gap/2,
-                             text=f"<b>{resistance_text}</b>",
-                             showarrow=False, font=dict(size=16, color="white"),
-                             bgcolor=fluid_color.replace('0.7', '0.9').replace('0.8', '0.95'))
-            
-            fig.update_layout(
-                xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, plate_length+1]),
-                yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, plate_gap+1]),
-                height=400,
-                showlegend=False,
-                plot_bgcolor='white',
-                margin=dict(l=20, r=20, t=30, b=20)
-            )
-            
-            # Result box
-            fig.add_annotation(
-                x=plate_length/2, y=plate_gap+1.0,
-                text=f"<b>Shear Stress: {tau:.2f} Pa</b>",
-                showarrow=False,
-                font=dict(size=18, color="white"),
-                bgcolor="rgba(0, 100, 200, 0.9)",
-                bordercolor="darkblue",
-                borderwidth=2,
-                borderpad=8
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.caption("""
-            **Couette Flow**: When one plate moves relative to another, the fluid between them experiences shear.
-            Higher viscosity fluids resist this shearing motion more strongly, requiring more force to maintain the same velocity.
-            """)
-        
-        with viz_tab2:
-            # --- Velocity Profile Comparison ---
-            st.markdown("#### Velocity Profile in Pipe Flow")
-            
-            fig2 = go.Figure()
-            
-            # Pipe radius
-            R = 1.0
-            
-            # Calculate velocity profile for laminar flow (Hagen-Poiseuille)
-            r = np.linspace(-R, R, 100)
-            
-            # Normalize velocity based on viscosity (inverse relationship)
-            v_max = 1 / (mu * 10 + 0.1)  # Normalized max velocity
-            v_max = min(v_max, 2)  # Cap at 2
-            
-            v = v_max * (1 - (r/R)**2)  # Parabolic profile
-            
-            # Draw pipe walls
-            fig2.add_shape(type="line", x0=0, y0=R, x1=3, y1=R,
-                          line=dict(color="black", width=4))
-            fig2.add_shape(type="line", x0=0, y0=-R, x1=3, y1=-R,
-                          line=dict(color="black", width=4))
-            
-            # Fill pipe with fluid color
-            fig2.add_shape(type="rect", x0=0, y0=-R, x1=3, y1=R,
-                          fillcolor=fluid_color, line_width=0, layer="below")
-            
-            # Velocity profile
-            fig2.add_trace(go.Scatter(x=v, y=r, mode='lines', fill='tozerox',
-                                     fillcolor='rgba(255,100,100,0.3)',
-                                     line=dict(color='red', width=3),
-                                     name='Velocity Profile'))
-            
-            # Add velocity arrows
-            n_arrows = 7
-            for i in range(n_arrows):
-                r_pos = -R + (i + 0.5) * 2 * R / n_arrows
-                v_at_r = v_max * (1 - (r_pos/R)**2)
-                if v_at_r > 0.05:
-                    fig2.add_annotation(
-                        x=v_at_r, y=r_pos,
-                        ax=0, ay=r_pos,
-                        showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
-                        arrowcolor="darkblue"
-                    )
-            
-            # Annotations
-            fig2.add_annotation(x=v_max/2, y=0, text=f"<b>V_max</b>",
-                              showarrow=True, ay=-30, font=dict(size=12, color="red"))
-            
-            fig2.add_annotation(x=-0.3, y=0, text="<b>Centerline</b>",
-                              showarrow=False, font=dict(size=10), textangle=-90)
-            
-            # Result box
-            fig2.add_annotation(
-                x=1.0, y=R+0.4,
-                text=f"<b>μ = {mu:.4f} Pa·s | Flow {'Slow' if mu > 0.1 else 'Fast'}</b>",
-                showarrow=False,
-                font=dict(size=16, color="white"),
-                bgcolor="rgba(0, 100, 200, 0.9)",
-                bordercolor="darkblue",
-                borderwidth=2,
-                borderpad=8
-            )
-            
-            fig2.update_layout(
-                xaxis=dict(title="Velocity", showgrid=True, gridcolor='rgba(0,0,0,0.1)', range=[-0.5, max(2.5, v_max+0.5)]),
-                yaxis=dict(title="Radial Position (r/R)", showgrid=True, gridcolor='rgba(0,0,0,0.1)', range=[-1.5, 1.7]),
-                height=400,
-                showlegend=False,
-                plot_bgcolor='white'
-            )
-            
-            st.plotly_chart(fig2, use_container_width=True)
-            
-            st.caption("""
-            **Pipe Flow**: In laminar flow, the velocity profile is parabolic. Maximum velocity occurs at the center,
-            while velocity is zero at the walls (no-slip condition). Higher viscosity = slower flow for the same pressure drop.
-            """)
-        
-        with viz_tab3:
             # --- Falling Ball Viscometer Simulation with Animation ---
             st.markdown("#### Falling Ball Viscometer - Animated")
             
@@ -581,6 +408,98 @@ with tab1:
             takes to fall a known distance, we can calculate the fluid's viscosity!
             
             **Container height**: {real_container_height*100:.0f} cm | **Fall distance**: {fall_distance*100:.2f} cm
+            """)
+        
+        with viz_tab2:
+            # --- Parallel Plate Flow Visualization ---
+            st.markdown("#### Couette Flow (Fluid Between Parallel Plates)")
+            
+            fig = go.Figure()
+            
+            # Plate dimensions
+            plate_length = 10
+            plate_gap = 2
+            
+            # Top plate (moving)
+            fig.add_shape(type="rect", x0=0, y0=plate_gap, x1=plate_length, y1=plate_gap+0.3,
+                         fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
+            fig.add_annotation(x=plate_length/2, y=plate_gap+0.5, text="<b>Moving Plate (V)</b>",
+                             showarrow=False, font=dict(size=12))
+            
+            # Bottom plate (stationary)
+            fig.add_shape(type="rect", x0=0, y0=-0.3, x1=plate_length, y1=0,
+                         fillcolor="rgba(100,100,100,0.8)", line=dict(color="black", width=2))
+            fig.add_annotation(x=plate_length/2, y=-0.5, text="<b>Stationary Plate</b>",
+                             showarrow=False, font=dict(size=12))
+            
+            # Fluid between plates
+            fig.add_shape(type="rect", x0=0, y0=0, x1=plate_length, y1=plate_gap,
+                         fillcolor=fluid_color, line=dict(color="blue", width=1))
+            
+            # Velocity profile arrows (linear for Couette flow)
+            n_arrows = 8
+            max_arrow_length = 2.5 - (mu / 3)  # Shorter arrows for more viscous fluids
+            max_arrow_length = max(0.5, max_arrow_length)
+            
+            for i in range(n_arrows + 1):
+                y_pos = i * plate_gap / n_arrows
+                velocity_fraction = y_pos / plate_gap
+                arrow_length = velocity_fraction * max_arrow_length
+                
+                if arrow_length > 0.1:
+                    fig.add_annotation(
+                        x=2 + arrow_length, y=y_pos,
+                        ax=2, ay=y_pos,
+                        showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                        arrowcolor="darkblue"
+                    )
+            
+            # Add velocity profile line
+            y_profile = np.linspace(0, plate_gap, 20)
+            x_profile = 2 + (y_profile / plate_gap) * max_arrow_length
+            fig.add_trace(go.Scatter(x=x_profile, y=y_profile, mode='lines',
+                                    line=dict(color='red', width=3, dash='dash'),
+                                    name='Velocity Profile'))
+            
+            # Shear stress indicator
+            fig.add_annotation(x=7, y=plate_gap/2, 
+                             text=f"<b>τ = μ × (du/dy)</b><br>τ = {tau:.2f} Pa",
+                             showarrow=False, font=dict(size=14, color="darkred"),
+                             bgcolor="rgba(255,255,255,0.9)", bordercolor="red", borderwidth=2)
+            
+            # Add "High viscosity = more resistance" annotation
+            resistance_text = "High resistance" if mu > 0.1 else "Low resistance" if mu < 0.01 else "Medium resistance"
+            fig.add_annotation(x=plate_length/2, y=plate_gap/2,
+                             text=f"<b>{resistance_text}</b>",
+                             showarrow=False, font=dict(size=16, color="white"),
+                             bgcolor=fluid_color.replace('0.7', '0.9').replace('0.8', '0.95'))
+            
+            fig.update_layout(
+                xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, plate_length+1]),
+                yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, plate_gap+1]),
+                height=400,
+                showlegend=False,
+                plot_bgcolor='white',
+                margin=dict(l=20, r=20, t=30, b=20)
+            )
+            
+            # Result box
+            fig.add_annotation(
+                x=plate_length/2, y=plate_gap+1.0,
+                text=f"<b>Shear Stress: {tau:.2f} Pa</b>",
+                showarrow=False,
+                font=dict(size=18, color="white"),
+                bgcolor="rgba(0, 100, 200, 0.9)",
+                bordercolor="darkblue",
+                borderwidth=2,
+                borderpad=8
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+            st.caption("""
+            **Couette Flow**: When one plate moves relative to another, the fluid between them experiences shear.
+            Higher viscosity fluids resist this shearing motion more strongly, requiring more force to maintain the same velocity.
             """)
 
 # =====================================================
