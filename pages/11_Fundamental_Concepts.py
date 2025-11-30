@@ -569,33 +569,70 @@ with main_tab2:
             st.markdown(f"**Contact Angle (θ):** `{theta}`°")
         
         st.markdown("---")
-        st.markdown("**Capillary Tube Parameters**")
+        st.markdown("**Floating Object Parameters**")
         
-        tube_radius_mm = st.slider("Tube Radius (mm)", 0.1, 5.0, 1.0, 0.1, key="st_tube_radius")
-        tube_radius = tube_radius_mm / 1000  # Convert to meters
+        # Object selection for floating demonstration
+        object_choice = st.selectbox(
+            "Select object to float:",
+            ("Steel Needle", "Paper Clip", "Water Strider", "Small Coin", "Razor Blade", "Custom"),
+            key="st_object_selector"
+        )
         
-        # Calculate capillary rise
+        # Object properties: mass per unit length (kg/m), width (m), density (kg/m³)
+        OBJECT_PROPERTIES = {
+            "Steel Needle":   {'mass_per_length': 0.0003, 'width': 0.0008, 'rho_obj': 7800, 'description': 'Classic demonstration'},
+            "Paper Clip":     {'mass_per_length': 0.001, 'width': 0.001, 'rho_obj': 7800, 'description': 'Office experiment'},
+            "Water Strider":  {'mass_per_length': 0.00001, 'width': 0.002, 'rho_obj': 1100, 'description': 'Nature\'s design - 6 legs'},
+            "Small Coin":     {'mass_per_length': 0.025, 'width': 0.018, 'rho_obj': 8900, 'description': 'Heavy - needs high γ'},
+            "Razor Blade":    {'mass_per_length': 0.002, 'width': 0.02, 'rho_obj': 7800, 'description': 'Flat and thin'},
+        }
+        
+        if object_choice == "Custom":
+            mass_per_length = st.slider("Mass per length (g/m)", 0.1, 50.0, 1.0, 0.1, key="st_mass") / 1000
+            obj_width = st.slider("Object width (mm)", 0.5, 30.0, 2.0, 0.5, key="st_width") / 1000
+            rho_obj = 7800
+            obj_desc = "Custom object"
+        else:
+            obj_props = OBJECT_PROPERTIES[object_choice]
+            mass_per_length = obj_props['mass_per_length']
+            obj_width = obj_props['width']
+            rho_obj = obj_props['rho_obj']
+            obj_desc = obj_props['description']
+            st.caption(f"*{obj_desc}*")
+        
+        # Calculate if object can float
+        # Surface tension force (both sides): F_st = 2 * γ * L * cos(θ)
+        # Weight per unit length: W = m/L * g
+        # For floating: 2γcos(θ) ≥ (m/L)g
+        
         g = 9.81
         theta_rad = np.radians(theta)
         
-        if rho_st > 0 and tube_radius > 0:
-            h_capillary = (2 * gamma * np.cos(theta_rad)) / (rho_st * g * tube_radius)
+        # Maximum supportable weight per unit length
+        max_weight_per_length = 2 * gamma * np.cos(theta_rad) if theta < 90 else 0
+        actual_weight_per_length = mass_per_length * g
+        
+        # Safety factor (how much margin before sinking)
+        if max_weight_per_length > 0:
+            safety_factor = max_weight_per_length / actual_weight_per_length
         else:
-            h_capillary = 0
+            safety_factor = 0
+        
+        can_float = safety_factor >= 1.0
         
         st.markdown("---")
         st.markdown("**Results**")
         
         col_res1, col_res2 = st.columns(2)
         with col_res1:
-            st.metric("Capillary Rise/Fall", f"{h_capillary*1000:.2f} mm")
+            st.metric("Max Support Force", f"{max_weight_per_length*1000:.3f} mN/m")
         with col_res2:
-            if h_capillary > 0:
-                st.metric("Direction", "↑ Rise")
-            elif h_capillary < 0:
-                st.metric("Direction", "↓ Depression")
-            else:
-                st.metric("Direction", "— No change")
+            st.metric("Object Weight", f"{actual_weight_per_length*1000:.3f} mN/m")
+        
+        if can_float:
+            st.success(f"✓ **FLOATS!** Safety factor: {safety_factor:.2f}x")
+        else:
+            st.error(f"✗ **SINKS!** Need {1/safety_factor:.1f}x more surface tension")
         
         # Surface tension comparison
         st.markdown("---")
@@ -609,96 +646,188 @@ with main_tab2:
         st.subheader("🖼️ Visualization")
         
         # Create visualization tabs
-        st_viz_tab1, st_viz_tab2 = st.tabs(["🧪 Capillary Rise", "💧 Droplet Shape"])
+        st_viz_tab1, st_viz_tab2 = st.tabs(["🪡 Floating Object", "💧 Droplet Shape"])
         
         with st_viz_tab1:
-            st.markdown("#### Capillary Rise Visualization")
+            st.markdown("#### Floating Needle / Water Strider Demonstration")
             
-            # Create capillary tube visualization
-            fig_cap = go.Figure()
+            # Create floating object visualization
+            fig_float = go.Figure()
             
-            # Container/beaker dimensions
-            beaker_width = 8
-            beaker_height = 6
-            water_level = 3
-            tube_viz_radius = 0.3
-            tube_x = beaker_width / 2
+            # Container dimensions
+            container_width = 10
+            container_height = 6
+            water_level = 3.5
             
-            # Scale capillary rise for visualization (max ±3 units)
-            h_viz = np.clip(h_capillary * 1000 / 10, -2.5, 2.5)  # Scale mm to viz units
+            # Draw container
+            fig_float.add_shape(type="rect", x0=0, y0=0, x1=container_width, y1=container_height,
+                              fillcolor="rgba(200, 220, 255, 0.2)", line=dict(color="darkblue", width=3))
             
-            # Draw beaker
-            fig_cap.add_shape(type="rect", x0=0, y0=0, x1=beaker_width, y1=beaker_height,
-                            fillcolor="rgba(200, 220, 255, 0.2)", line=dict(color="darkblue", width=2))
+            # Draw liquid
+            fig_float.add_shape(type="rect", x0=0.1, y0=0.1, x1=container_width-0.1, y1=water_level,
+                              fillcolor=liquid_color, line_width=0)
             
-            # Draw liquid in beaker
-            fig_cap.add_shape(type="rect", x0=0.1, y0=0.1, x1=beaker_width-0.1, y1=water_level,
-                            fillcolor=liquid_color, line_width=0)
+            # Object dimensions for visualization
+            obj_viz_width = 3
+            obj_viz_height = 0.15
+            obj_x_center = container_width / 2
             
-            # Draw capillary tube (glass walls)
-            fig_cap.add_shape(type="rect", x0=tube_x-tube_viz_radius-0.1, y0=0.5, 
-                            x1=tube_x-tube_viz_radius, y1=beaker_height+1,
-                            fillcolor="rgba(200, 220, 255, 0.5)", line=dict(color="gray", width=1))
-            fig_cap.add_shape(type="rect", x0=tube_x+tube_viz_radius, y0=0.5, 
-                            x1=tube_x+tube_viz_radius+0.1, y1=beaker_height+1,
-                            fillcolor="rgba(200, 220, 255, 0.5)", line=dict(color="gray", width=1))
-            
-            # Draw liquid in tube
-            liquid_top = water_level + h_viz
-            fig_cap.add_shape(type="rect", x0=tube_x-tube_viz_radius, y0=0.5, 
-                            x1=tube_x+tube_viz_radius, y1=liquid_top,
-                            fillcolor=liquid_color, line_width=0)
-            
-            # Draw meniscus
-            if theta < 90:  # Wetting liquid - concave meniscus
-                meniscus_y = np.linspace(liquid_top - 0.2, liquid_top, 20)
-                meniscus_x = tube_x + tube_viz_radius * np.cos(np.linspace(0, np.pi, 20))
-                fig_cap.add_trace(go.Scatter(x=meniscus_x, y=meniscus_y, mode='lines',
-                                           line=dict(color='darkblue', width=2), showlegend=False))
-            else:  # Non-wetting liquid - convex meniscus
-                meniscus_y = np.linspace(liquid_top, liquid_top + 0.2, 20)
-                meniscus_x = tube_x + tube_viz_radius * np.cos(np.linspace(np.pi, 0, 20))
-                fig_cap.add_trace(go.Scatter(x=meniscus_x, y=meniscus_y, mode='lines',
-                                           line=dict(color='darkblue', width=2), showlegend=False))
-            
-            # Reference line at water level
-            fig_cap.add_shape(type="line", x0=0, y0=water_level, x1=beaker_width, y1=water_level,
-                            line=dict(color="red", width=2, dash="dash"))
-            
-            # Height indicator
-            if abs(h_viz) > 0.1:
-                fig_cap.add_annotation(
-                    x=tube_x + 1, y=(water_level + liquid_top)/2,
-                    text=f"<b>h = {h_capillary*1000:.2f} mm</b>",
-                    showarrow=True, arrowhead=2,
-                    ax=40, ay=0,
-                    font=dict(size=12, color="darkred"),
-                    bgcolor="rgba(255,255,255,0.9)"
+            if can_float:
+                # Object floats - show surface depression
+                depression_depth = 0.3 * (1 - safety_factor) if safety_factor < 2 else 0.05
+                depression_depth = max(0.05, min(0.4, depression_depth))
+                obj_y = water_level - depression_depth
+                
+                # Draw depressed water surface (meniscus on both sides)
+                # Left side meniscus
+                meniscus_x_left = np.linspace(0.1, obj_x_center - obj_viz_width/2, 30)
+                meniscus_y_left = water_level - depression_depth * np.exp(-2 * (meniscus_x_left - (obj_x_center - obj_viz_width/2))**2)
+                
+                # Right side meniscus
+                meniscus_x_right = np.linspace(obj_x_center + obj_viz_width/2, container_width - 0.1, 30)
+                meniscus_y_right = water_level - depression_depth * np.exp(-2 * (meniscus_x_right - (obj_x_center + obj_viz_width/2))**2)
+                
+                # Draw the curved water surface
+                fig_float.add_trace(go.Scatter(
+                    x=np.concatenate([meniscus_x_left, [obj_x_center - obj_viz_width/2]]),
+                    y=np.concatenate([meniscus_y_left, [obj_y]]),
+                    mode='lines', line=dict(color='darkblue', width=3),
+                    showlegend=False
+                ))
+                fig_float.add_trace(go.Scatter(
+                    x=np.concatenate([[obj_x_center + obj_viz_width/2], meniscus_x_right]),
+                    y=np.concatenate([[obj_y], meniscus_y_right]),
+                    mode='lines', line=dict(color='darkblue', width=3),
+                    showlegend=False
+                ))
+                
+                # Draw the floating object
+                if object_choice == "Water Strider":
+                    # Draw water strider with legs
+                    body_x = [obj_x_center - 0.3, obj_x_center + 0.3, obj_x_center + 0.2, obj_x_center - 0.2]
+                    body_y = [obj_y + 0.3, obj_y + 0.3, obj_y + 0.5, obj_y + 0.5]
+                    fig_float.add_trace(go.Scatter(x=body_x + [body_x[0]], y=body_y + [body_y[0]],
+                                                  fill='toself', fillcolor='rgba(80, 60, 40, 0.9)',
+                                                  line=dict(color='black', width=2), mode='lines', showlegend=False))
+                    
+                    # Draw 6 legs (3 on each side)
+                    leg_positions = [-1.2, 0, 1.2]
+                    for lp in leg_positions:
+                        # Left legs
+                        fig_float.add_trace(go.Scatter(
+                            x=[obj_x_center + lp*0.2, obj_x_center - 1.5 + lp*0.3],
+                            y=[obj_y + 0.35, obj_y - 0.05],
+                            mode='lines', line=dict(color='black', width=2), showlegend=False
+                        ))
+                        # Foot dimple on left
+                        fig_float.add_trace(go.Scatter(
+                            x=[obj_x_center - 1.5 + lp*0.3], y=[obj_y - 0.05],
+                            mode='markers', marker=dict(size=6, color='black'), showlegend=False
+                        ))
+                        # Right legs
+                        fig_float.add_trace(go.Scatter(
+                            x=[obj_x_center + lp*0.2, obj_x_center + 1.5 - lp*0.3],
+                            y=[obj_y + 0.35, obj_y - 0.05],
+                            mode='lines', line=dict(color='black', width=2), showlegend=False
+                        ))
+                        # Foot dimple on right
+                        fig_float.add_trace(go.Scatter(
+                            x=[obj_x_center + 1.5 - lp*0.3], y=[obj_y - 0.05],
+                            mode='markers', marker=dict(size=6, color='black'), showlegend=False
+                        ))
+                else:
+                    # Draw needle/paper clip as a rectangle
+                    fig_float.add_shape(type="rect",
+                                       x0=obj_x_center - obj_viz_width/2, y0=obj_y,
+                                       x1=obj_x_center + obj_viz_width/2, y1=obj_y + obj_viz_height,
+                                       fillcolor="rgba(180, 180, 190, 0.95)",
+                                       line=dict(color="black", width=2))
+                
+                # Force arrows showing surface tension
+                arrow_length = 0.8
+                arrow_y = obj_y - 0.1
+                
+                # Left surface tension arrow (pointing up-left)
+                fig_float.add_annotation(
+                    x=obj_x_center - obj_viz_width/2 - 0.3, y=arrow_y + arrow_length,
+                    ax=obj_x_center - obj_viz_width/2 - 0.1, ay=arrow_y,
+                    showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=3,
+                    arrowcolor="green"
                 )
+                # Right surface tension arrow (pointing up-right)
+                fig_float.add_annotation(
+                    x=obj_x_center + obj_viz_width/2 + 0.3, y=arrow_y + arrow_length,
+                    ax=obj_x_center + obj_viz_width/2 + 0.1, ay=arrow_y,
+                    showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=3,
+                    arrowcolor="green"
+                )
+                
+                # Weight arrow (pointing down)
+                fig_float.add_annotation(
+                    x=obj_x_center, y=obj_y - 0.8,
+                    ax=obj_x_center, ay=obj_y + obj_viz_height/2,
+                    showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=3,
+                    arrowcolor="red"
+                )
+                
+                # Labels
+                fig_float.add_annotation(x=obj_x_center - obj_viz_width/2 - 0.8, y=arrow_y + arrow_length + 0.2,
+                                        text="<b>F<sub>γ</sub></b>", showarrow=False, font=dict(size=14, color="green"))
+                fig_float.add_annotation(x=obj_x_center + obj_viz_width/2 + 0.8, y=arrow_y + arrow_length + 0.2,
+                                        text="<b>F<sub>γ</sub></b>", showarrow=False, font=dict(size=14, color="green"))
+                fig_float.add_annotation(x=obj_x_center + 0.4, y=obj_y - 0.9,
+                                        text="<b>W</b>", showarrow=False, font=dict(size=14, color="red"))
+                
+                # Status
+                status_color = "rgba(0, 150, 0, 0.9)"
+                status_text = f"FLOATING! (Safety factor: {safety_factor:.2f}x)"
+                
+            else:
+                # Object sinks
+                obj_y = 0.5  # At bottom
+                
+                # Flat water surface
+                fig_float.add_shape(type="line", x0=0.1, y0=water_level, x1=container_width-0.1, y1=water_level,
+                                  line=dict(color="darkblue", width=3))
+                
+                # Draw sunken object
+                fig_float.add_shape(type="rect",
+                                   x0=obj_x_center - obj_viz_width/2, y0=obj_y,
+                                   x1=obj_x_center + obj_viz_width/2, y1=obj_y + obj_viz_height,
+                                   fillcolor="rgba(180, 180, 190, 0.95)",
+                                   line=dict(color="black", width=2))
+                
+                # Sinking arrow
+                fig_float.add_annotation(
+                    x=obj_x_center, y=obj_y + 1.5,
+                    ax=obj_x_center, ay=obj_y + 0.5,
+                    showarrow=True, arrowhead=2, arrowsize=2, arrowwidth=3,
+                    arrowcolor="red"
+                )
+                
+                status_color = "rgba(200, 0, 0, 0.9)"
+                status_text = f"SINKS! (Need {1/safety_factor:.1f}x more γ)"
             
-            # Labels
-            fig_cap.add_annotation(x=beaker_width/2, y=-0.5, text=f"<b>{liquid_choice}</b>",
-                                 showarrow=False, font=dict(size=14))
-            fig_cap.add_annotation(x=tube_x, y=beaker_height+1.5, 
-                                 text=f"<b>Tube r = {tube_radius_mm} mm</b>",
-                                 showarrow=False, font=dict(size=11))
-            
-            # Result box
-            rise_text = "RISE" if h_capillary > 0 else "DEPRESSION" if h_capillary < 0 else "NO CHANGE"
-            fig_cap.add_annotation(
-                x=beaker_width/2, y=beaker_height+2.2,
-                text=f"<b>Capillary {rise_text}: {h_capillary*1000:.2f} mm</b>",
+            # Status box
+            fig_float.add_annotation(
+                x=container_width/2, y=container_height + 0.8,
+                text=f"<b>{status_text}</b>",
                 showarrow=False,
                 font=dict(size=16, color="white"),
-                bgcolor="rgba(0, 100, 200, 0.9)",
-                bordercolor="darkblue",
+                bgcolor=status_color,
+                bordercolor="black",
                 borderwidth=2,
                 borderpad=8
             )
             
-            fig_cap.update_layout(
-                xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, beaker_width+1]),
-                yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, beaker_height+3],
+            # Object label
+            fig_float.add_annotation(x=container_width/2, y=container_height + 1.6,
+                                    text=f"<b>{object_choice}</b> on <b>{liquid_choice}</b>",
+                                    showarrow=False, font=dict(size=14))
+            
+            fig_float.update_layout(
+                xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.5, container_width+0.5]),
+                yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-0.5, container_height+2.2],
                           scaleanchor="x", scaleratio=1),
                 height=500,
                 showlegend=False,
@@ -706,13 +835,14 @@ with main_tab2:
                 margin=dict(t=20, b=20)
             )
             
-            st.plotly_chart(fig_cap, use_container_width=True)
+            st.plotly_chart(fig_float, use_container_width=True)
             
             st.caption("""
-            **Capillary Rise Equation**: h = 2γcos(θ) / (ρgr)
+            **Force Balance for Floating**: 2γL cos(θ) ≥ W
             
-            - θ < 90°: Liquid wets the surface → Rise (water in glass)
-            - θ > 90°: Liquid doesn't wet the surface → Depression (mercury in glass)
+            - **F<sub>γ</sub>** (green): Surface tension force pulling upward along contact line
+            - **W** (red): Weight of the object pulling downward
+            - The object floats when surface tension forces exceed weight!
             """)
         
         with st_viz_tab2:
@@ -937,11 +1067,12 @@ with main_tab2:
         
         **🕷️ Water Striders**
         - Insects exploit surface tension to walk on water
-        - Their legs are hydrophobic
+        - Their legs are hydrophobic (high contact angle)
+        - *Try the simulation above with "Water Strider" object!*
         
-        **🌿 Plant Capillary Action**
-        - Water rises in plant xylem
-        - Essential for nutrient transport
+        **🪡 Floating Needle Trick**
+        - A steel needle can float if placed gently
+        - Surface tension supports ~1000× more than buoyancy alone
         
         **🫧 Soap Bubbles**
         - Minimize surface area (spherical shape)
