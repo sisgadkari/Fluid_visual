@@ -205,21 +205,21 @@ st.sidebar.title("📚 Navigation")
 
 # Interactive Modules Section
 st.sidebar.markdown("### 🔬 Interactive Modules")
-st.sidebar.page_link("pages/1_💧_Capillary_Rise.py", label="💧 Capillary Rise")
-st.sidebar.page_link("pages/2_📏_Open_Manometer.py", label="📏 Open Manometer")
-st.sidebar.page_link("pages/3_🔒_Closed_Manometer.py", label="🔒 Closed Manometer")
-st.sidebar.page_link("pages/4_✈️_Pitot-Static_Tube.py", label="✈️ Pitot-Static Tube")
-st.sidebar.page_link("pages/5_🏗️_Hydrostatic_Pressure_Straight_Wall.py", label="🏗️ Hydrostatic Force - Straight Wall")
-st.sidebar.page_link("pages/6_📐_Hydrostatic_Pressure_Inclined_Wall.py", label="📐 Hydrostatic Force - Inclined Wall")
-st.sidebar.page_link("pages/7_🔄_Reducing_Pipe_Bend.py", label="🔄 Reducing Pipe Bend")
-st.sidebar.page_link("pages/8_🌊_Laminar_and_Turbulent_Flow.py", label="🌊 Laminar & Turbulent Flow")
-st.sidebar.page_link("pages/9_⚡_Pump_Head_Demand.py", label="⚡ Pump Head & Power")
-st.sidebar.page_link("pages/10_⚙️_Turbine_Power.py", label="⚙️ Turbine Power")
+st.sidebar.page_link("pages/1_Capillary_Rise_.py", label="💧 Capillary Rise")
+st.sidebar.page_link("pages/2_Open_Manometer.py", label="📏 Open Manometer")
+st.sidebar.page_link("pages/3_Closed_Manometer.py", label="🔒 Closed Manometer")
+st.sidebar.page_link("pages/4_Pitot-Static_Tube.py", label="✈️ Pitot-Static Tube")
+st.sidebar.page_link("pages/5_Hydrostatic_Pressure_Straight_wall.py", label="🏗️ Hydrostatic Force - Straight Wall")
+st.sidebar.page_link("pages/6_Hydrostatic_Pressure_Inclined_wall.py", label="📐 Hydrostatic Force - Inclined Wall")
+st.sidebar.page_link("pages/7_Reducing_Bend.py", label="🔄 Reducing Pipe Bend")
+st.sidebar.page_link("pages/8_Laminar-and-Turbulent-Flow.py", label="🌊 Laminar & Turbulent Flow")
+st.sidebar.page_link("pages/9_Pump_head_demand.py", label="⚡ Pump Head & Power")
+st.sidebar.page_link("pages/10_Turbine_Power.py", label="⚙️ Turbine Power")
 
 # Fundamental Concepts Section
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📖 Fundamental Concepts")
-st.sidebar.page_link("pages/Fundamental_Concepts/1_🍯_Viscosity.py", label="🍯 Viscosity")
+st.sidebar.page_link("pages/Fundamental_Concepts/1_Viscosity.py", label="🍯 Viscosity")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
