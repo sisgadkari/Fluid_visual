@@ -200,6 +200,36 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- Sidebar Navigation ---
+st.sidebar.title("📚 Navigation")
+
+# Interactive Modules Section
+st.sidebar.markdown("### 🔬 Interactive Modules")
+st.sidebar.page_link("pages/1_💧_Capillary_Rise.py", label="💧 Capillary Rise")
+st.sidebar.page_link("pages/2_📏_Open_Manometer.py", label="📏 Open Manometer")
+st.sidebar.page_link("pages/3_🔒_Closed_Manometer.py", label="🔒 Closed Manometer")
+st.sidebar.page_link("pages/4_✈️_Pitot-Static_Tube.py", label="✈️ Pitot-Static Tube")
+st.sidebar.page_link("pages/5_🏗️_Hydrostatic_Pressure_Straight_Wall.py", label="🏗️ Hydrostatic Force - Straight Wall")
+st.sidebar.page_link("pages/6_📐_Hydrostatic_Pressure_Inclined_Wall.py", label="📐 Hydrostatic Force - Inclined Wall")
+st.sidebar.page_link("pages/7_🔄_Reducing_Pipe_Bend.py", label="🔄 Reducing Pipe Bend")
+st.sidebar.page_link("pages/8_🌊_Laminar_and_Turbulent_Flow.py", label="🌊 Laminar & Turbulent Flow")
+st.sidebar.page_link("pages/9_⚡_Pump_Head_Demand.py", label="⚡ Pump Head & Power")
+st.sidebar.page_link("pages/10_⚙️_Turbine_Power.py", label="⚙️ Turbine Power")
+
+# Fundamental Concepts Section
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📖 Fundamental Concepts")
+st.sidebar.page_link("pages/Fundamental_Concepts/1_🍯_Viscosity.py", label="🍯 Viscosity")
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("""
+<div style='text-align: center; padding: 10px; font-size: 0.85em; color: #64748b;'>
+    <p style='margin: 5px 0;'>💻 <strong>App developed by</strong></p>
+    <p style='margin: 5px 0; font-weight: 600; color: #1e293b;'>Dr. Siddharth Gadkari</p>
+    <p style='margin: 5px 0; font-size: 0.8em;'>University of Surrey</p>
+</div>
+""", unsafe_allow_html=True)
+
 # --- Hero Section ---
 st.markdown("<h1 class='main-header'>💧 Fluid Mechanics Interactive Learning Hub</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Transform Complex Concepts into Visual Understanding • Learn by Doing • Master Fluid Mechanics</p>", unsafe_allow_html=True)
@@ -493,15 +523,5 @@ st.markdown("""
     <p>University of Surrey | School of Chemistry and Chemical Engineering</p>
     <p style='margin-top: 10px;'>👨‍💻 Developer: <strong>Dr Siddharth Gadkari</strong></p>
     <p style='margin-top: 5px;'>🏆 Funded by the <strong>Fluor Global University Sponsorship Program (GUSP) Award</strong> and <strong>Faculty of Engineering and Physical Sciences Teaching Innovation Fund</strong></p>
-</div>
-""", unsafe_allow_html=True)
-
-# --- Sidebar Developer Credit ---
-st.sidebar.markdown("---")
-st.sidebar.markdown("""
-<div style='text-align: center; padding: 10px; font-size: 0.85em; color: #64748b;'>
-    <p style='margin: 5px 0;'>💻 <strong>App developed by</strong></p>
-    <p style='margin: 5px 0; font-weight: 600; color: #1e293b;'>Dr. Siddharth Gadkari</p>
-    <p style='margin: 5px 0; font-size: 0.8em;'>University of Surrey</p>
 </div>
 """, unsafe_allow_html=True)
