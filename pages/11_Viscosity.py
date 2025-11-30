@@ -18,8 +18,7 @@ st.markdown("---")
 # =====================================================
 # SECTION 1: INTERACTIVE SIMULATION
 # =====================================================
-st.header("🎯 Interactive Simulation")
-st.markdown("---")
+st.markdown("## 🎯 Interactive Simulation")
 
 col1, col2 = st.columns([2, 3])
 
@@ -65,7 +64,7 @@ with col1:
     
     # Calculate kinematic viscosity
     nu = mu / rho  # m²/s
-        
+    
     st.markdown("---")
     st.subheader("Calculated Properties")
     
@@ -98,7 +97,7 @@ with col1:
 # --- Column 2: Visualization ---
 with col2:
     st.header("🖼️ Visualization")
-        
+    
     # Create visualization tabs
     viz_tab1, viz_tab2 = st.tabs(["🍯 Falling Ball", "🌊 Fluid Flow"])
     
@@ -183,12 +182,9 @@ with col2:
                 st.metric("Time to Sink/Rise", "Very long!")
         
         # Animation parameters
-        # We want the animation to take exactly time_to_sink seconds
-        # Plotly frame duration is in milliseconds
-        # Cap the animation time between 0.5s and 30s for usability
         animation_time = max(0.5, min(30.0, time_to_sink))
         
-        # Number of frames - more frames for longer animations for smoothness
+        # Number of frames
         if animation_time < 1:
             n_frames = 30
         elif animation_time < 5:
@@ -198,24 +194,21 @@ with col2:
         else:
             n_frames = 120
         
-        # Frame duration in milliseconds to achieve real-time animation
+        # Frame duration in milliseconds
         frame_duration_ms = (animation_time * 1000) / n_frames
         
         # Calculate positions for animation
-        # Ball starts just below surface, ends resting on bottom
-        start_y = container_height - ball_viz_radius - 0.3  # Just below fluid surface
-        end_y = ball_viz_radius  # Resting on bottom (ball center at radius height)
+        start_y = container_height - ball_viz_radius - 0.3
+        end_y = ball_viz_radius
         
         if not will_sink:
-            # Floating: starts at bottom, rises to top
             start_y = ball_viz_radius + 0.3
             end_y = container_height - ball_viz_radius - 0.3
         
-        # Generate positions - linear motion (constant terminal velocity)
+        # Generate positions
         positions = []
         for i in range(n_frames):
-            progress = i / (n_frames - 1)  # 0 to 1
-            
+            progress = i / (n_frames - 1)
             if will_sink:
                 pos = start_y - (start_y - end_y) * progress
             else:
@@ -226,8 +219,6 @@ with col2:
         frames = []
         for i, ball_y in enumerate(positions):
             frame_data = []
-            
-            # Ball trace
             theta_circle = np.linspace(0, 2*np.pi, 30)
             ball_x = container_width/2 + ball_viz_radius * np.cos(theta_circle)
             ball_y_circle = ball_y + ball_viz_radius * np.sin(theta_circle)
@@ -245,14 +236,11 @@ with col2:
         # Create figure with initial state
         fig3 = go.Figure()
         
-        # Draw container (glass walls)
-        # Left wall
+        # Draw container
         fig3.add_shape(type="rect", x0=-0.2, y0=0, x1=0, y1=container_height,
                       fillcolor="rgba(200, 220, 255, 0.5)", line=dict(color="darkblue", width=2))
-        # Right wall
         fig3.add_shape(type="rect", x0=container_width, y0=0, x1=container_width+0.2, y1=container_height,
                       fillcolor="rgba(200, 220, 255, 0.5)", line=dict(color="darkblue", width=2))
-        # Bottom
         fig3.add_shape(type="rect", x0=-0.2, y0=-0.3, x1=container_width+0.2, y1=0,
                       fillcolor="rgba(150, 150, 160, 0.8)", line=dict(color="black", width=2))
         
@@ -278,7 +266,6 @@ with col2:
             name='Ball'
         ))
         
-        # Add frames
         fig3.frames = frames
         
         # Labels and annotations
@@ -292,7 +279,6 @@ with col2:
                           showarrow=False, font=dict(size=11),
                           bgcolor="rgba(255,255,255,0.9)", borderpad=5)
         
-        # Direction indicator
         if will_sink:
             fig3.add_annotation(x=container_width/2, y=container_height - 3,
                               text="⬇️ SINKING", showarrow=False,
@@ -302,7 +288,6 @@ with col2:
                               text="⬆️ FLOATING UP", showarrow=False,
                               font=dict(size=14, color="darkgreen"))
         
-        # Result box
         fig3.add_annotation(
             x=container_width/2, y=-1.0,
             text=f"<b>V_terminal = {v_terminal:.4f} m/s ({v_terminal*100:.2f} cm/s)</b>",
@@ -377,7 +362,6 @@ with col2:
                 mat_v = min(mat_v, 50)
                 status = "Floats"
             
-            # Calculate time to sink/rise
             if mat_v > 0:
                 mat_time = fall_distance / mat_v
             else:
@@ -394,7 +378,6 @@ with col2:
         df_comparison = pd.DataFrame(comparison_data)
         st.dataframe(df_comparison, use_container_width=True, hide_index=True)
         
-        # Show animation time info
         if time_to_sink != animation_time:
             st.info(f"⏱️ **Note**: Real sink time is {time_to_sink:.6f} s. Animation is capped at {animation_time:.2f} s for usability.")
         else:
@@ -415,7 +398,6 @@ with col2:
         
         fig = go.Figure()
         
-        # Plate dimensions
         plate_length = 10
         plate_gap = 2
         
@@ -435,9 +417,9 @@ with col2:
         fig.add_shape(type="rect", x0=0, y0=0, x1=plate_length, y1=plate_gap,
                      fillcolor=fluid_color, line=dict(color="blue", width=1))
         
-        # Velocity profile arrows (linear for Couette flow)
+        # Velocity profile arrows
         n_arrows = 8
-        max_arrow_length = 2.5 - (mu / 3)  # Shorter arrows for more viscous fluids
+        max_arrow_length = 2.5 - (mu / 3)
         max_arrow_length = max(0.5, max_arrow_length)
         
         for i in range(n_arrows + 1):
@@ -466,7 +448,6 @@ with col2:
                          showarrow=False, font=dict(size=14, color="darkred"),
                          bgcolor="rgba(255,255,255,0.9)", bordercolor="red", borderwidth=2)
         
-        # Add "High viscosity = more resistance" annotation
         resistance_text = "High resistance" if mu > 0.1 else "Low resistance" if mu < 0.01 else "Medium resistance"
         fig.add_annotation(x=plate_length/2, y=plate_gap/2,
                          text=f"<b>{resistance_text}</b>",
@@ -482,7 +463,6 @@ with col2:
             margin=dict(l=20, r=20, t=30, b=20)
         )
         
-        # Result box
         fig.add_annotation(
             x=plate_length/2, y=plate_gap+1.0,
             text=f"<b>Shear Stress: {tau:.2f} Pa</b>",
@@ -506,8 +486,7 @@ st.markdown("---")
 # =====================================================
 # SECTION 2: THEORY & CONCEPTS
 # =====================================================
-st.header("📚 Understanding Viscosity")
-st.markdown("---")
+st.markdown("## 📚 Theory & Concepts")
 
 col_theory1, col_theory2 = st.columns([1, 1])
 
@@ -608,8 +587,7 @@ st.markdown("---")
 # =====================================================
 # SECTION 3: VISCOSITY TYPES
 # =====================================================
-st.header("🔬 Types of Fluid Behavior")
-st.markdown("---")
+st.markdown("## 🔬 Types of Fluid Behavior")
 
 col_type1, col_type2 = st.columns([1, 1])
 
@@ -646,32 +624,32 @@ with col_type1:
     - Examples: Toothpaste, mayonnaise, drilling mud
     - *"Won't flow until you push hard enough"*
     """)
-    
-    with col_type2:
+
+with col_type2:
     # Create a plot showing different fluid behaviors
     fig_types = go.Figure()
     
-    shear_rate = np.linspace(0, 100, 100)
+    shear_rate_arr = np.linspace(0, 100, 100)
     
     # Newtonian
-    tau_newtonian = 0.5 * shear_rate
+    tau_newtonian = 0.5 * shear_rate_arr
     
     # Shear-thinning (power law n < 1)
-    tau_thinning = 2 * shear_rate**0.5
+    tau_thinning = 2 * shear_rate_arr**0.5
     
     # Shear-thickening (power law n > 1)
-    tau_thickening = 0.05 * shear_rate**1.5
+    tau_thickening = 0.05 * shear_rate_arr**1.5
     
     # Bingham plastic
-    tau_bingham = 20 + 0.3 * shear_rate
+    tau_bingham = 20 + 0.3 * shear_rate_arr
     
-    fig_types.add_trace(go.Scatter(x=shear_rate, y=tau_newtonian, mode='lines',
+    fig_types.add_trace(go.Scatter(x=shear_rate_arr, y=tau_newtonian, mode='lines',
                                    name='Newtonian', line=dict(color='blue', width=3)))
-    fig_types.add_trace(go.Scatter(x=shear_rate, y=tau_thinning, mode='lines',
+    fig_types.add_trace(go.Scatter(x=shear_rate_arr, y=tau_thinning, mode='lines',
                                    name='Shear-Thinning', line=dict(color='green', width=3)))
-    fig_types.add_trace(go.Scatter(x=shear_rate, y=tau_thickening, mode='lines',
+    fig_types.add_trace(go.Scatter(x=shear_rate_arr, y=tau_thickening, mode='lines',
                                    name='Shear-Thickening', line=dict(color='red', width=3)))
-    fig_types.add_trace(go.Scatter(x=shear_rate, y=tau_bingham, mode='lines',
+    fig_types.add_trace(go.Scatter(x=shear_rate_arr, y=tau_bingham, mode='lines',
                                    name='Bingham Plastic', line=dict(color='purple', width=3)))
     
     fig_types.update_layout(
@@ -712,8 +690,7 @@ st.markdown("---")
 # =====================================================
 # SECTION 4: ENGINEERING APPLICATIONS
 # =====================================================
-st.header("📋 Engineering Applications of Viscosity")
-st.markdown("---")
+st.markdown("## 📋 Engineering Applications of Viscosity")
 
 col_app1, col_app2 = st.columns([1, 1])
 
@@ -846,8 +823,8 @@ with result_col4:
 
 if Re_pipe < 2300:
     st.info(f"**Laminar Flow**: Using Hagen-Poiseuille equation. ΔP = 128μLQ/(πD⁴)")
-    else:
-        st.warning(f"**Turbulent Flow**: Using Darcy-Weisbach with Blasius correlation. Higher pressure drop due to turbulent mixing.")
+else:
+    st.warning(f"**Turbulent Flow**: Using Darcy-Weisbach with Blasius correlation. Higher pressure drop due to turbulent mixing.")
 
 # --- Footer ---
 st.markdown("---")
