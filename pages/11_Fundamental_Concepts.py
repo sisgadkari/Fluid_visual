@@ -16,7 +16,7 @@ st.markdown(
 st.markdown("---")
 
 # Create main tabs for different fundamental concepts
-main_tab1, main_tab2, main_tab3 = st.tabs(["🍯 Viscosity", "💧 Surface Tension", "⚓ Buoyancy & Stability"])
+main_tab1, main_tab2, main_tab3, main_tab4 = st.tabs(["🍯 Viscosity", "💧 Surface Tension", "⚓ Buoyancy & Stability", "🌊 Bernoulli Principle"])
 
 # =====================================================
 # TAB 1: VISCOSITY
@@ -1116,6 +1116,439 @@ with main_tab3:
     - **Floating Condition**: ρ_object × V_object = ρ_fluid × V_submerged  
     - **Fraction Submerged**: V_sub/V_total = ρ_object/ρ_fluid
     - **Apparent Weight**: W_apparent = W - F_B = (ρ_object - ρ_fluid) × g × V
+    """)
+
+# =====================================================
+# TAB 4: BERNOULLI PRINCIPLE
+# =====================================================
+with main_tab4:
+    st.markdown("<h2 style='text-align: center;'>🌊 The Bernoulli Principle</h2>", unsafe_allow_html=True)
+    st.markdown(
+        "<p style='text-align: center; font-size: 16px;'>Explore the fundamental relationship between pressure, velocity, and elevation in flowing fluids.</p>",
+        unsafe_allow_html=True
+    )
+    st.markdown("---")
+    
+    # SECTION 1: INTERACTIVE SIMULATION
+    st.markdown("### 🎯 Interactive Simulation - Venturi Effect")
+    
+    col_bern1, col_bern2 = st.columns([2, 3])
+    
+    with col_bern1:
+        st.subheader("🔬 Parameters")
+        
+        st.markdown("**Pipe Configuration**")
+        
+        # Inlet parameters
+        D1 = st.slider("Inlet Diameter D₁ (cm)", 5, 20, 10, 1, key="bern_D1")
+        D2 = st.slider("Throat Diameter D₂ (cm)", 2, 15, 5, 1, key="bern_D2")
+        
+        # Ensure D2 < D1
+        if D2 >= D1:
+            st.warning("⚠️ Throat diameter should be smaller than inlet!")
+            D2 = D1 - 1
+        
+        st.markdown("---")
+        st.markdown("**Flow Conditions**")
+        
+        # Inlet velocity
+        U1 = st.slider("Inlet Velocity U₁ (m/s)", 0.5, 10.0, 2.0, 0.1, key="bern_U1")
+        
+        # Fluid selection
+        fluid_bern = st.selectbox(
+            "Select Fluid:",
+            ("Water", "Air", "Oil", "Custom"),
+            key="bern_fluid"
+        )
+        
+        FLUID_BERN = {
+            "Water": {'rho': 1000, 'name': 'Water'},
+            "Air": {'rho': 1.2, 'name': 'Air'},
+            "Oil": {'rho': 850, 'name': 'Oil'},
+        }
+        
+        if fluid_bern == "Custom":
+            rho_bern = st.number_input("Fluid Density (kg/m³)", value=1000, min_value=1, max_value=15000, key="bern_rho")
+        else:
+            rho_bern = FLUID_BERN[fluid_bern]['rho']
+        
+        # Reference elevation
+        z1 = st.slider("Inlet Elevation z₁ (m)", 0.0, 5.0, 1.0, 0.1, key="bern_z1")
+        z2 = st.slider("Throat Elevation z₂ (m)", 0.0, 5.0, 1.0, 0.1, key="bern_z2")
+        
+        # Inlet pressure (gauge)
+        p1_kpa = st.slider("Inlet Pressure p₁ (kPa gauge)", 0, 500, 100, 10, key="bern_p1")
+        p1 = p1_kpa * 1000  # Convert to Pa
+        
+        st.markdown("---")
+        
+        # Calculations using continuity and Bernoulli
+        # Convert diameters to meters
+        D1_m = D1 / 100
+        D2_m = D2 / 100
+        
+        # Areas
+        A1 = np.pi * (D1_m/2)**2
+        A2 = np.pi * (D2_m/2)**2
+        
+        # Continuity: A1*U1 = A2*U2
+        U2 = U1 * (A1 / A2)
+        
+        # Volume flow rate
+        Q = A1 * U1  # m³/s
+        
+        # Bernoulli: p1/ρ + U1²/2 + gz1 = p2/ρ + U2²/2 + gz2
+        # Solve for p2:
+        g = 9.81
+        p2 = p1 + 0.5 * rho_bern * (U1**2 - U2**2) + rho_bern * g * (z1 - z2)
+        
+        # Calculate heads
+        pressure_head_1 = p1 / (rho_bern * g)
+        velocity_head_1 = U1**2 / (2 * g)
+        elevation_head_1 = z1
+        total_head_1 = pressure_head_1 + velocity_head_1 + elevation_head_1
+        
+        pressure_head_2 = p2 / (rho_bern * g)
+        velocity_head_2 = U2**2 / (2 * g)
+        elevation_head_2 = z2
+        total_head_2 = pressure_head_2 + velocity_head_2 + elevation_head_2
+        
+        st.markdown("**Results**")
+        
+        col_r1, col_r2 = st.columns(2)
+        with col_r1:
+            st.markdown("**Inlet (1)**")
+            st.metric("Velocity U₁", f"{U1:.2f} m/s")
+            st.metric("Pressure p₁", f"{p1/1000:.1f} kPa")
+        with col_r2:
+            st.markdown("**Throat (2)**")
+            st.metric("Velocity U₂", f"{U2:.2f} m/s")
+            st.metric("Pressure p₂", f"{p2/1000:.1f} kPa")
+        
+        st.metric("Volume Flow Rate Q", f"{Q*1000:.2f} L/s")
+        
+        # Pressure change indicator
+        delta_p = p2 - p1
+        if delta_p < 0:
+            st.success(f"✓ Pressure **drops** by {abs(delta_p)/1000:.1f} kPa at throat (velocity increases!)")
+        else:
+            st.info(f"Pressure **increases** by {delta_p/1000:.1f} kPa at throat")
+        
+        # Check for cavitation (water only)
+        if fluid_bern == "Water" and p2 < -100000:  # Below -100 kPa gauge (absolute ~ 0)
+            st.error("⚠️ **Cavitation Warning!** Pressure at throat may go below vapor pressure!")
+    
+    with col_bern2:
+        st.subheader("🖼️ Visualization")
+        
+        # Create Venturi tube visualization
+        fig_bern = go.Figure()
+        
+        # Pipe dimensions for visualization
+        pipe_length = 12
+        inlet_length = 4
+        throat_length = 4
+        outlet_length = 4
+        
+        # Scale factors for visualization
+        inlet_radius = D1 / 10  # Scale to reasonable size
+        throat_radius = D2 / 10
+        
+        # Create pipe outline
+        # Top wall
+        x_top = [0, inlet_length, inlet_length + throat_length/3, 
+                inlet_length + 2*throat_length/3, inlet_length + throat_length, pipe_length]
+        y_top = [inlet_radius, inlet_radius, throat_radius, 
+                throat_radius, inlet_radius, inlet_radius]
+        
+        # Bottom wall (mirror)
+        x_bottom = x_top
+        y_bottom = [-y for y in y_top]
+        
+        # Draw pipe walls
+        fig_bern.add_trace(go.Scatter(x=x_top, y=y_top, mode='lines',
+                                      line=dict(color='darkblue', width=4), showlegend=False))
+        fig_bern.add_trace(go.Scatter(x=x_bottom, y=y_bottom, mode='lines',
+                                      line=dict(color='darkblue', width=4), showlegend=False))
+        
+        # Fill pipe interior
+        x_fill = x_top + x_bottom[::-1]
+        y_fill = y_top + y_bottom[::-1]
+        fig_bern.add_trace(go.Scatter(x=x_fill, y=y_fill, fill='toself',
+                                      fillcolor='rgba(100, 170, 255, 0.3)',
+                                      line=dict(width=0), showlegend=False))
+        
+        # Flow arrows (more arrows in throat due to higher velocity)
+        # Inlet arrows
+        for y_pos in np.linspace(-inlet_radius*0.6, inlet_radius*0.6, 3):
+            fig_bern.add_annotation(
+                x=2, y=y_pos, ax=0.5, ay=y_pos,
+                showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                arrowcolor="blue"
+            )
+        
+        # Throat arrows (longer to show higher velocity)
+        arrow_scale = U2/U1
+        for y_pos in np.linspace(-throat_radius*0.5, throat_radius*0.5, 3):
+            fig_bern.add_annotation(
+                x=inlet_length + throat_length/2 + 0.8*arrow_scale, y=y_pos,
+                ax=inlet_length + throat_length/2 - 0.5, ay=y_pos,
+                showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                arrowcolor="red"
+            )
+        
+        # Outlet arrows
+        for y_pos in np.linspace(-inlet_radius*0.6, inlet_radius*0.6, 3):
+            fig_bern.add_annotation(
+                x=pipe_length - 0.5, y=y_pos, ax=pipe_length - 2, ay=y_pos,
+                showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=2,
+                arrowcolor="blue"
+            )
+        
+        # Pressure indicators (manometer tubes)
+        manometer_height_1 = min(3, pressure_head_1 / 2)  # Scale for visualization
+        manometer_height_2 = min(3, max(-2, pressure_head_2 / 2))
+        
+        # Inlet manometer
+        fig_bern.add_shape(type="line", x0=2, y0=inlet_radius, x1=2, y1=inlet_radius + 2.5,
+                          line=dict(color="gray", width=2))
+        fig_bern.add_shape(type="rect", x0=1.8, y0=inlet_radius, x1=2.2, y1=inlet_radius + manometer_height_1,
+                          fillcolor="rgba(100, 170, 255, 0.8)", line=dict(width=1))
+        fig_bern.add_annotation(x=2, y=inlet_radius + 2.8, text=f"p₁={p1/1000:.0f} kPa",
+                               showarrow=False, font=dict(size=10))
+        
+        # Throat manometer
+        throat_x = inlet_length + throat_length/2
+        fig_bern.add_shape(type="line", x0=throat_x, y0=throat_radius, x1=throat_x, y1=throat_radius + 2.5,
+                          line=dict(color="gray", width=2))
+        if manometer_height_2 > 0:
+            fig_bern.add_shape(type="rect", x0=throat_x-0.2, y0=throat_radius, 
+                              x1=throat_x+0.2, y1=throat_radius + manometer_height_2,
+                              fillcolor="rgba(100, 170, 255, 0.8)", line=dict(width=1))
+        fig_bern.add_annotation(x=throat_x, y=throat_radius + 2.8, text=f"p₂={p2/1000:.0f} kPa",
+                               showarrow=False, font=dict(size=10, color="red" if p2 < p1 else "black"))
+        
+        # Labels
+        fig_bern.add_annotation(x=1, y=-inlet_radius - 0.8, text=f"D₁={D1} cm<br>U₁={U1:.1f} m/s",
+                               showarrow=False, font=dict(size=11))
+        fig_bern.add_annotation(x=throat_x, y=-throat_radius - 1.0, text=f"D₂={D2} cm<br>U₂={U2:.1f} m/s",
+                               showarrow=False, font=dict(size=11, color="red"))
+        fig_bern.add_annotation(x=pipe_length - 1, y=-inlet_radius - 0.8, text="Outlet",
+                               showarrow=False, font=dict(size=11))
+        
+        # Title
+        fig_bern.add_annotation(x=pipe_length/2, y=inlet_radius + 4,
+                               text="<b>Venturi Tube - Bernoulli Principle</b>",
+                               showarrow=False, font=dict(size=14))
+        
+        fig_bern.update_layout(
+            xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, pipe_length+1]),
+            yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, 
+                      range=[-inlet_radius - 2, inlet_radius + 5], scaleanchor="x", scaleratio=1),
+            height=400,
+            showlegend=False,
+            plot_bgcolor='white',
+            margin=dict(t=20, b=20)
+        )
+        
+        st.plotly_chart(fig_bern, use_container_width=True)
+        
+        # Energy head bar chart
+        st.markdown("#### Energy Head Breakdown")
+        
+        fig_heads = go.Figure()
+        
+        locations = ['Inlet (1)', 'Throat (2)']
+        
+        fig_heads.add_trace(go.Bar(
+            name='Pressure Head (p/ρg)', x=locations,
+            y=[pressure_head_1, pressure_head_2],
+            marker_color='steelblue'
+        ))
+        fig_heads.add_trace(go.Bar(
+            name='Velocity Head (U²/2g)', x=locations,
+            y=[velocity_head_1, velocity_head_2],
+            marker_color='coral'
+        ))
+        fig_heads.add_trace(go.Bar(
+            name='Elevation Head (z)', x=locations,
+            y=[elevation_head_1, elevation_head_2],
+            marker_color='seagreen'
+        ))
+        
+        fig_heads.update_layout(
+            barmode='stack',
+            yaxis_title='Head (m)',
+            height=300,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+            margin=dict(t=50, b=20)
+        )
+        
+        # Add total head line
+        fig_heads.add_hline(y=total_head_1, line_dash="dash", line_color="red",
+                           annotation_text=f"Total Head = {total_head_1:.2f} m")
+        
+        st.plotly_chart(fig_heads, use_container_width=True)
+        
+        st.caption("""
+        **Key Insight**: As velocity increases in the throat, pressure decreases to keep total head constant.
+        This is the Venturi effect - the basis for many flow measurement devices!
+        """)
+    
+    st.markdown("---")
+    
+    # SECTION 2: THEORY & CONCEPTS
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_bern_theory1, col_bern_theory2 = st.columns([1, 1])
+    
+    with col_bern_theory1:
+        st.markdown("""
+        #### The Bernoulli Equation
+        
+        Derived from conservation of energy along a streamline for **steady, incompressible, inviscid flow**:
+        """)
+        
+        st.latex(r'\frac{p}{\rho} + \frac{U^2}{2} + gz = \text{Constant}')
+        
+        st.markdown("""
+        Or in terms of **Head** (dividing by g):
+        """)
+        
+        st.latex(r'\frac{p}{\rho g} + \frac{U^2}{2g} + z = \text{Total Head}')
+        
+        st.markdown("""
+        #### The Three Energy Terms
+        
+        | Term | Name | Physical Meaning |
+        |------|------|------------------|
+        | p/ρg | **Pressure Head** | Energy from fluid pressure |
+        | U²/2g | **Velocity Head** | Kinetic energy of flow |
+        | z | **Elevation Head** | Potential energy (gravity) |
+        
+        > **Total Head** remains constant along a streamline (ideal flow)
+        """)
+        
+    with col_bern_theory2:
+        st.markdown("""
+        #### Continuity Equation
+        
+        Conservation of mass for incompressible flow:
+        """)
+        
+        st.latex(r'A_1 U_1 = A_2 U_2 = Q = \text{Constant}')
+        
+        st.markdown("""
+        This means:
+        - **Smaller area → Higher velocity**
+        - **Larger area → Lower velocity**
+        
+        #### Combining Continuity & Bernoulli
+        
+        Between two points on a streamline:
+        """)
+        
+        st.latex(r'\frac{p_1}{\rho g} + \frac{U_1^2}{2g} + z_1 = \frac{p_2}{\rho g} + \frac{U_2^2}{2g} + z_2')
+        
+        st.markdown("""
+        #### Key Assumptions
+        
+        Bernoulli equation is valid when:
+        - ✓ **Steady flow** (no time variation)
+        - ✓ **Incompressible fluid** (constant ρ)
+        - ✓ **Inviscid flow** (no friction losses)
+        - ✓ **Along a streamline**
+        - ✓ **No heat transfer or work**
+        """)
+    
+    st.markdown("---")
+    
+    # Alternative forms
+    st.markdown("### 📐 Alternative Forms of Bernoulli Equation")
+    
+    col_form1, col_form2, col_form3 = st.columns(3)
+    
+    with col_form1:
+        st.markdown("**Specific Energy Form**")
+        st.markdown("*(J/kg)*")
+        st.latex(r'\frac{p}{\rho} + \frac{U^2}{2} + gz = \text{Constant}')
+        
+    with col_form2:
+        st.markdown("**Head Form**")
+        st.markdown("*(m)*")
+        st.latex(r'\frac{p}{\rho g} + \frac{U^2}{2g} + z = \text{Constant}')
+        
+    with col_form3:
+        st.markdown("**Pressure Form**")
+        st.markdown("*(N/m² or Pa)*")
+        st.latex(r'p + \frac{\rho U^2}{2} + \rho gz = \text{Constant}')
+    
+    st.markdown("---")
+    
+    # Engineering Applications
+    st.markdown("### 📋 Engineering Applications")
+    
+    col_app1, col_app2 = st.columns([1, 1])
+    
+    with col_app1:
+        st.markdown("""
+        #### Flow Measurement
+        
+        **📏 Venturi Meter**
+        - Measures flow rate from pressure difference
+        - Low energy loss, high accuracy
+        - Used in water and gas pipelines
+        
+        **📏 Orifice Plate**
+        - Simpler than Venturi, lower cost
+        - Higher pressure loss
+        - Common in industrial processes
+        
+        **📏 Pitot Tube**
+        - Measures local velocity
+        - Used in aircraft (airspeed indicator)
+        - Stagnation pressure vs static pressure
+        """)
+        
+    with col_app2:
+        st.markdown("""
+        #### Other Applications
+        
+        **✈️ Aircraft Wings (Lift)**
+        - Air flows faster over curved top surface
+        - Lower pressure above → upward lift force
+        
+        **⛽ Carburetors**
+        - Venturi effect draws fuel into airstream
+        - Mixing of air and fuel
+        
+        **🚿 Aspirators & Atomizers**
+        - Low pressure region draws in secondary fluid
+        - Used in spray bottles, lab equipment
+        
+        **🏗️ Building Aerodynamics**
+        - Wind acceleration between buildings
+        - Pressure differences on structures
+        """)
+    
+    st.info("""
+    **The Venturi Effect in Action:**
+    
+    When fluid flows through a constriction:
+    1. **Continuity**: Area decreases → Velocity increases
+    2. **Bernoulli**: Velocity increases → Pressure decreases
+    
+    This pressure drop is used in Venturi meters, carburetors, aspirators, and even explains 
+    how airplane wings generate lift!
+    """)
+    
+    st.success("""
+    **Key Equations Summary:**
+    
+    - **Continuity**: A₁U₁ = A₂U₂ (mass conservation)
+    - **Bernoulli**: p/ρg + U²/2g + z = Total Head (energy conservation)
+    - **Velocity from Continuity**: U₂ = U₁(A₁/A₂) = U₁(D₁/D₂)²
+    - **Mass Flow Rate**: ṁ = ρAU = ρQ
     """)
 
 # --- Footer ---
