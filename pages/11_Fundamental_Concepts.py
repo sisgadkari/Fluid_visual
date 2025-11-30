@@ -16,7 +16,7 @@ st.markdown(
 st.markdown("---")
 
 # Create main tabs for different fundamental concepts
-main_tab1, main_tab2 = st.tabs(["🍯 Viscosity", "💧 Surface Tension"])
+main_tab1, main_tab2, main_tab3 = st.tabs(["🍯 Viscosity", "💧 Surface Tension", "⚓ Buoyancy & Stability"])
 
 # =====================================================
 # TAB 1: VISCOSITY
@@ -679,6 +679,443 @@ with main_tab2:
     - **Weber Number (We)** = ρV²L/γ — Ratio of inertia to surface tension
     - **Capillary Number (Ca)** = μV/γ — Ratio of viscous forces to surface tension
     - **Bond Number (Bo)** = ρgL²/γ — Ratio of gravitational to surface tension forces
+    """)
+
+# =====================================================
+# TAB 3: BUOYANCY AND STABILITY
+# =====================================================
+with main_tab3:
+    st.markdown("<h2 style='text-align: center;'>⚓ Buoyancy and Stability</h2>", unsafe_allow_html=True)
+    st.markdown(
+        "<p style='text-align: center; font-size: 16px;'>Understand why objects float or sink, and explore the stability of floating bodies through Archimedes' Principle.</p>",
+        unsafe_allow_html=True
+    )
+    st.markdown("---")
+    
+    # SECTION 1: INTERACTIVE SIMULATION
+    st.markdown("### 🎯 Interactive Simulation")
+    
+    col_b1, col_b2 = st.columns([2, 3])
+    
+    with col_b1:
+        st.subheader("🔬 Parameters")
+        
+        # --- Fluid Selection ---
+        st.markdown("**Select the Fluid**")
+        fluid_buoy = st.selectbox(
+            "Choose the surrounding fluid:",
+            ("Water (Fresh)", "Seawater", "Oil", "Mercury", "Glycerol", "Custom"),
+            key="buoy_fluid_selector"
+        )
+        
+        FLUID_BUOY_PROPERTIES = {
+            "Water (Fresh)": {'rho': 1000, 'color': 'rgba(100, 170, 255, 0.6)', 'name': 'Fresh Water'},
+            "Seawater":      {'rho': 1025, 'color': 'rgba(70, 150, 220, 0.6)', 'name': 'Seawater'},
+            "Oil":           {'rho': 850, 'color': 'rgba(200, 180, 100, 0.6)', 'name': 'Oil'},
+            "Mercury":       {'rho': 13546, 'color': 'rgba(180, 180, 180, 0.8)', 'name': 'Mercury'},
+            "Glycerol":      {'rho': 1260, 'color': 'rgba(200, 200, 220, 0.6)', 'name': 'Glycerol'},
+        }
+        
+        if fluid_buoy == "Custom":
+            rho_fluid = st.slider("Fluid Density (kg/m³)", 500, 15000, 1000, 10, key="buoy_fluid_rho")
+            fluid_color_buoy = 'rgba(100, 170, 255, 0.6)'
+        else:
+            rho_fluid = FLUID_BUOY_PROPERTIES[fluid_buoy]['rho']
+            fluid_color_buoy = FLUID_BUOY_PROPERTIES[fluid_buoy]['color']
+            st.info(f"**{fluid_buoy}**: ρ = {rho_fluid} kg/m³")
+        
+        st.markdown("---")
+        st.markdown("**Object Properties**")
+        
+        # Object selection
+        object_buoy = st.selectbox(
+            "Choose an object:",
+            ("Wooden Block", "Steel Cube", "Ice Cube", "Aluminum Block", "Cork", "Concrete Block", "Custom"),
+            key="buoy_object_selector"
+        )
+        
+        OBJECT_BUOY_PROPERTIES = {
+            "Wooden Block":    {'rho': 600, 'color': 'rgba(180, 130, 80, 0.95)', 'name': 'Wood (Oak)'},
+            "Steel Cube":      {'rho': 7850, 'color': 'rgba(120, 120, 130, 0.95)', 'name': 'Steel'},
+            "Ice Cube":        {'rho': 917, 'color': 'rgba(200, 230, 255, 0.7)', 'name': 'Ice'},
+            "Aluminum Block":  {'rho': 2700, 'color': 'rgba(180, 180, 190, 0.95)', 'name': 'Aluminum'},
+            "Cork":            {'rho': 240, 'color': 'rgba(210, 180, 140, 0.95)', 'name': 'Cork'},
+            "Concrete Block":  {'rho': 2400, 'color': 'rgba(150, 150, 150, 0.95)', 'name': 'Concrete'},
+        }
+        
+        if object_buoy == "Custom":
+            rho_object = st.slider("Object Density (kg/m³)", 100, 10000, 1000, 10, key="buoy_obj_rho")
+            object_color_buoy = 'rgba(150, 150, 150, 0.95)'
+        else:
+            rho_object = OBJECT_BUOY_PROPERTIES[object_buoy]['rho']
+            object_color_buoy = OBJECT_BUOY_PROPERTIES[object_buoy]['color']
+        
+        # Object dimensions
+        obj_side = st.slider("Object side length (cm)", 5, 30, 15, 1, key="buoy_side")
+        obj_side_m = obj_side / 100  # Convert to meters
+        
+        # Calculations
+        g = 9.81
+        V_object = obj_side_m ** 3  # Volume of cube in m³
+        m_object = rho_object * V_object  # Mass of object
+        W_object = m_object * g  # Weight of object
+        
+        # Determine floating condition
+        if rho_object < rho_fluid:
+            # Object floats - calculate submerged fraction
+            fraction_submerged = rho_object / rho_fluid
+            V_submerged = fraction_submerged * V_object
+            F_buoyancy = rho_fluid * g * V_submerged
+            status = "FLOATS"
+            status_color = "green"
+        elif rho_object > rho_fluid:
+            # Object sinks - fully submerged
+            fraction_submerged = 1.0
+            V_submerged = V_object
+            F_buoyancy = rho_fluid * g * V_submerged
+            status = "SINKS"
+            status_color = "red"
+        else:
+            # Neutrally buoyant
+            fraction_submerged = 1.0
+            V_submerged = V_object
+            F_buoyancy = rho_fluid * g * V_submerged
+            status = "NEUTRALLY BUOYANT"
+            status_color = "orange"
+        
+        st.markdown("---")
+        st.markdown("**Results**")
+        
+        col_res1, col_res2 = st.columns(2)
+        with col_res1:
+            st.metric("Object Weight (W)", f"{W_object:.2f} N")
+            st.metric("Object Density", f"{rho_object} kg/m³")
+        with col_res2:
+            st.metric("Buoyancy Force (Fᵦ)", f"{F_buoyancy:.2f} N")
+            st.metric("Fluid Density", f"{rho_fluid} kg/m³")
+        
+        if status == "FLOATS":
+            st.success(f"✓ **{status}!** {fraction_submerged*100:.1f}% submerged")
+        elif status == "SINKS":
+            st.error(f"✗ **{status}!** W > Fᵦ (when fully submerged)")
+        else:
+            st.warning(f"⚖ **{status}!** W = Fᵦ exactly")
+        
+        # Apparent weight for sinking objects
+        if rho_object > rho_fluid:
+            apparent_weight = W_object - F_buoyancy
+            st.info(f"**Apparent Weight in Fluid:** {apparent_weight:.2f} N ({apparent_weight/W_object*100:.1f}% of actual weight)")
+    
+    with col_b2:
+        st.subheader("🖼️ Visualization")
+        
+        # Create buoyancy visualization
+        fig_buoy = go.Figure()
+        
+        # Container dimensions
+        container_width = 10
+        container_height = 12
+        fluid_level = 9
+        
+        # Object visualization size
+        obj_viz_size = 2
+        obj_x_center = container_width / 2
+        
+        # Calculate object position based on floating/sinking
+        if status == "FLOATS":
+            # Object floats - position based on submerged fraction
+            submerged_height = obj_viz_size * fraction_submerged
+            obj_bottom = fluid_level - submerged_height
+            obj_top = obj_bottom + obj_viz_size
+        elif status == "SINKS":
+            # Object at bottom
+            obj_bottom = 0.5
+            obj_top = obj_bottom + obj_viz_size
+        else:
+            # Neutrally buoyant - in middle of fluid
+            obj_bottom = fluid_level / 2 - obj_viz_size / 2
+            obj_top = obj_bottom + obj_viz_size
+        
+        # Draw container
+        fig_buoy.add_shape(type="rect", x0=0, y0=0, x1=container_width, y1=container_height,
+                          fillcolor="rgba(200, 220, 255, 0.1)", line=dict(color="darkblue", width=3))
+        
+        # Draw fluid
+        fig_buoy.add_shape(type="rect", x0=0.1, y0=0.1, x1=container_width-0.1, y1=fluid_level,
+                          fillcolor=fluid_color_buoy, line_width=0)
+        
+        # Draw fluid surface line
+        fig_buoy.add_shape(type="line", x0=0.1, y0=fluid_level, x1=container_width-0.1, y1=fluid_level,
+                          line=dict(color="darkblue", width=3))
+        
+        # Draw the object
+        fig_buoy.add_shape(type="rect",
+                          x0=obj_x_center - obj_viz_size/2, y0=obj_bottom,
+                          x1=obj_x_center + obj_viz_size/2, y1=obj_top,
+                          fillcolor=object_color_buoy,
+                          line=dict(color="black", width=2))
+        
+        # Draw force arrows
+        obj_center_y = (obj_bottom + obj_top) / 2
+        
+        # Weight arrow (pointing down) - RED
+        arrow_scale = 1.5
+        weight_arrow_length = min(2.5, W_object / 50 * arrow_scale)
+        fig_buoy.add_annotation(
+            x=obj_x_center, y=obj_center_y - weight_arrow_length,
+            ax=obj_x_center, ay=obj_center_y,
+            showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=3,
+            arrowcolor="red"
+        )
+        fig_buoy.add_annotation(x=obj_x_center - 0.8, y=obj_center_y - weight_arrow_length - 0.3,
+                               text="<b>W</b>", showarrow=False, font=dict(size=16, color="red"))
+        
+        # Buoyancy arrow (pointing up) - GREEN
+        buoy_arrow_length = min(2.5, F_buoyancy / 50 * arrow_scale)
+        fig_buoy.add_annotation(
+            x=obj_x_center, y=obj_center_y + buoy_arrow_length,
+            ax=obj_x_center, ay=obj_center_y,
+            showarrow=True, arrowhead=2, arrowsize=1.5, arrowwidth=3,
+            arrowcolor="green"
+        )
+        fig_buoy.add_annotation(x=obj_x_center + 0.8, y=obj_center_y + buoy_arrow_length + 0.3,
+                               text="<b>F<sub>B</sub></b>", showarrow=False, font=dict(size=16, color="green"))
+        
+        # Pressure arrows on submerged portion (small blue arrows)
+        if obj_bottom < fluid_level:
+            # Bottom pressure (larger, pointing up)
+            for dx in [-0.6, 0, 0.6]:
+                fig_buoy.add_annotation(
+                    x=obj_x_center + dx, y=obj_bottom + 0.4,
+                    ax=obj_x_center + dx, ay=obj_bottom - 0.1,
+                    showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2,
+                    arrowcolor="blue", opacity=0.6
+                )
+            
+            # Top pressure (smaller, pointing down) - only if submerged
+            submerged_top = min(obj_top, fluid_level)
+            if submerged_top > obj_bottom + 0.5:
+                for dx in [-0.6, 0, 0.6]:
+                    fig_buoy.add_annotation(
+                        x=obj_x_center + dx, y=submerged_top - 0.4,
+                        ax=obj_x_center + dx, ay=submerged_top + 0.1,
+                        showarrow=True, arrowhead=2, arrowsize=0.8, arrowwidth=1.5,
+                        arrowcolor="lightblue", opacity=0.6
+                    )
+        
+        # Labels
+        fig_buoy.add_annotation(x=container_width/2, y=container_height + 0.8,
+                               text=f"<b>{object_buoy}</b> in <b>{fluid_buoy}</b>",
+                               showarrow=False, font=dict(size=14))
+        
+        # Status box
+        status_bg = "rgba(0, 150, 0, 0.9)" if status == "FLOATS" else "rgba(200, 0, 0, 0.9)" if status == "SINKS" else "rgba(200, 150, 0, 0.9)"
+        fig_buoy.add_annotation(
+            x=container_width/2, y=container_height + 1.8,
+            text=f"<b>{status}</b>",
+            showarrow=False,
+            font=dict(size=18, color="white"),
+            bgcolor=status_bg,
+            bordercolor="black",
+            borderwidth=2,
+            borderpad=8
+        )
+        
+        # Depth markers
+        fig_buoy.add_annotation(x=-0.8, y=fluid_level, text="Surface", showarrow=False, 
+                               font=dict(size=10, color="darkblue"))
+        
+        # Force comparison text
+        force_text = f"W = {W_object:.1f} N<br>F<sub>B</sub> = {F_buoyancy:.1f} N"
+        fig_buoy.add_annotation(x=container_width + 1.5, y=container_height/2,
+                               text=force_text, showarrow=False,
+                               font=dict(size=12), align="left",
+                               bgcolor="rgba(255,255,255,0.9)", borderpad=5)
+        
+        fig_buoy.update_layout(
+            xaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-2, container_width+3]),
+            yaxis=dict(showgrid=False, showticklabels=False, zeroline=False, range=[-1, container_height+3],
+                      scaleanchor="x", scaleratio=1),
+            height=550,
+            showlegend=False,
+            plot_bgcolor='white',
+            margin=dict(t=20, b=20)
+        )
+        
+        st.plotly_chart(fig_buoy, use_container_width=True)
+        
+        st.caption("""
+        **Archimedes' Principle**: F_B = ρ_fluid × g × V_submerged
+        
+        - **Blue arrows**: Hydrostatic pressure forces (larger at bottom due to greater depth)
+        - **Green arrow (F_B)**: Net buoyancy force (acts upward at centre of buoyancy)
+        - **Red arrow (W)**: Weight of object (acts downward at centre of gravity)
+        """)
+    
+    st.markdown("---")
+    
+    # SECTION 2: THEORY & CONCEPTS
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_buoy_theory1, col_buoy_theory2 = st.columns([1, 1])
+    
+    with col_buoy_theory1:
+        st.markdown("""
+        #### Archimedes' Principle
+        
+        When an object is submerged (fully or partially) in a fluid, it experiences an upward **buoyancy force** equal to the weight of the fluid displaced.
+        """)
+        
+        st.latex(r'F_B = \rho_{fluid} \cdot g \cdot V_{submerged}')
+        
+        st.markdown("""
+        This principle was discovered by Archimedes (287-212 BC) and explains why objects float or sink.
+        
+        #### Origin of Buoyancy
+        
+        The buoyancy force arises from the **pressure difference** between the top and bottom of a submerged object:
+        
+        - Pressure increases with depth: p = ρgh
+        - Bottom surface experiences higher pressure than top
+        - Net upward force = F_B
+        """)
+        
+        st.latex(r'F_B = p_2 A - p_1 A = \rho g h_2 A - \rho g h_1 A = \rho g V')
+        
+    with col_buoy_theory2:
+        st.markdown("""
+        #### Floating Condition
+        
+        For an object to float, the buoyancy force must balance its weight:
+        """)
+        
+        st.latex(r'W = F_B \implies \rho_{object} \cdot V_{object} = \rho_{fluid} \cdot V_{submerged}')
+        
+        st.markdown("""
+        **Fraction submerged** for a floating object:
+        """)
+        
+        st.latex(r'\frac{V_{submerged}}{V_{object}} = \frac{\rho_{object}}{\rho_{fluid}}')
+        
+        st.markdown("""
+        #### Sink, Float, or Neutral?
+        
+        | Condition | Result |
+        |-----------|--------|
+        | ρ_object < ρ_fluid | **Floats** (partially submerged) |
+        | ρ_object > ρ_fluid | **Sinks** (W > F_B even when fully submerged) |
+        | ρ_object = ρ_fluid | **Neutrally buoyant** (suspended in fluid) |
+        
+        > **Example**: Ice (ρ = 917 kg/m³) floats in water (ρ = 1000 kg/m³) with about 91.7% submerged!
+        """)
+    
+    st.markdown("---")
+    
+    # SECTION 3: STABILITY
+    st.markdown("### ⚖️ Stability of Floating & Submerged Bodies")
+    
+    col_stab1, col_stab2 = st.columns([1, 1])
+    
+    with col_stab1:
+        st.markdown("""
+        #### Stability of Submerged Bodies
+        
+        For a **fully submerged** body, stability depends on the relative positions of:
+        
+        - **CG** (Centre of Gravity): Where weight acts
+        - **CB** (Centre of Buoyancy): Centroid of displaced volume
+        
+        | Configuration | Stability |
+        |--------------|-----------|
+        | CG below CB | **Stable** ✓ (self-righting) |
+        | CG above CB | **Unstable** ✗ (will capsize) |
+        | CG at CB | **Neutral** (no tendency either way) |
+        
+        > **Think of a submarine**: Ballast tanks are positioned to keep CG below CB for stability.
+        """)
+        
+    with col_stab2:
+        st.markdown("""
+        #### Stability of Floating Bodies
+        
+        Floating bodies are more complex because the **CB moves** when the body tilts!
+        
+        The key concept is the **Metacentre (M)**:
+        - M is where the line of action of buoyancy force intersects the centreline
+        - **Metacentric Height (GM)** = distance from G to M
+        
+        | Configuration | Stability |
+        |--------------|-----------|
+        | M above CG (GM > 0) | **Stable** ✓ |
+        | M below CG (GM < 0) | **Unstable** ✗ |
+        | M at CG (GM = 0) | **Neutral** |
+        
+        > **Ships** are designed with positive GM. Wider ships are generally more stable!
+        """)
+    
+    st.info("""
+    **Why can ships have CG above CB and still be stable?**
+    
+    When a ship tilts, the shape of the submerged volume changes, causing CB to shift sideways. 
+    If the metacentre M (intersection of the new buoyancy line with the centreline) is above CG, 
+    a **restoring moment** is created that rights the ship. This is why the metacentric height GM 
+    is the critical stability parameter for floating vessels, not just the CG-CB relationship.
+    """)
+    
+    st.markdown("---")
+    
+    # Practical Applications
+    st.markdown("### 📋 Engineering Applications")
+    
+    col_app1, col_app2 = st.columns([1, 1])
+    
+    with col_app1:
+        st.markdown("""
+        #### Marine & Naval Engineering
+        
+        **🚢 Ship Design**
+        - Hull shape optimized for stability (GM > 0)
+        - Ballast systems to adjust CG position
+        - Load distribution to maintain stability
+        
+        **🛥️ Submarines**
+        - Ballast tanks for depth control
+        - Trim tanks for pitch adjustment
+        - CG kept below CB for stability
+        
+        **🏊 Life Jackets & Buoys**
+        - Low-density materials (foam, air)
+        - Designed to keep head above water
+        """)
+        
+    with col_app2:
+        st.markdown("""
+        #### Industrial Applications
+        
+        **⚗️ Hydrometers**
+        - Measure fluid density by floating depth
+        - Used in brewing, batteries, milk testing
+        
+        **🎈 Hot Air Balloons**
+        - Heated air is less dense than cold air
+        - Buoyancy in atmosphere (same principle!)
+        
+        **🛢️ Oil-Water Separation**
+        - Oil floats on water (ρ_oil < ρ_water)
+        - Used in spill cleanup and refineries
+        
+        **⚓ Offshore Platforms**
+        - Semi-submersibles use buoyancy
+        - Tension-leg platforms anchored against buoyancy
+        """)
+    
+    st.success("""
+    **Key Equations Summary:**
+    
+    - **Buoyancy Force**: F_B = ρ_fluid × g × V_submerged
+    - **Floating Condition**: ρ_object × V_object = ρ_fluid × V_submerged  
+    - **Fraction Submerged**: V_sub/V_total = ρ_object/ρ_fluid
+    - **Apparent Weight**: W_apparent = W - F_B = (ρ_object - ρ_fluid) × g × V
     """)
 
 # --- Footer ---
