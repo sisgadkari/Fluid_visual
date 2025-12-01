@@ -319,70 +319,47 @@ with tab1:
                          x1=0.5, y1=pipe_y-pipe_radius, 
                          line=dict(color='black', width=2))
             
-            # System fluid in pipe (base layer)
+            # System fluid in pipe (base layer - static background)
             fig.add_shape(type="rect", 
                          x0=-0.5, y0=pipe_y-pipe_radius+0.005, 
                          x1=0.5, y1=pipe_y+pipe_radius-0.005, 
                          fillcolor=system_fluid_color, line_width=0)
             
-            # Animated flow particles in pipe
+            # Animated droplets flowing through the pipe
             if animate:
-                # Create flowing particle effect
-                num_particles = 12
-                particle_spacing = 1.0 / num_particles
-                flow_speed = 0.08  # How far particles move per frame
+                num_droplets = 8
+                pipe_length = 1.0  # from -0.5 to 0.5
+                droplet_spacing = pipe_length / num_droplets
+                flow_speed = 0.05  # movement per frame
                 
-                # Calculate particle positions based on frame
-                particle_x_positions = []
-                particle_y_positions = []
-                particle_colors = []
-                particle_sizes = []
+                droplet_x = []
+                droplet_y = []
                 
-                for i in range(num_particles):
-                    # Base position plus animation offset
-                    base_x = -0.5 + (i * particle_spacing)
-                    # Move particles based on frame, wrap around when they reach the end
-                    animated_x = ((base_x + 0.5 + frame * flow_speed) % 1.0) - 0.5 + 0.5
-                    if animated_x > 0.5:
-                        animated_x = animated_x - 1.0
+                for i in range(num_droplets):
+                    # Calculate x position based on frame, wrapping around
+                    x_pos = -0.5 + ((i * droplet_spacing + frame * flow_speed) % pipe_length)
                     
-                    # Create particles at different y-levels for depth effect
-                    for y_offset in [-0.02, 0, 0.02]:
-                        particle_x_positions.append(animated_x)
-                        particle_y_positions.append(pipe_y + y_offset)
-                        # Lighter color particles to show flow
-                        particle_colors.append('rgba(255, 255, 255, 0.6)')
-                        particle_sizes.append(8 if y_offset == 0 else 5)
-                
-                # Add flow streak lines
-                for i in range(num_particles):
-                    base_x = -0.5 + (i * particle_spacing)
-                    animated_x = ((base_x + 0.5 + frame * flow_speed) % 1.0) - 0.5 + 0.5
-                    if animated_x > 0.5:
-                        animated_x = animated_x - 1.0
+                    # Add droplets at different y levels for visual interest
+                    if i % 3 == 0:
+                        y_pos = pipe_y + 0.02
+                    elif i % 3 == 1:
+                        y_pos = pipe_y
+                    else:
+                        y_pos = pipe_y - 0.02
                     
-                    # Draw streak behind each particle
-                    streak_length = 0.06
-                    streak_x_start = animated_x - streak_length
-                    
-                    # Only draw if streak is within pipe bounds
-                    if streak_x_start >= -0.5 and animated_x <= 0.5:
-                        fig.add_shape(
-                            type="line",
-                            x0=streak_x_start, y0=pipe_y,
-                            x1=animated_x, y1=pipe_y,
-                            line=dict(color='rgba(255, 255, 255, 0.4)', width=3)
-                        )
+                    droplet_x.append(x_pos)
+                    droplet_y.append(y_pos)
                 
-                # Add particles as scatter points
+                # Draw droplets as small circles
                 fig.add_trace(go.Scatter(
-                    x=particle_x_positions,
-                    y=particle_y_positions,
+                    x=droplet_x,
+                    y=droplet_y,
                     mode='markers',
                     marker=dict(
-                        size=particle_sizes,
-                        color=particle_colors,
-                        symbol='circle'
+                        size=10,
+                        color='rgba(0, 80, 180, 0.8)',  # Darker blue droplets
+                        symbol='circle',
+                        line=dict(color='rgba(255, 255, 255, 0.8)', width=1)
                     ),
                     hoverinfo='none',
                     showlegend=False
