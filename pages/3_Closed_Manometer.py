@@ -9,8 +9,6 @@ st.set_page_config(page_title="U-Tube Manometer", layout="wide")
 # --- Initialize Session State for Animation ---
 if 'previous_h_mano' not in st.session_state:
     st.session_state.previous_h_mano = None
-if 'flow_frame' not in st.session_state:
-    st.session_state.flow_frame = 0
 
 # --- Title and Introduction ---
 st.markdown("<h1 style='text-align: center;'>Interactive U-Tube Manometer (Differential Pressure)</h1>", unsafe_allow_html=True)
@@ -81,9 +79,6 @@ with tab1:
             show_flow = st.checkbox("Show Flow Direction", value=True)
         with col_vis2:
             show_pressure_values = st.checkbox("Show Pressure Values", value=False)
-        
-        animate_flow = st.checkbox("Animate Fluid Flow", value=True, 
-                                   help="Show animated particles moving through the pipe")
 
         # --- Calculation ---
         delta_P = (rho_m - rho_f) * g * h
@@ -296,7 +291,7 @@ with tab1:
         x_inner_bend, y_inner_bend = get_bend_points(tube_inner_radius, bend_y_center)
 
         # --- Function to generate the plot for a specific height ---
-        def generate_manometer_plot(h_inst, show_flow_arrows, show_p_values, animate=False, frame=0):
+        def generate_manometer_plot(h_inst, show_flow_arrows, show_p_values):
             level_center = bend_y_center + 0.1
             level_left = level_center - h_inst / 2
             level_right = level_center + h_inst / 2
@@ -319,51 +314,11 @@ with tab1:
                          x1=0.5, y1=pipe_y-pipe_radius, 
                          line=dict(color='black', width=2))
             
-            # System fluid in pipe (base layer - static background)
+            # System fluid in pipe
             fig.add_shape(type="rect", 
                          x0=-0.5, y0=pipe_y-pipe_radius+0.005, 
                          x1=0.5, y1=pipe_y+pipe_radius-0.005, 
                          fillcolor=system_fluid_color, line_width=0)
-            
-            # Animated droplets flowing through the pipe
-            if animate:
-                num_droplets = 8
-                pipe_length = 1.0  # from -0.5 to 0.5
-                droplet_spacing = pipe_length / num_droplets
-                flow_speed = 0.05  # movement per frame
-                
-                droplet_x = []
-                droplet_y = []
-                
-                for i in range(num_droplets):
-                    # Calculate x position based on frame, wrapping around
-                    x_pos = -0.5 + ((i * droplet_spacing + frame * flow_speed) % pipe_length)
-                    
-                    # Add droplets at different y levels for visual interest
-                    if i % 3 == 0:
-                        y_pos = pipe_y + 0.02
-                    elif i % 3 == 1:
-                        y_pos = pipe_y
-                    else:
-                        y_pos = pipe_y - 0.02
-                    
-                    droplet_x.append(x_pos)
-                    droplet_y.append(y_pos)
-                
-                # Draw droplets as small circles
-                fig.add_trace(go.Scatter(
-                    x=droplet_x,
-                    y=droplet_y,
-                    mode='markers',
-                    marker=dict(
-                        size=10,
-                        color='rgba(0, 80, 180, 0.8)',  # Darker blue droplets
-                        symbol='circle',
-                        line=dict(color='rgba(255, 255, 255, 0.8)', width=1)
-                    ),
-                    hoverinfo='none',
-                    showlegend=False
-                ))
             
             # 2. Draw Connecting Tubes (pressure taps) - Starting from inside the pipe
             # Left connecting tube
@@ -583,24 +538,14 @@ with tab1:
             animation_steps = 20
             for i in range(animation_steps + 1):
                 intermediate_h = start_h + (end_h - start_h) * (i / animation_steps)
-                # Increment frame for each step to show flow during height animation
-                current_frame = (st.session_state.flow_frame + i) % 100
-                fig = generate_manometer_plot(intermediate_h, show_flow, show_pressure_values, animate_flow, current_frame)
-                plot_placeholder.plotly_chart(fig, use_container_width=True, key=f"mano_anim_{i}")
+                fig = generate_manometer_plot(intermediate_h, show_flow, show_pressure_values)
+                plot_placeholder.plotly_chart(fig, use_container_width=True)
                 time.sleep(0.02)
-            st.session_state.flow_frame = (st.session_state.flow_frame + animation_steps) % 100
         else:
-            fig = generate_manometer_plot(end_h, show_flow, show_pressure_values, animate_flow, st.session_state.flow_frame)
-            plot_placeholder.plotly_chart(fig, use_container_width=True, key="mano_static")
+            fig = generate_manometer_plot(end_h, show_flow, show_pressure_values)
+            plot_placeholder.plotly_chart(fig, use_container_width=True)
         
         st.session_state.previous_h_mano = end_h
-        
-        # Auto-refresh for continuous flow animation
-        # Uses st.rerun with a delay to create smooth animation effect
-        if animate_flow:
-            st.session_state.flow_frame = (st.session_state.flow_frame + 1) % 100
-            time.sleep(0.25)  # 4 frames per second for smooth but not overwhelming animation
-            st.rerun()
 
 with tab2:
     st.header("📚 Understanding Differential Manometers")
