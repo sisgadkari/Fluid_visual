@@ -106,8 +106,9 @@ with tab1:
             d_mm = st.slider("Capillary Diameter (d) [mm]", 0.1, 10.0, 1.0, 0.1,
                             help="Smaller diameter = greater capillary rise")
         else:
-            theta_deg = st.slider("Contact Angle (θ) [degrees]", 0, 180, selected_scenario["theta"],
-                                 help="0° = perfect wetting, 90° = neutral, >90° = non-wetting")
+            # Always start at 90 degrees (neutral) - user can adjust to see the effect
+            theta_deg = st.slider("Contact Angle (θ) [degrees]", 0, 180, 90,
+                                 help=f"0° = perfect wetting, 90° = neutral, >90° = non-wetting. Typical for this scenario: {selected_scenario['theta']}°")
             d_mm = st.slider("Capillary Diameter (d) [mm]", 0.1, 10.0, selected_scenario["d_mm"], 0.1,
                             help="Smaller diameter = greater capillary rise")
         
