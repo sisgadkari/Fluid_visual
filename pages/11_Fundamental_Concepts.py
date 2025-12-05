@@ -39,6 +39,86 @@ with main_tab1:
     )
     st.markdown("---")
     
+    st.markdown("---")
+    
+    # SECTION 2: THEORY & CONCEPTS
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_theory1, col_theory2 = st.columns([1, 1])
+    
+    with col_theory1:
+        st.markdown("""
+        #### What is Viscosity?
+        
+        **Viscosity** is a measure of a fluid's resistance to deformation or flow. Think of it as the "thickness" or "stickiness" of a fluid.
+        
+        - **High viscosity**: Honey, motor oil, glycerol (flows slowly)
+        - **Low viscosity**: Water, air, alcohol (flows easily)
+        
+        #### Newton's Law of Viscosity
+        
+        For **Newtonian fluids**, the shear stress is directly proportional to the shear rate:
+        """)
+        
+        st.latex(r'\tau = \mu \frac{du}{dy}')
+        
+        st.markdown("""
+        Where:
+        - **τ** (tau) = Shear stress [Pa or N/m²]
+        - **μ** (mu) = Dynamic viscosity [Pa·s]
+        - **du/dy** = Velocity gradient (shear rate) [1/s]
+        """)
+    
+    with col_theory2:
+        st.markdown("""
+        #### Two Types of Viscosity
+        
+        **1. Dynamic (Absolute) Viscosity (μ)**
+        - Measures the force required to move one layer of fluid past another
+        - Units: Pa·s (SI) or Poise (P) where 1 Pa·s = 10 P
+        
+        **2. Kinematic Viscosity (ν)**
+        - Dynamic viscosity divided by density
+        """)
+        
+        st.latex(r'\nu = \frac{\mu}{\rho}')
+        
+        st.markdown("""
+        - Units: m²/s (SI) or Stokes (St)
+        
+        > **Fun Fact**: Kinematic viscosity is used in the Reynolds number calculation!
+        """)
+    
+    st.markdown("---")
+    
+    # Viscosity comparison table
+    st.markdown("#### 📊 Viscosity of Common Fluids at 20°C")
+    
+    col_table1, col_table2 = st.columns(2)
+    
+    with col_table1:
+        st.markdown("""
+        | Fluid | μ (Pa·s) | Relative to Water |
+        |-------|----------|-------------------|
+        | Air | 1.81 × 10⁻⁵ | 0.018× |
+        | Water | 1.00 × 10⁻³ | 1× (reference) |
+        | Blood | 3-4 × 10⁻³ | 3-4× |
+        | Olive Oil | 8.4 × 10⁻² | 84× |
+        | Motor Oil | 0.1 - 0.3 | 100-300× |
+        """)
+    
+    with col_table2:
+        st.markdown("""
+        | Fluid | μ (Pa·s) | Relative to Water |
+        |-------|----------|-------------------|
+        | Maple Syrup | 0.15 | 150× |
+        | Honey | 2 - 10 | 2,000-10,000× |
+        | Glycerol | 1.5 | 1,500× |
+        | Peanut Butter | ~250 | 250,000× |
+        | Pitch (tar) | 2.3 × 10⁸ | 230 billion× |
+        """)
+
+# =====================================================
     # SECTION 1: INTERACTIVE SIMULATION
     st.markdown("### 🎯 Interactive Simulation")
     
@@ -441,86 +521,6 @@ with main_tab1:
             Higher viscosity fluids resist this shearing motion more strongly.
             """)
     
-    st.markdown("---")
-    
-    # SECTION 2: THEORY & CONCEPTS
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_theory1, col_theory2 = st.columns([1, 1])
-    
-    with col_theory1:
-        st.markdown("""
-        #### What is Viscosity?
-        
-        **Viscosity** is a measure of a fluid's resistance to deformation or flow. Think of it as the "thickness" or "stickiness" of a fluid.
-        
-        - **High viscosity**: Honey, motor oil, glycerol (flows slowly)
-        - **Low viscosity**: Water, air, alcohol (flows easily)
-        
-        #### Newton's Law of Viscosity
-        
-        For **Newtonian fluids**, the shear stress is directly proportional to the shear rate:
-        """)
-        
-        st.latex(r'\tau = \mu \frac{du}{dy}')
-        
-        st.markdown("""
-        Where:
-        - **τ** (tau) = Shear stress [Pa or N/m²]
-        - **μ** (mu) = Dynamic viscosity [Pa·s]
-        - **du/dy** = Velocity gradient (shear rate) [1/s]
-        """)
-    
-    with col_theory2:
-        st.markdown("""
-        #### Two Types of Viscosity
-        
-        **1. Dynamic (Absolute) Viscosity (μ)**
-        - Measures the force required to move one layer of fluid past another
-        - Units: Pa·s (SI) or Poise (P) where 1 Pa·s = 10 P
-        
-        **2. Kinematic Viscosity (ν)**
-        - Dynamic viscosity divided by density
-        """)
-        
-        st.latex(r'\nu = \frac{\mu}{\rho}')
-        
-        st.markdown("""
-        - Units: m²/s (SI) or Stokes (St)
-        
-        > **Fun Fact**: Kinematic viscosity is used in the Reynolds number calculation!
-        """)
-    
-    st.markdown("---")
-    
-    # Viscosity comparison table
-    st.markdown("#### 📊 Viscosity of Common Fluids at 20°C")
-    
-    col_table1, col_table2 = st.columns(2)
-    
-    with col_table1:
-        st.markdown("""
-        | Fluid | μ (Pa·s) | Relative to Water |
-        |-------|----------|-------------------|
-        | Air | 1.81 × 10⁻⁵ | 0.018× |
-        | Water | 1.00 × 10⁻³ | 1× (reference) |
-        | Blood | 3-4 × 10⁻³ | 3-4× |
-        | Olive Oil | 8.4 × 10⁻² | 84× |
-        | Motor Oil | 0.1 - 0.3 | 100-300× |
-        """)
-    
-    with col_table2:
-        st.markdown("""
-        | Fluid | μ (Pa·s) | Relative to Water |
-        |-------|----------|-------------------|
-        | Maple Syrup | 0.15 | 150× |
-        | Honey | 2 - 10 | 2,000-10,000× |
-        | Glycerol | 1.5 | 1,500× |
-        | Peanut Butter | ~250 | 250,000× |
-        | Pitch (tar) | 2.3 × 10⁸ | 230 billion× |
-        """)
-
-# =====================================================
 # TAB 2: SURFACE TENSION
 # =====================================================
 with main_tab2:
@@ -702,6 +702,173 @@ with main_tab3:
     )
     st.markdown("---")
     
+    st.markdown("---")
+    
+    # SECTION 2: THEORY & CONCEPTS
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_buoy_theory1, col_buoy_theory2 = st.columns([1, 1])
+    
+    with col_buoy_theory1:
+        st.markdown("""
+        #### Archimedes' Principle
+        
+        When an object is submerged (fully or partially) in a fluid, it experiences an upward **buoyancy force** equal to the weight of the fluid displaced.
+        """)
+        
+        st.latex(r'F_B = \rho_{fluid} \cdot g \cdot V_{submerged}')
+        
+        st.markdown("""
+        This principle was discovered by Archimedes (287-212 BC) and explains why objects float or sink.
+        
+        #### Origin of Buoyancy
+        
+        The buoyancy force arises from the **pressure difference** between the top and bottom of a submerged object:
+        
+        - Pressure increases with depth: p = ρgh
+        - Bottom surface experiences higher pressure than top
+        - Net upward force = F_B
+        """)
+        
+        st.latex(r'F_B = p_2 A - p_1 A = \rho g h_2 A - \rho g h_1 A = \rho g V')
+        
+    with col_buoy_theory2:
+        st.markdown("""
+        #### Floating Condition
+        
+        For an object to float, the buoyancy force must balance its weight:
+        """)
+        
+        st.latex(r'W = F_B \implies \rho_{object} \cdot V_{object} = \rho_{fluid} \cdot V_{submerged}')
+        
+        st.markdown("""
+        **Fraction submerged** for a floating object:
+        """)
+        
+        st.latex(r'\frac{V_{submerged}}{V_{object}} = \frac{\rho_{object}}{\rho_{fluid}}')
+        
+        st.markdown("""
+        #### Sink, Float, or Neutral?
+        
+        | Condition | Result |
+        |-----------|--------|
+        | ρ_object < ρ_fluid | **Floats** (partially submerged) |
+        | ρ_object > ρ_fluid | **Sinks** (W > F_B even when fully submerged) |
+        | ρ_object = ρ_fluid | **Neutrally buoyant** (suspended in fluid) |
+        
+        > **Example**: Ice (ρ = 917 kg/m³) floats in water (ρ = 1000 kg/m³) with about 91.7% submerged!
+        """)
+    
+    st.markdown("---")
+    
+    # SECTION 3: STABILITY
+    st.markdown("### ⚖️ Stability of Floating & Submerged Bodies")
+    
+    col_stab1, col_stab2 = st.columns([1, 1])
+    
+    with col_stab1:
+        st.markdown("""
+        #### Stability of Submerged Bodies
+        
+        For a **fully submerged** body, stability depends on the relative positions of:
+        
+        - **CG** (Centre of Gravity): Where weight acts
+        - **CB** (Centre of Buoyancy): Centroid of displaced volume
+        
+        | Configuration | Stability |
+        |--------------|-----------|
+        | CG below CB | **Stable** ✓ (self-righting) |
+        | CG above CB | **Unstable** ✗ (will capsize) |
+        | CG at CB | **Neutral** (no tendency either way) |
+        
+        > **Think of a submarine**: Ballast tanks are positioned to keep CG below CB for stability.
+        """)
+        
+    with col_stab2:
+        st.markdown("""
+        #### Stability of Floating Bodies
+        
+        Floating bodies are more complex because the **CB moves** when the body tilts!
+        
+        The key concept is the **Metacentre (M)**:
+        - M is where the line of action of buoyancy force intersects the centreline
+        - **Metacentric Height (GM)** = distance from G to M
+        
+        | Configuration | Stability |
+        |--------------|-----------|
+        | M above CG (GM > 0) | **Stable** ✓ |
+        | M below CG (GM < 0) | **Unstable** ✗ |
+        | M at CG (GM = 0) | **Neutral** |
+        
+        > **Ships** are designed with positive GM. Wider ships are generally more stable!
+        """)
+    
+    st.info("""
+    **Why can ships have CG above CB and still be stable?**
+    
+    When a ship tilts, the shape of the submerged volume changes, causing CB to shift sideways. 
+    If the metacentre M (intersection of the new buoyancy line with the centreline) is above CG, 
+    a **restoring moment** is created that rights the ship. This is why the metacentric height GM 
+    is the critical stability parameter for floating vessels, not just the CG-CB relationship.
+    """)
+    
+    st.markdown("---")
+    
+    # Practical Applications
+    st.markdown("### 📋 Engineering Applications")
+    
+    col_app1, col_app2 = st.columns([1, 1])
+    
+    with col_app1:
+        st.markdown("""
+        #### Marine & Naval Engineering
+        
+        **🚢 Ship Design**
+        - Hull shape optimized for stability (GM > 0)
+        - Ballast systems to adjust CG position
+        - Load distribution to maintain stability
+        
+        **🛥️ Submarines**
+        - Ballast tanks for depth control
+        - Trim tanks for pitch adjustment
+        - CG kept below CB for stability
+        
+        **🏊 Life Jackets & Buoys**
+        - Low-density materials (foam, air)
+        - Designed to keep head above water
+        """)
+        
+    with col_app2:
+        st.markdown("""
+        #### Industrial Applications
+        
+        **⚗️ Hydrometers**
+        - Measure fluid density by floating depth
+        - Used in brewing, batteries, milk testing
+        
+        **🎈 Hot Air Balloons**
+        - Heated air is less dense than cold air
+        - Buoyancy in atmosphere (same principle!)
+        
+        **🛢️ Oil-Water Separation**
+        - Oil floats on water (ρ_oil < ρ_water)
+        - Used in spill cleanup and refineries
+        
+        **⚓ Offshore Platforms**
+        - Semi-submersibles use buoyancy
+        - Tension-leg platforms anchored against buoyancy
+        """)
+    
+    st.success("""
+    **Key Equations Summary:**
+    
+    - **Buoyancy Force**: F_B = ρ_fluid × g × V_submerged
+    - **Floating Condition**: ρ_object × V_object = ρ_fluid × V_submerged  
+    - **Fraction Submerged**: V_sub/V_total = ρ_object/ρ_fluid
+    - **Apparent Weight**: W_apparent = W - F_B = (ρ_object - ρ_fluid) × g × V
+    """)
+
+# =====================================================
     # SECTION 1: INTERACTIVE SIMULATION
     st.markdown("### 🎯 Interactive Simulation")
     
@@ -962,173 +1129,6 @@ with main_tab3:
         - **Red arrow (W)**: Weight of object (acts downward at centre of gravity)
         """)
     
-    st.markdown("---")
-    
-    # SECTION 2: THEORY & CONCEPTS
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_buoy_theory1, col_buoy_theory2 = st.columns([1, 1])
-    
-    with col_buoy_theory1:
-        st.markdown("""
-        #### Archimedes' Principle
-        
-        When an object is submerged (fully or partially) in a fluid, it experiences an upward **buoyancy force** equal to the weight of the fluid displaced.
-        """)
-        
-        st.latex(r'F_B = \rho_{fluid} \cdot g \cdot V_{submerged}')
-        
-        st.markdown("""
-        This principle was discovered by Archimedes (287-212 BC) and explains why objects float or sink.
-        
-        #### Origin of Buoyancy
-        
-        The buoyancy force arises from the **pressure difference** between the top and bottom of a submerged object:
-        
-        - Pressure increases with depth: p = ρgh
-        - Bottom surface experiences higher pressure than top
-        - Net upward force = F_B
-        """)
-        
-        st.latex(r'F_B = p_2 A - p_1 A = \rho g h_2 A - \rho g h_1 A = \rho g V')
-        
-    with col_buoy_theory2:
-        st.markdown("""
-        #### Floating Condition
-        
-        For an object to float, the buoyancy force must balance its weight:
-        """)
-        
-        st.latex(r'W = F_B \implies \rho_{object} \cdot V_{object} = \rho_{fluid} \cdot V_{submerged}')
-        
-        st.markdown("""
-        **Fraction submerged** for a floating object:
-        """)
-        
-        st.latex(r'\frac{V_{submerged}}{V_{object}} = \frac{\rho_{object}}{\rho_{fluid}}')
-        
-        st.markdown("""
-        #### Sink, Float, or Neutral?
-        
-        | Condition | Result |
-        |-----------|--------|
-        | ρ_object < ρ_fluid | **Floats** (partially submerged) |
-        | ρ_object > ρ_fluid | **Sinks** (W > F_B even when fully submerged) |
-        | ρ_object = ρ_fluid | **Neutrally buoyant** (suspended in fluid) |
-        
-        > **Example**: Ice (ρ = 917 kg/m³) floats in water (ρ = 1000 kg/m³) with about 91.7% submerged!
-        """)
-    
-    st.markdown("---")
-    
-    # SECTION 3: STABILITY
-    st.markdown("### ⚖️ Stability of Floating & Submerged Bodies")
-    
-    col_stab1, col_stab2 = st.columns([1, 1])
-    
-    with col_stab1:
-        st.markdown("""
-        #### Stability of Submerged Bodies
-        
-        For a **fully submerged** body, stability depends on the relative positions of:
-        
-        - **CG** (Centre of Gravity): Where weight acts
-        - **CB** (Centre of Buoyancy): Centroid of displaced volume
-        
-        | Configuration | Stability |
-        |--------------|-----------|
-        | CG below CB | **Stable** ✓ (self-righting) |
-        | CG above CB | **Unstable** ✗ (will capsize) |
-        | CG at CB | **Neutral** (no tendency either way) |
-        
-        > **Think of a submarine**: Ballast tanks are positioned to keep CG below CB for stability.
-        """)
-        
-    with col_stab2:
-        st.markdown("""
-        #### Stability of Floating Bodies
-        
-        Floating bodies are more complex because the **CB moves** when the body tilts!
-        
-        The key concept is the **Metacentre (M)**:
-        - M is where the line of action of buoyancy force intersects the centreline
-        - **Metacentric Height (GM)** = distance from G to M
-        
-        | Configuration | Stability |
-        |--------------|-----------|
-        | M above CG (GM > 0) | **Stable** ✓ |
-        | M below CG (GM < 0) | **Unstable** ✗ |
-        | M at CG (GM = 0) | **Neutral** |
-        
-        > **Ships** are designed with positive GM. Wider ships are generally more stable!
-        """)
-    
-    st.info("""
-    **Why can ships have CG above CB and still be stable?**
-    
-    When a ship tilts, the shape of the submerged volume changes, causing CB to shift sideways. 
-    If the metacentre M (intersection of the new buoyancy line with the centreline) is above CG, 
-    a **restoring moment** is created that rights the ship. This is why the metacentric height GM 
-    is the critical stability parameter for floating vessels, not just the CG-CB relationship.
-    """)
-    
-    st.markdown("---")
-    
-    # Practical Applications
-    st.markdown("### 📋 Engineering Applications")
-    
-    col_app1, col_app2 = st.columns([1, 1])
-    
-    with col_app1:
-        st.markdown("""
-        #### Marine & Naval Engineering
-        
-        **🚢 Ship Design**
-        - Hull shape optimized for stability (GM > 0)
-        - Ballast systems to adjust CG position
-        - Load distribution to maintain stability
-        
-        **🛥️ Submarines**
-        - Ballast tanks for depth control
-        - Trim tanks for pitch adjustment
-        - CG kept below CB for stability
-        
-        **🏊 Life Jackets & Buoys**
-        - Low-density materials (foam, air)
-        - Designed to keep head above water
-        """)
-        
-    with col_app2:
-        st.markdown("""
-        #### Industrial Applications
-        
-        **⚗️ Hydrometers**
-        - Measure fluid density by floating depth
-        - Used in brewing, batteries, milk testing
-        
-        **🎈 Hot Air Balloons**
-        - Heated air is less dense than cold air
-        - Buoyancy in atmosphere (same principle!)
-        
-        **🛢️ Oil-Water Separation**
-        - Oil floats on water (ρ_oil < ρ_water)
-        - Used in spill cleanup and refineries
-        
-        **⚓ Offshore Platforms**
-        - Semi-submersibles use buoyancy
-        - Tension-leg platforms anchored against buoyancy
-        """)
-    
-    st.success("""
-    **Key Equations Summary:**
-    
-    - **Buoyancy Force**: F_B = ρ_fluid × g × V_submerged
-    - **Floating Condition**: ρ_object × V_object = ρ_fluid × V_submerged  
-    - **Fraction Submerged**: V_sub/V_total = ρ_object/ρ_fluid
-    - **Apparent Weight**: W_apparent = W - F_B = (ρ_object - ρ_fluid) × g × V
-    """)
-
-# =====================================================
 # TAB 4: BERNOULLI PRINCIPLE
 # =====================================================
 with main_tab4:
@@ -1139,6 +1139,163 @@ with main_tab4:
     )
     st.markdown("---")
     
+    st.markdown("---")
+    
+    # SECTION 2: THEORY & CONCEPTS
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_bern_theory1, col_bern_theory2 = st.columns([1, 1])
+    
+    with col_bern_theory1:
+        st.markdown("""
+        #### The Bernoulli Equation
+        
+        Derived from conservation of energy along a streamline for **steady, incompressible, inviscid flow**:
+        """)
+        
+        st.latex(r'\frac{p}{\rho} + \frac{U^2}{2} + gz = \text{Constant}')
+        
+        st.markdown("""
+        Or in terms of **Head** (dividing by g):
+        """)
+        
+        st.latex(r'\frac{p}{\rho g} + \frac{U^2}{2g} + z = \text{Total Head}')
+        
+        st.markdown("""
+        #### The Three Energy Terms
+        
+        | Term | Name | Physical Meaning |
+        |------|------|------------------|
+        | p/ρg | **Pressure Head** | Energy from fluid pressure |
+        | U²/2g | **Velocity Head** | Kinetic energy of flow |
+        | z | **Elevation Head** | Potential energy (gravity) |
+        
+        > **Total Head** remains constant along a streamline (ideal flow)
+        """)
+        
+    with col_bern_theory2:
+        st.markdown("""
+        #### Continuity Equation
+        
+        Conservation of mass for incompressible flow:
+        """)
+        
+        st.latex(r'A_1 U_1 = A_2 U_2 = Q = \text{Constant}')
+        
+        st.markdown("""
+        This means:
+        - **Smaller area → Higher velocity**
+        - **Larger area → Lower velocity**
+        
+        #### Combining Continuity & Bernoulli
+        
+        Between two points on a streamline:
+        """)
+        
+        st.latex(r'\frac{p_1}{\rho g} + \frac{U_1^2}{2g} + z_1 = \frac{p_2}{\rho g} + \frac{U_2^2}{2g} + z_2')
+        
+        st.markdown("""
+        #### Key Assumptions
+        
+        Bernoulli equation is valid when:
+        - ✓ **Steady flow** (no time variation)
+        - ✓ **Incompressible fluid** (constant ρ)
+        - ✓ **Inviscid flow** (no friction losses)
+        - ✓ **Along a streamline**
+        - ✓ **No heat transfer or work**
+        """)
+    
+    st.markdown("---")
+    
+    # Alternative forms
+    st.markdown("### 📐 Alternative Forms of Bernoulli Equation")
+    
+    col_form1, col_form2, col_form3 = st.columns(3)
+    
+    with col_form1:
+        st.markdown("**Specific Energy Form**")
+        st.markdown("*(J/kg)*")
+        st.latex(r'\frac{p}{\rho} + \frac{U^2}{2} + gz = \text{Constant}')
+        
+    with col_form2:
+        st.markdown("**Head Form**")
+        st.markdown("*(m)*")
+        st.latex(r'\frac{p}{\rho g} + \frac{U^2}{2g} + z = \text{Constant}')
+        
+    with col_form3:
+        st.markdown("**Pressure Form**")
+        st.markdown("*(N/m² or Pa)*")
+        st.latex(r'p + \frac{\rho U^2}{2} + \rho gz = \text{Constant}')
+    
+    st.markdown("---")
+    
+    # Engineering Applications
+    st.markdown("### 📋 Engineering Applications")
+    
+    col_app1, col_app2 = st.columns([1, 1])
+    
+    with col_app1:
+        st.markdown("""
+        #### Flow Measurement
+        
+        **📏 Venturi Meter**
+        - Measures flow rate from pressure difference
+        - Low energy loss, high accuracy
+        - Used in water and gas pipelines
+        
+        **📏 Orifice Plate**
+        - Simpler than Venturi, lower cost
+        - Higher pressure loss
+        - Common in industrial processes
+        
+        **📏 Pitot Tube**
+        - Measures local velocity
+        - Used in aircraft (airspeed indicator)
+        - Stagnation pressure vs static pressure
+        """)
+        
+    with col_app2:
+        st.markdown("""
+        #### Other Applications
+        
+        **✈️ Aircraft Wings (Lift)**
+        - Air flows faster over curved top surface
+        - Lower pressure above → upward lift force
+        
+        **⛽ Carburetors**
+        - Venturi effect draws fuel into airstream
+        - Mixing of air and fuel
+        
+        **🚿 Aspirators & Atomizers**
+        - Low pressure region draws in secondary fluid
+        - Used in spray bottles, lab equipment
+        
+        **🏗️ Building Aerodynamics**
+        - Wind acceleration between buildings
+        - Pressure differences on structures
+        """)
+    
+    st.info("""
+    **The Venturi Effect in Action:**
+    
+    When fluid flows through a constriction:
+    1. **Continuity**: Area decreases → Velocity increases
+    2. **Bernoulli**: Velocity increases → Pressure decreases
+    
+    This pressure drop is used in Venturi meters, carburetors, aspirators, and even explains 
+    how airplane wings generate lift!
+    """)
+    
+    st.success("""
+    **Key Equations Summary:**
+    
+    - **Continuity**: A₁U₁ = A₂U₂ (mass conservation)
+    - **Bernoulli**: p/ρg + U²/2g + z = Total Head (energy conservation)
+    - **Velocity from Continuity**: U₂ = U₁(A₁/A₂) = U₁(D₁/D₂)²
+    - **Mass Flow Rate**: ṁ = ρAU = ρQ
+    """)
+
+# =====================================================
     # SECTION 1: INTERACTIVE SIMULATION
     st.markdown("### 🎯 Interactive Simulation - Venturi Effect")
     
@@ -1405,163 +1562,6 @@ with main_tab4:
         This is the Venturi effect - the basis for many flow measurement devices!
         """)
     
-    st.markdown("---")
-    
-    # SECTION 2: THEORY & CONCEPTS
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_bern_theory1, col_bern_theory2 = st.columns([1, 1])
-    
-    with col_bern_theory1:
-        st.markdown("""
-        #### The Bernoulli Equation
-        
-        Derived from conservation of energy along a streamline for **steady, incompressible, inviscid flow**:
-        """)
-        
-        st.latex(r'\frac{p}{\rho} + \frac{U^2}{2} + gz = \text{Constant}')
-        
-        st.markdown("""
-        Or in terms of **Head** (dividing by g):
-        """)
-        
-        st.latex(r'\frac{p}{\rho g} + \frac{U^2}{2g} + z = \text{Total Head}')
-        
-        st.markdown("""
-        #### The Three Energy Terms
-        
-        | Term | Name | Physical Meaning |
-        |------|------|------------------|
-        | p/ρg | **Pressure Head** | Energy from fluid pressure |
-        | U²/2g | **Velocity Head** | Kinetic energy of flow |
-        | z | **Elevation Head** | Potential energy (gravity) |
-        
-        > **Total Head** remains constant along a streamline (ideal flow)
-        """)
-        
-    with col_bern_theory2:
-        st.markdown("""
-        #### Continuity Equation
-        
-        Conservation of mass for incompressible flow:
-        """)
-        
-        st.latex(r'A_1 U_1 = A_2 U_2 = Q = \text{Constant}')
-        
-        st.markdown("""
-        This means:
-        - **Smaller area → Higher velocity**
-        - **Larger area → Lower velocity**
-        
-        #### Combining Continuity & Bernoulli
-        
-        Between two points on a streamline:
-        """)
-        
-        st.latex(r'\frac{p_1}{\rho g} + \frac{U_1^2}{2g} + z_1 = \frac{p_2}{\rho g} + \frac{U_2^2}{2g} + z_2')
-        
-        st.markdown("""
-        #### Key Assumptions
-        
-        Bernoulli equation is valid when:
-        - ✓ **Steady flow** (no time variation)
-        - ✓ **Incompressible fluid** (constant ρ)
-        - ✓ **Inviscid flow** (no friction losses)
-        - ✓ **Along a streamline**
-        - ✓ **No heat transfer or work**
-        """)
-    
-    st.markdown("---")
-    
-    # Alternative forms
-    st.markdown("### 📐 Alternative Forms of Bernoulli Equation")
-    
-    col_form1, col_form2, col_form3 = st.columns(3)
-    
-    with col_form1:
-        st.markdown("**Specific Energy Form**")
-        st.markdown("*(J/kg)*")
-        st.latex(r'\frac{p}{\rho} + \frac{U^2}{2} + gz = \text{Constant}')
-        
-    with col_form2:
-        st.markdown("**Head Form**")
-        st.markdown("*(m)*")
-        st.latex(r'\frac{p}{\rho g} + \frac{U^2}{2g} + z = \text{Constant}')
-        
-    with col_form3:
-        st.markdown("**Pressure Form**")
-        st.markdown("*(N/m² or Pa)*")
-        st.latex(r'p + \frac{\rho U^2}{2} + \rho gz = \text{Constant}')
-    
-    st.markdown("---")
-    
-    # Engineering Applications
-    st.markdown("### 📋 Engineering Applications")
-    
-    col_app1, col_app2 = st.columns([1, 1])
-    
-    with col_app1:
-        st.markdown("""
-        #### Flow Measurement
-        
-        **📏 Venturi Meter**
-        - Measures flow rate from pressure difference
-        - Low energy loss, high accuracy
-        - Used in water and gas pipelines
-        
-        **📏 Orifice Plate**
-        - Simpler than Venturi, lower cost
-        - Higher pressure loss
-        - Common in industrial processes
-        
-        **📏 Pitot Tube**
-        - Measures local velocity
-        - Used in aircraft (airspeed indicator)
-        - Stagnation pressure vs static pressure
-        """)
-        
-    with col_app2:
-        st.markdown("""
-        #### Other Applications
-        
-        **✈️ Aircraft Wings (Lift)**
-        - Air flows faster over curved top surface
-        - Lower pressure above → upward lift force
-        
-        **⛽ Carburetors**
-        - Venturi effect draws fuel into airstream
-        - Mixing of air and fuel
-        
-        **🚿 Aspirators & Atomizers**
-        - Low pressure region draws in secondary fluid
-        - Used in spray bottles, lab equipment
-        
-        **🏗️ Building Aerodynamics**
-        - Wind acceleration between buildings
-        - Pressure differences on structures
-        """)
-    
-    st.info("""
-    **The Venturi Effect in Action:**
-    
-    When fluid flows through a constriction:
-    1. **Continuity**: Area decreases → Velocity increases
-    2. **Bernoulli**: Velocity increases → Pressure decreases
-    
-    This pressure drop is used in Venturi meters, carburetors, aspirators, and even explains 
-    how airplane wings generate lift!
-    """)
-    
-    st.success("""
-    **Key Equations Summary:**
-    
-    - **Continuity**: A₁U₁ = A₂U₂ (mass conservation)
-    - **Bernoulli**: p/ρg + U²/2g + z = Total Head (energy conservation)
-    - **Velocity from Continuity**: U₂ = U₁(A₁/A₂) = U₁(D₁/D₂)²
-    - **Mass Flow Rate**: ṁ = ρAU = ρQ
-    """)
-
-# =====================================================
 # TAB 5: TYPES OF FLOW
 # =====================================================
 with main_tab5:
@@ -1573,6 +1573,66 @@ with main_tab5:
     st.markdown("---")
     
     # Interactive Visualization Section
+    st.markdown("---")
+    
+    # Theory Section
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_theory1, col_theory2 = st.columns(2)
+    
+    with col_theory1:
+        st.markdown("""
+        #### Classification Summary
+        
+        | Classification | Criterion | Types |
+        |---------------|-----------|-------|
+        | **Time Dependence** | ∂/∂t | Steady / Unsteady |
+        | **Spatial Variation** | ∂/∂s | Uniform / Non-uniform |
+        | **Flow Regime** | Reynolds Number | Laminar / Turbulent |
+        | **Dimensionality** | Velocity components | 1D / 2D / 3D |
+        | **Compressibility** | Mach Number | Incompressible / Compressible |
+        
+        #### Reynolds Number
+        """)
+        
+        st.latex(r'Re = \frac{\rho U L}{\mu} = \frac{U L}{\nu} = \frac{\text{Inertial Forces}}{\text{Viscous Forces}}')
+        
+        st.markdown("""
+        **Critical Values (pipe flow):**
+        - Re < 2300: Laminar
+        - 2300 < Re < 4000: Transitional
+        - Re > 4000: Turbulent
+        """)
+    
+    with col_theory2:
+        st.markdown("""
+        #### Streamlines, Pathlines & Streaklines
+        
+        **Streamline**: Line tangent to velocity vector at an instant
+        - Snapshot of flow field
+        - No flow crosses a streamline
+        
+        **Pathline**: Path traced by a single fluid particle over time
+        - Lagrangian description
+        - Like tracking a leaf in a stream
+        
+        **Streakline**: Line connecting all particles that passed through a point
+        - Like dye injection
+        - What we see in flow visualization
+        
+        > **For steady flow**: All three are identical!
+        """)
+    
+    st.info("""
+    **Practical Implications:**
+    
+    - **Steady vs Unsteady**: Determines if time derivatives can be neglected in governing equations
+    - **Uniform vs Non-uniform**: Affects pressure and velocity distribution calculations
+    - **Laminar vs Turbulent**: Completely changes friction factor correlations and mixing behavior
+    - **Dimensionality**: Determines complexity of analysis (1D is simplest, 3D most complex)
+    """)
+
+# =====================================================
     st.markdown("### 🎯 Interactive Flow Visualization")
     
     col_flow1, col_flow2 = st.columns([2, 3])
@@ -1903,66 +1963,6 @@ with main_tab5:
         
         st.plotly_chart(fig_flow, use_container_width=True)
     
-    st.markdown("---")
-    
-    # Theory Section
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_theory1, col_theory2 = st.columns(2)
-    
-    with col_theory1:
-        st.markdown("""
-        #### Classification Summary
-        
-        | Classification | Criterion | Types |
-        |---------------|-----------|-------|
-        | **Time Dependence** | ∂/∂t | Steady / Unsteady |
-        | **Spatial Variation** | ∂/∂s | Uniform / Non-uniform |
-        | **Flow Regime** | Reynolds Number | Laminar / Turbulent |
-        | **Dimensionality** | Velocity components | 1D / 2D / 3D |
-        | **Compressibility** | Mach Number | Incompressible / Compressible |
-        
-        #### Reynolds Number
-        """)
-        
-        st.latex(r'Re = \frac{\rho U L}{\mu} = \frac{U L}{\nu} = \frac{\text{Inertial Forces}}{\text{Viscous Forces}}')
-        
-        st.markdown("""
-        **Critical Values (pipe flow):**
-        - Re < 2300: Laminar
-        - 2300 < Re < 4000: Transitional
-        - Re > 4000: Turbulent
-        """)
-    
-    with col_theory2:
-        st.markdown("""
-        #### Streamlines, Pathlines & Streaklines
-        
-        **Streamline**: Line tangent to velocity vector at an instant
-        - Snapshot of flow field
-        - No flow crosses a streamline
-        
-        **Pathline**: Path traced by a single fluid particle over time
-        - Lagrangian description
-        - Like tracking a leaf in a stream
-        
-        **Streakline**: Line connecting all particles that passed through a point
-        - Like dye injection
-        - What we see in flow visualization
-        
-        > **For steady flow**: All three are identical!
-        """)
-    
-    st.info("""
-    **Practical Implications:**
-    
-    - **Steady vs Unsteady**: Determines if time derivatives can be neglected in governing equations
-    - **Uniform vs Non-uniform**: Affects pressure and velocity distribution calculations
-    - **Laminar vs Turbulent**: Completely changes friction factor correlations and mixing behavior
-    - **Dimensionality**: Determines complexity of analysis (1D is simplest, 3D most complex)
-    """)
-
-# =====================================================
 # TAB 6: CONTINUUM ASSUMPTION
 # =====================================================
 with main_tab6:
@@ -1974,6 +1974,79 @@ with main_tab6:
     st.markdown("---")
     
     # Interactive Section
+    st.markdown("---")
+    
+    # Theory Section
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_t1, col_t2 = st.columns(2)
+    
+    with col_t1:
+        st.markdown("""
+        #### What is the Continuum Assumption?
+        
+        We treat a fluid as a **continuous medium** rather than discrete molecules when:
+        - The sample volume contains enough molecules for statistical averaging
+        - Molecular fluctuations are negligible compared to bulk properties
+        
+        #### Knudsen Number Definition
+        """)
+        
+        st.latex(r'Kn = \frac{\lambda}{L}')
+        
+        st.markdown("""
+        Where:
+        - **λ** = Mean free path (average distance between molecular collisions)
+        - **L** = Characteristic length of the flow (pipe diameter, channel width, etc.)
+        
+        #### Mean Free Path
+        """)
+        
+        st.latex(r'\lambda = \frac{k_B T}{\sqrt{2} \pi d^2 p}')
+        
+        st.markdown("""
+        Where:
+        - k_B = Boltzmann constant
+        - T = Temperature
+        - d = Molecular diameter
+        - p = Pressure
+        """)
+    
+    with col_t2:
+        st.markdown("""
+        #### Flow Regimes
+        
+        | Kn Range | Regime | Analysis Method |
+        |----------|--------|-----------------|
+        | < 0.001 | **Continuum** | Navier-Stokes equations |
+        | 0.001 - 0.1 | **Slip Flow** | N-S with slip BC |
+        | 0.1 - 10 | **Transition** | DSMC, Kinetic theory |
+        | > 10 | **Free Molecular** | Molecular dynamics |
+        
+        #### Typical Mean Free Paths
+        
+        | Condition | λ (approximate) |
+        |-----------|-----------------|
+        | Air at STP | 68 nm |
+        | Air at 100 km | 0.1 m |
+        | Water | 0.3 nm |
+        | Vacuum (10⁻⁶ Pa) | 60 m |
+        
+        #### Why It Matters
+        
+        - **Microfluidics**: Small L → larger Kn → slip effects
+        - **High altitude**: Low pressure → larger λ → rarefied flow
+        - **Vacuum systems**: Very large λ → molecular flow
+        """)
+    
+    st.info("""
+    **Key Insight:** The continuum assumption allows us to define fluid properties like density, velocity, and pressure 
+    at a "point" — which is actually a small volume containing many molecules, but small compared to the system size.
+    
+    Without this assumption, we would need to track individual molecules — computationally impossible for most engineering applications!
+    """)
+
+# =====================================================
     st.markdown("### 🎯 Interactive Exploration")
     
     col_cont1, col_cont2 = st.columns([2, 3])
@@ -2146,79 +2219,6 @@ with main_tab6:
         st.plotly_chart(fig_kn, use_container_width=True)
         st.caption(f"Current position: Kn = {Kn:.2e} → **{regime}**")
     
-    st.markdown("---")
-    
-    # Theory Section
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_t1, col_t2 = st.columns(2)
-    
-    with col_t1:
-        st.markdown("""
-        #### What is the Continuum Assumption?
-        
-        We treat a fluid as a **continuous medium** rather than discrete molecules when:
-        - The sample volume contains enough molecules for statistical averaging
-        - Molecular fluctuations are negligible compared to bulk properties
-        
-        #### Knudsen Number Definition
-        """)
-        
-        st.latex(r'Kn = \frac{\lambda}{L}')
-        
-        st.markdown("""
-        Where:
-        - **λ** = Mean free path (average distance between molecular collisions)
-        - **L** = Characteristic length of the flow (pipe diameter, channel width, etc.)
-        
-        #### Mean Free Path
-        """)
-        
-        st.latex(r'\lambda = \frac{k_B T}{\sqrt{2} \pi d^2 p}')
-        
-        st.markdown("""
-        Where:
-        - k_B = Boltzmann constant
-        - T = Temperature
-        - d = Molecular diameter
-        - p = Pressure
-        """)
-    
-    with col_t2:
-        st.markdown("""
-        #### Flow Regimes
-        
-        | Kn Range | Regime | Analysis Method |
-        |----------|--------|-----------------|
-        | < 0.001 | **Continuum** | Navier-Stokes equations |
-        | 0.001 - 0.1 | **Slip Flow** | N-S with slip BC |
-        | 0.1 - 10 | **Transition** | DSMC, Kinetic theory |
-        | > 10 | **Free Molecular** | Molecular dynamics |
-        
-        #### Typical Mean Free Paths
-        
-        | Condition | λ (approximate) |
-        |-----------|-----------------|
-        | Air at STP | 68 nm |
-        | Air at 100 km | 0.1 m |
-        | Water | 0.3 nm |
-        | Vacuum (10⁻⁶ Pa) | 60 m |
-        
-        #### Why It Matters
-        
-        - **Microfluidics**: Small L → larger Kn → slip effects
-        - **High altitude**: Low pressure → larger λ → rarefied flow
-        - **Vacuum systems**: Very large λ → molecular flow
-        """)
-    
-    st.info("""
-    **Key Insight:** The continuum assumption allows us to define fluid properties like density, velocity, and pressure 
-    at a "point" — which is actually a small volume containing many molecules, but small compared to the system size.
-    
-    Without this assumption, we would need to track individual molecules — computationally impossible for most engineering applications!
-    """)
-
-# =====================================================
 # TAB 7: CONTINUITY EQUATION
 # =====================================================
 with main_tab7:
@@ -2230,6 +2230,79 @@ with main_tab7:
     st.markdown("---")
     
     # Interactive Section
+    st.markdown("---")
+    
+    # Theory Section
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_th1, col_th2 = st.columns(2)
+    
+    with col_th1:
+        st.markdown("""
+        #### The Continuity Equation
+        
+        **Integral Form** (for a control volume):
+        """)
+        
+        st.latex(r'\frac{\partial}{\partial t} \int_{CV} \rho \, dV + \int_{CS} \rho \mathbf{U} \cdot d\mathbf{A} = 0')
+        
+        st.markdown("""
+        **Differential Form**:
+        """)
+        
+        st.latex(r'\frac{\partial \rho}{\partial t} + \nabla \cdot (\rho \mathbf{U}) = 0')
+        
+        st.markdown("""
+        **For Steady, Incompressible Flow**:
+        """)
+        
+        st.latex(r'A_1 U_1 = A_2 U_2 = Q = \text{constant}')
+        
+        st.markdown("""
+        Or in terms of mass flow rate:
+        """)
+        
+        st.latex(r'\dot{m} = \rho A U = \text{constant}')
+    
+    with col_th2:
+        st.markdown("""
+        #### Key Relationships
+        
+        **Velocity-Area Relationship**:
+        """)
+        
+        st.latex(r'U_2 = U_1 \frac{A_1}{A_2} = U_1 \left(\frac{D_1}{D_2}\right)^2')
+        
+        st.markdown("""
+        **For circular pipes**:
+        - Area: A = πD²/4
+        - Diameter ratio squared gives velocity ratio
+        
+        #### Implications
+        
+        | Geometry | Area | Velocity | Pressure* |
+        |----------|------|----------|-----------|
+        | Converging | ↓ | ↑ | ↓ |
+        | Diverging | ↑ | ↓ | ↑ |
+        | Constant | = | = | = |
+        
+        *From Bernoulli equation
+        
+        #### Multiple Inlets/Outlets
+        """)
+        
+        st.latex(r'\sum \dot{m}_{in} = \sum \dot{m}_{out}')
+    
+    st.success("""
+    **Key Takeaways:**
+    
+    1. Mass is conserved — what flows in must flow out (steady state)
+    2. Volume flow rate Q = AU is constant for incompressible flow
+    3. Smaller area → Higher velocity (and vice versa)
+    4. This principle is fundamental to understanding Venturi meters, nozzles, diffusers, and pipe networks
+    """)
+
+# =====================================================
     st.markdown("### 🎯 Interactive Simulation")
     
     col_ce1, col_ce2 = st.columns([2, 3])
@@ -2420,79 +2493,6 @@ with main_tab7:
             st.latex(rf'A_2 U_2 = {A2:.6f} \times {U2:.2f}')
             st.latex(rf'= {A2*U2:.6f} \text{{ m³/s}}')
     
-    st.markdown("---")
-    
-    # Theory Section
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_th1, col_th2 = st.columns(2)
-    
-    with col_th1:
-        st.markdown("""
-        #### The Continuity Equation
-        
-        **Integral Form** (for a control volume):
-        """)
-        
-        st.latex(r'\frac{\partial}{\partial t} \int_{CV} \rho \, dV + \int_{CS} \rho \mathbf{U} \cdot d\mathbf{A} = 0')
-        
-        st.markdown("""
-        **Differential Form**:
-        """)
-        
-        st.latex(r'\frac{\partial \rho}{\partial t} + \nabla \cdot (\rho \mathbf{U}) = 0')
-        
-        st.markdown("""
-        **For Steady, Incompressible Flow**:
-        """)
-        
-        st.latex(r'A_1 U_1 = A_2 U_2 = Q = \text{constant}')
-        
-        st.markdown("""
-        Or in terms of mass flow rate:
-        """)
-        
-        st.latex(r'\dot{m} = \rho A U = \text{constant}')
-    
-    with col_th2:
-        st.markdown("""
-        #### Key Relationships
-        
-        **Velocity-Area Relationship**:
-        """)
-        
-        st.latex(r'U_2 = U_1 \frac{A_1}{A_2} = U_1 \left(\frac{D_1}{D_2}\right)^2')
-        
-        st.markdown("""
-        **For circular pipes**:
-        - Area: A = πD²/4
-        - Diameter ratio squared gives velocity ratio
-        
-        #### Implications
-        
-        | Geometry | Area | Velocity | Pressure* |
-        |----------|------|----------|-----------|
-        | Converging | ↓ | ↑ | ↓ |
-        | Diverging | ↑ | ↓ | ↑ |
-        | Constant | = | = | = |
-        
-        *From Bernoulli equation
-        
-        #### Multiple Inlets/Outlets
-        """)
-        
-        st.latex(r'\sum \dot{m}_{in} = \sum \dot{m}_{out}')
-    
-    st.success("""
-    **Key Takeaways:**
-    
-    1. Mass is conserved — what flows in must flow out (steady state)
-    2. Volume flow rate Q = AU is constant for incompressible flow
-    3. Smaller area → Higher velocity (and vice versa)
-    4. This principle is fundamental to understanding Venturi meters, nozzles, diffusers, and pipe networks
-    """)
-
-# =====================================================
 # TAB 8: BOUNDARY LAYER CONCEPT
 # =====================================================
 with main_tab8:
@@ -2504,6 +2504,80 @@ with main_tab8:
     st.markdown("---")
     
     # Interactive Section
+    st.markdown("---")
+    
+    # Theory Section
+    st.markdown("### 📚 Theory & Concepts")
+    
+    col_blt1, col_blt2 = st.columns(2)
+    
+    with col_blt1:
+        st.markdown("""
+        #### What is the Boundary Layer?
+        
+        A thin region near a solid surface where **viscous effects are significant**.
+        
+        - Outside: Flow behaves as **inviscid** (Bernoulli applies)
+        - Inside: **Viscous forces** are important, velocity varies from 0 to U∞
+        
+        #### The No-Slip Condition
+        
+        At a solid surface, the fluid velocity equals the surface velocity:
+        """)
+        
+        st.latex(r'u(y=0) = 0 \text{ (for stationary surface)}')
+        
+        st.markdown("""
+        #### Boundary Layer Thickness δ
+        
+        Defined as the distance where u = 0.99 U∞
+        
+        **Laminar (Blasius solution)**:
+        """)
+        
+        st.latex(r'\delta = \frac{5x}{\sqrt{Re_x}}')
+        
+        st.markdown("""
+        **Turbulent (approximate)**:
+        """)
+        
+        st.latex(r'\delta = \frac{0.37x}{Re_x^{0.2}}')
+    
+    with col_blt2:
+        st.markdown("""
+        #### Laminar vs Turbulent Boundary Layer
+        
+        | Property | Laminar | Turbulent |
+        |----------|---------|-----------|
+        | **Re_x range** | < 5×10⁵ | > 5×10⁵ |
+        | **Profile shape** | Parabolic | Fuller |
+        | **Wall shear** | Lower | Higher |
+        | **Thickness growth** | ~ x^0.5 | ~ x^0.8 |
+        | **Mixing** | Poor | Enhanced |
+        
+        #### Other Thickness Definitions
+        
+        **Displacement thickness δ*** (mass flow deficit):
+        """)
+        
+        st.latex(r'\delta^* = \int_0^\infty \left(1 - \frac{u}{U_\infty}\right) dy')
+        
+        st.markdown("""
+        **Momentum thickness θ** (momentum deficit):
+        """)
+        
+        st.latex(r'\theta = \int_0^\infty \frac{u}{U_\infty}\left(1 - \frac{u}{U_\infty}\right) dy')
+    
+    st.info("""
+    **Engineering Significance:**
+    
+    - **Drag**: Skin friction drag comes from wall shear stress in the boundary layer
+    - **Heat Transfer**: Thermal boundary layer controls convective heat transfer
+    - **Flow Separation**: Adverse pressure gradients can cause BL separation → increased drag, stall
+    - **Design**: Aircraft wings, turbine blades, heat exchangers all require BL analysis
+    """)
+
+# =====================================================
     st.markdown("### 🎯 Interactive Simulation")
     
     col_bl1, col_bl2 = st.columns([2, 3])
@@ -2687,80 +2761,6 @@ with main_tab8:
         
         st.plotly_chart(fig_bl, use_container_width=True)
     
-    st.markdown("---")
-    
-    # Theory Section
-    st.markdown("### 📚 Theory & Concepts")
-    
-    col_blt1, col_blt2 = st.columns(2)
-    
-    with col_blt1:
-        st.markdown("""
-        #### What is the Boundary Layer?
-        
-        A thin region near a solid surface where **viscous effects are significant**.
-        
-        - Outside: Flow behaves as **inviscid** (Bernoulli applies)
-        - Inside: **Viscous forces** are important, velocity varies from 0 to U∞
-        
-        #### The No-Slip Condition
-        
-        At a solid surface, the fluid velocity equals the surface velocity:
-        """)
-        
-        st.latex(r'u(y=0) = 0 \text{ (for stationary surface)}')
-        
-        st.markdown("""
-        #### Boundary Layer Thickness δ
-        
-        Defined as the distance where u = 0.99 U∞
-        
-        **Laminar (Blasius solution)**:
-        """)
-        
-        st.latex(r'\delta = \frac{5x}{\sqrt{Re_x}}')
-        
-        st.markdown("""
-        **Turbulent (approximate)**:
-        """)
-        
-        st.latex(r'\delta = \frac{0.37x}{Re_x^{0.2}}')
-    
-    with col_blt2:
-        st.markdown("""
-        #### Laminar vs Turbulent Boundary Layer
-        
-        | Property | Laminar | Turbulent |
-        |----------|---------|-----------|
-        | **Re_x range** | < 5×10⁵ | > 5×10⁵ |
-        | **Profile shape** | Parabolic | Fuller |
-        | **Wall shear** | Lower | Higher |
-        | **Thickness growth** | ~ x^0.5 | ~ x^0.8 |
-        | **Mixing** | Poor | Enhanced |
-        
-        #### Other Thickness Definitions
-        
-        **Displacement thickness δ*** (mass flow deficit):
-        """)
-        
-        st.latex(r'\delta^* = \int_0^\infty \left(1 - \frac{u}{U_\infty}\right) dy')
-        
-        st.markdown("""
-        **Momentum thickness θ** (momentum deficit):
-        """)
-        
-        st.latex(r'\theta = \int_0^\infty \frac{u}{U_\infty}\left(1 - \frac{u}{U_\infty}\right) dy')
-    
-    st.info("""
-    **Engineering Significance:**
-    
-    - **Drag**: Skin friction drag comes from wall shear stress in the boundary layer
-    - **Heat Transfer**: Thermal boundary layer controls convective heat transfer
-    - **Flow Separation**: Adverse pressure gradients can cause BL separation → increased drag, stall
-    - **Design**: Aircraft wings, turbine blades, heat exchangers all require BL analysis
-    """)
-
-# =====================================================
 # TAB 9: DIMENSIONAL ANALYSIS
 # =====================================================
 with main_tab9:
@@ -2771,6 +2771,123 @@ with main_tab9:
     )
     st.markdown("---")
     
+    st.markdown("---")
+    
+    # Buckingham Pi Theorem Section
+    st.markdown("### 📚 Buckingham Pi Theorem")
+    
+    col_pi1, col_pi2 = st.columns(2)
+    
+    with col_pi1:
+        st.markdown("""
+        #### The Theorem
+        
+        If a physical problem involves **n** variables and **k** fundamental dimensions (M, L, T, θ), 
+        then the problem can be described by **(n - k)** independent dimensionless groups (π groups).
+        """)
+        
+        st.latex(r'\text{Number of } \Pi \text{ groups} = n - k')
+        
+        st.markdown("""
+        #### Fundamental Dimensions
+        
+        | Dimension | Symbol | SI Unit |
+        |-----------|--------|---------|
+        | Mass | M | kg |
+        | Length | L | m |
+        | Time | T | s |
+        | Temperature | θ | K |
+        
+        #### Example: Drag on a Sphere
+        
+        Variables: F_D, ρ, U, D, μ (n = 5)
+        
+        Dimensions: M, L, T (k = 3)
+        
+        π groups: 5 - 3 = **2**
+        """)
+    
+    with col_pi2:
+        st.markdown("""
+        #### Procedure
+        
+        1. **List all variables** affecting the phenomenon
+        2. **Express dimensions** of each variable in M, L, T, θ
+        3. **Select k repeating variables** (must include all dimensions)
+        4. **Form π groups** by combining remaining variables with repeating variables
+        5. **Write the functional relationship** between π groups
+        
+        #### Sphere Drag Result
+        """)
+        
+        st.latex(r'\Pi_1 = \frac{F_D}{\rho U^2 D^2} = C_D \quad \text{(Drag coefficient)}')
+        
+        st.latex(r'\Pi_2 = \frac{\rho U D}{\mu} = Re \quad \text{(Reynolds number)}')
+        
+        st.markdown("""
+        **Functional relationship:**
+        """)
+        
+        st.latex(r'C_D = f(Re)')
+        
+        st.markdown("""
+        This tells us drag coefficient depends **only** on Reynolds number!
+        """)
+    
+    st.markdown("---")
+    
+    # Similitude Section
+    st.markdown("### 🔄 Similitude and Model Testing")
+    
+    col_sim1, col_sim2 = st.columns(2)
+    
+    with col_sim1:
+        st.markdown("""
+        #### Types of Similarity
+        
+        **Geometric Similarity**
+        - Model and prototype have same shape
+        - All length ratios equal: L_r = L_m/L_p
+        
+        **Kinematic Similarity**
+        - Velocity ratios equal at corresponding points
+        - Same flow patterns
+        
+        **Dynamic Similarity**
+        - Force ratios equal at corresponding points
+        - **Requires equal dimensionless numbers**
+        """)
+    
+    with col_sim2:
+        st.markdown("""
+        #### Scaling Laws
+        
+        For complete dynamic similarity, match the relevant dimensionless numbers:
+        
+        | Application | Match This Number |
+        |-------------|-------------------|
+        | Pipe flow, aircraft | Reynolds (Re) |
+        | Ship hulls, spillways | Froude (Fr) |
+        | High-speed flow | Mach (Ma) |
+        | Droplets, bubbles | Weber (We) |
+        
+        #### The Challenge
+        
+        Often **impossible to match all numbers** simultaneously!
+        
+        → Use **dominant phenomenon** to select which number to match
+        """)
+    
+    st.success("""
+    **Key Takeaways:**
+    
+    1. **Dimensional analysis** reduces the number of variables needed to describe a problem
+    2. **Dimensionless numbers** allow comparison across different scales and fluids
+    3. **Buckingham Pi Theorem** provides a systematic way to find dimensionless groups
+    4. **Model testing** requires matching the relevant dimensionless numbers for valid scaling
+    5. **Reynolds number** is the most important dimensionless number in fluid mechanics
+    """)
+
     # Interactive Section
     st.markdown("### 🎯 Interactive Exploration")
     
@@ -2898,123 +3015,6 @@ with main_tab9:
             **When important:** We >> 1 means surface tension negligible
             """)
     
-    st.markdown("---")
-    
-    # Buckingham Pi Theorem Section
-    st.markdown("### 📚 Buckingham Pi Theorem")
-    
-    col_pi1, col_pi2 = st.columns(2)
-    
-    with col_pi1:
-        st.markdown("""
-        #### The Theorem
-        
-        If a physical problem involves **n** variables and **k** fundamental dimensions (M, L, T, θ), 
-        then the problem can be described by **(n - k)** independent dimensionless groups (π groups).
-        """)
-        
-        st.latex(r'\text{Number of } \Pi \text{ groups} = n - k')
-        
-        st.markdown("""
-        #### Fundamental Dimensions
-        
-        | Dimension | Symbol | SI Unit |
-        |-----------|--------|---------|
-        | Mass | M | kg |
-        | Length | L | m |
-        | Time | T | s |
-        | Temperature | θ | K |
-        
-        #### Example: Drag on a Sphere
-        
-        Variables: F_D, ρ, U, D, μ (n = 5)
-        
-        Dimensions: M, L, T (k = 3)
-        
-        π groups: 5 - 3 = **2**
-        """)
-    
-    with col_pi2:
-        st.markdown("""
-        #### Procedure
-        
-        1. **List all variables** affecting the phenomenon
-        2. **Express dimensions** of each variable in M, L, T, θ
-        3. **Select k repeating variables** (must include all dimensions)
-        4. **Form π groups** by combining remaining variables with repeating variables
-        5. **Write the functional relationship** between π groups
-        
-        #### Sphere Drag Result
-        """)
-        
-        st.latex(r'\Pi_1 = \frac{F_D}{\rho U^2 D^2} = C_D \quad \text{(Drag coefficient)}')
-        
-        st.latex(r'\Pi_2 = \frac{\rho U D}{\mu} = Re \quad \text{(Reynolds number)}')
-        
-        st.markdown("""
-        **Functional relationship:**
-        """)
-        
-        st.latex(r'C_D = f(Re)')
-        
-        st.markdown("""
-        This tells us drag coefficient depends **only** on Reynolds number!
-        """)
-    
-    st.markdown("---")
-    
-    # Similitude Section
-    st.markdown("### 🔄 Similitude and Model Testing")
-    
-    col_sim1, col_sim2 = st.columns(2)
-    
-    with col_sim1:
-        st.markdown("""
-        #### Types of Similarity
-        
-        **Geometric Similarity**
-        - Model and prototype have same shape
-        - All length ratios equal: L_r = L_m/L_p
-        
-        **Kinematic Similarity**
-        - Velocity ratios equal at corresponding points
-        - Same flow patterns
-        
-        **Dynamic Similarity**
-        - Force ratios equal at corresponding points
-        - **Requires equal dimensionless numbers**
-        """)
-    
-    with col_sim2:
-        st.markdown("""
-        #### Scaling Laws
-        
-        For complete dynamic similarity, match the relevant dimensionless numbers:
-        
-        | Application | Match This Number |
-        |-------------|-------------------|
-        | Pipe flow, aircraft | Reynolds (Re) |
-        | Ship hulls, spillways | Froude (Fr) |
-        | High-speed flow | Mach (Ma) |
-        | Droplets, bubbles | Weber (We) |
-        
-        #### The Challenge
-        
-        Often **impossible to match all numbers** simultaneously!
-        
-        → Use **dominant phenomenon** to select which number to match
-        """)
-    
-    st.success("""
-    **Key Takeaways:**
-    
-    1. **Dimensional analysis** reduces the number of variables needed to describe a problem
-    2. **Dimensionless numbers** allow comparison across different scales and fluids
-    3. **Buckingham Pi Theorem** provides a systematic way to find dimensionless groups
-    4. **Model testing** requires matching the relevant dimensionless numbers for valid scaling
-    5. **Reynolds number** is the most important dimensionless number in fluid mechanics
-    """)
-
 # --- Footer ---
 st.markdown("---")
 st.markdown("""
