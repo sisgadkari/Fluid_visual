@@ -1572,10 +1572,7 @@ with main_tab5:
     )
     st.markdown("---")
     
-    # Interactive Visualization Section
-    st.markdown("---")
-    
-    # Theory Section
+    # SECTION 1: THEORY & CONCEPTS
     st.markdown("### 📚 Theory & Concepts")
     
     col_theory1, col_theory2 = st.columns(2)
@@ -1589,7 +1586,6 @@ with main_tab5:
         | **Time Dependence** | ∂/∂t | Steady / Unsteady |
         | **Spatial Variation** | ∂/∂s | Uniform / Non-uniform |
         | **Flow Regime** | Reynolds Number | Laminar / Turbulent |
-        | **Dimensionality** | Velocity components | 1D / 2D / 3D |
         | **Compressibility** | Mach Number | Incompressible / Compressible |
         
         #### Reynolds Number
@@ -1623,346 +1619,258 @@ with main_tab5:
         > **For steady flow**: All three are identical!
         """)
     
+    st.markdown("---")
+    
+    # SECTION 2: FLOW TYPE VISUALIZATIONS
+    st.markdown("### 🖼️ Flow Type Visualizations")
+    
+    # --- Steady vs Unsteady Flow ---
+    st.markdown("#### 1. Steady vs Unsteady Flow")
+    
+    col_su1, col_su2 = st.columns(2)
+    
+    with col_su1:
+        st.markdown("**Steady Flow**")
+        
+        # Create steady flow visualization
+        fig_steady = go.Figure()
+        
+        # Pipe walls
+        fig_steady.add_shape(type="rect", x0=0, y0=0.2, x1=10, y1=0.8,
+                            fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
+        
+        # Parallel streamlines
+        for y_pos in np.linspace(0.3, 0.7, 5):
+            x_line = np.linspace(0, 10, 50)
+            y_line = np.ones_like(x_line) * y_pos
+            fig_steady.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
+                                           line=dict(color='blue', width=2), showlegend=False))
+            # Add arrows
+            for x_arr in [2, 5, 8]:
+                fig_steady.add_annotation(x=x_arr+0.4, y=y_pos, ax=x_arr, ay=y_pos,
+                                         showarrow=True, arrowhead=2, arrowsize=1.5,
+                                         arrowwidth=2, arrowcolor='blue')
+        
+        fig_steady.add_annotation(x=5, y=0.95, text="<b>∂U/∂t = 0</b>",
+                                 showarrow=False, font=dict(size=14, color="green"))
+        
+        fig_steady.update_layout(
+            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(range=[0, 1.1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
+            height=250, margin=dict(t=30, b=10, l=10, r=10), plot_bgcolor='white'
+        )
+        st.plotly_chart(fig_steady, use_container_width=True)
+        
+        st.success("""
+        **Properties constant with time at each point**
+        
+        Examples: Constant tap flow, steady pipe flow
+        """)
+    
+    with col_su2:
+        st.markdown("**Unsteady Flow**")
+        
+        # Create unsteady flow visualization
+        fig_unsteady = go.Figure()
+        
+        # Pipe walls
+        fig_unsteady.add_shape(type="rect", x0=0, y0=0.2, x1=10, y1=0.8,
+                              fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
+        
+        # Varying streamlines at different times
+        colors = ['lightblue', 'blue', 'darkblue']
+        labels = ['t₁', 't₂', 't₃']
+        for i, (color, label) in enumerate(zip(colors, labels)):
+            y_base = 0.5
+            x_line = np.linspace(0, 10, 50)
+            amplitude = 0.08 * (i + 1)
+            y_line = y_base + amplitude * np.sin(x_line * 0.8 + i * 1.5)
+            fig_unsteady.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
+                                             line=dict(color=color, width=2), name=label))
+        
+        fig_unsteady.add_annotation(x=5, y=0.95, text="<b>∂U/∂t ≠ 0</b>",
+                                   showarrow=False, font=dict(size=14, color="orange"))
+        
+        fig_unsteady.update_layout(
+            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(range=[0, 1.1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
+            height=250, margin=dict(t=30, b=10, l=10, r=10), plot_bgcolor='white',
+            legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5)
+        )
+        st.plotly_chart(fig_unsteady, use_container_width=True)
+        
+        st.warning("""
+        **Properties change with time at each point**
+        
+        Examples: Pump startup, filling tanks, pulsating flow
+        """)
+    
+    st.markdown("---")
+    
+    # --- Uniform vs Non-uniform Flow ---
+    st.markdown("#### 2. Uniform vs Non-uniform Flow")
+    
+    col_un1, col_un2 = st.columns(2)
+    
+    with col_un1:
+        st.markdown("**Uniform Flow**")
+        
+        # Create uniform flow visualization
+        fig_uniform = go.Figure()
+        
+        # Constant diameter pipe
+        fig_uniform.add_shape(type="rect", x0=0, y0=0.25, x1=10, y1=0.75,
+                             fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
+        
+        # Equal arrows everywhere
+        for y_pos in np.linspace(0.35, 0.65, 3):
+            for x_arr in [1, 3, 5, 7, 9]:
+                fig_uniform.add_annotation(x=x_arr+0.5, y=y_pos, ax=x_arr, ay=y_pos,
+                                          showarrow=True, arrowhead=2, arrowsize=1.5,
+                                          arrowwidth=2, arrowcolor='blue')
+        
+        fig_uniform.add_annotation(x=5, y=0.92, text="<b>∂U/∂s = 0</b>",
+                                  showarrow=False, font=dict(size=14, color="green"))
+        
+        fig_uniform.update_layout(
+            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(range=[0, 1.1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
+            height=250, margin=dict(t=30, b=10, l=10, r=10), plot_bgcolor='white'
+        )
+        st.plotly_chart(fig_uniform, use_container_width=True)
+        
+        st.success("""
+        **Same velocity at all positions (at given time)**
+        
+        Examples: Fully developed pipe flow, wide river
+        """)
+    
+    with col_un2:
+        st.markdown("**Non-uniform Flow**")
+        
+        # Create non-uniform flow visualization (converging pipe)
+        fig_nonuniform = go.Figure()
+        
+        # Converging pipe shape
+        x_pipe = [0, 4, 6, 10, 10, 6, 4, 0, 0]
+        y_pipe = [0.2, 0.2, 0.35, 0.35, 0.65, 0.65, 0.8, 0.8, 0.2]
+        fig_nonuniform.add_trace(go.Scatter(x=x_pipe, y=y_pipe, fill="toself",
+                                           fillcolor="rgba(200,220,255,0.3)", 
+                                           line=dict(color="black", width=2), showlegend=False))
+        
+        # Arrows - increasing length in narrow section
+        arrow_data = [(1, 0.5, 0.3), (3, 0.5, 0.35), (5, 0.5, 0.5), (7, 0.5, 0.6), (9, 0.5, 0.6)]
+        for x_arr, y_pos, length in arrow_data:
+            fig_nonuniform.add_annotation(x=x_arr+length, y=y_pos, ax=x_arr, ay=y_pos,
+                                         showarrow=True, arrowhead=2, arrowsize=1.5,
+                                         arrowwidth=2, arrowcolor='blue')
+        
+        fig_nonuniform.add_annotation(x=5, y=0.92, text="<b>∂U/∂s ≠ 0</b>",
+                                     showarrow=False, font=dict(size=14, color="orange"))
+        
+        fig_nonuniform.update_layout(
+            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(range=[0, 1.1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
+            height=250, margin=dict(t=30, b=10, l=10, r=10), plot_bgcolor='white'
+        )
+        st.plotly_chart(fig_nonuniform, use_container_width=True)
+        
+        st.warning("""
+        **Velocity changes with position**
+        
+        Examples: Nozzles, diffusers, flow around objects
+        """)
+    
+    st.markdown("---")
+    
+    # --- Laminar vs Turbulent Flow ---
+    st.markdown("#### 3. Laminar vs Turbulent Flow")
+    
+    col_lt1, col_lt2 = st.columns(2)
+    
+    with col_lt1:
+        st.markdown("**Laminar Flow** (Re < 2300)")
+        
+        # Create laminar flow visualization
+        fig_laminar = go.Figure()
+        
+        # Pipe
+        fig_laminar.add_shape(type="rect", x0=0, y0=0.1, x1=10, y1=0.9,
+                             fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
+        
+        # Smooth parallel streamlines
+        for y_pos in np.linspace(0.2, 0.8, 7):
+            x_line = np.linspace(0, 10, 100)
+            y_line = np.ones_like(x_line) * y_pos
+            fig_laminar.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
+                                            line=dict(color='blue', width=1.5), showlegend=False))
+        
+        fig_laminar.add_annotation(x=5, y=0.98, text="<b>Smooth, ordered layers</b>",
+                                  showarrow=False, font=dict(size=12, color="green"))
+        
+        fig_laminar.update_layout(
+            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(range=[0, 1.1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
+            height=250, margin=dict(t=30, b=10, l=10, r=10), plot_bgcolor='white'
+        )
+        st.plotly_chart(fig_laminar, use_container_width=True)
+        
+        st.success("""
+        **Characteristics:**
+        - Fluid moves in parallel layers
+        - Viscous forces dominate
+        - Predictable, smooth flow
+        - Low energy loss
+        """)
+    
+    with col_lt2:
+        st.markdown("**Turbulent Flow** (Re > 4000)")
+        
+        # Create turbulent flow visualization
+        fig_turbulent = go.Figure()
+        
+        # Pipe
+        fig_turbulent.add_shape(type="rect", x0=0, y0=0.1, x1=10, y1=0.9,
+                               fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
+        
+        # Chaotic streamlines
+        np.random.seed(42)
+        for y_start in np.linspace(0.2, 0.8, 6):
+            x_line = np.linspace(0, 10, 100)
+            y_line = y_start + 0.12 * np.cumsum(np.random.randn(100)) / 15
+            y_line = np.clip(y_line, 0.15, 0.85)
+            fig_turbulent.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
+                                              line=dict(color='red', width=1), showlegend=False))
+        
+        fig_turbulent.add_annotation(x=5, y=0.98, text="<b>Chaotic, irregular motion</b>",
+                                    showarrow=False, font=dict(size=12, color="red"))
+        
+        fig_turbulent.update_layout(
+            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(range=[0, 1.1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
+            height=250, margin=dict(t=30, b=10, l=10, r=10), plot_bgcolor='white'
+        )
+        st.plotly_chart(fig_turbulent, use_container_width=True)
+        
+        st.error("""
+        **Characteristics:**
+        - Eddies and vortices present
+        - Inertial forces dominate
+        - Enhanced mixing
+        - Higher energy loss
+        """)
+    
+    st.markdown("---")
+    
+    # Summary info box
     st.info("""
     **Practical Implications:**
     
     - **Steady vs Unsteady**: Determines if time derivatives can be neglected in governing equations
     - **Uniform vs Non-uniform**: Affects pressure and velocity distribution calculations
     - **Laminar vs Turbulent**: Completely changes friction factor correlations and mixing behavior
-    - **Dimensionality**: Determines complexity of analysis (1D is simplest, 3D most complex)
     """)
 
-# =====================================================
-    st.markdown("### 🎯 Interactive Flow Visualization")
-    
-    col_flow1, col_flow2 = st.columns([2, 3])
-    
-    with col_flow1:
-        st.subheader("🔬 Flow Classification")
-        
-        # Flow type selection
-        flow_classification = st.selectbox(
-            "Select Flow Classification to Explore:",
-            ("Steady vs Unsteady", "Uniform vs Non-uniform", "Laminar vs Turbulent", "1D vs 2D vs 3D"),
-            key="flow_type_selector"
-        )
-        
-        if flow_classification == "Steady vs Unsteady":
-            flow_mode = st.radio("Select Flow Type:", ["Steady Flow", "Unsteady Flow"], key="steady_radio")
-            
-            st.markdown("---")
-            if flow_mode == "Steady Flow":
-                st.success("""
-                **Steady Flow**: Properties at any point do NOT change with time.
-                
-                Mathematically: ∂(property)/∂t = 0
-                
-                **Examples:**
-                - Water from a tap at constant opening
-                - Flow in pipes at constant pump speed
-                - River flow (approximately)
-                """)
-            else:
-                st.warning("""
-                **Unsteady Flow**: Properties at a point CHANGE with time.
-                
-                Mathematically: ∂(property)/∂t ≠ 0
-                
-                **Examples:**
-                - Filling/draining a tank
-                - Pump startup/shutdown
-                - Tidal flows
-                - Pulsating blood flow
-                """)
-                
-        elif flow_classification == "Uniform vs Non-uniform":
-            flow_mode = st.radio("Select Flow Type:", ["Uniform Flow", "Non-uniform Flow"], key="uniform_radio")
-            
-            st.markdown("---")
-            if flow_mode == "Uniform Flow":
-                st.success("""
-                **Uniform Flow**: Properties do NOT change with position at a given time.
-                
-                Mathematically: ∂(property)/∂s = 0
-                
-                **Examples:**
-                - Flow in a constant-diameter pipe (fully developed)
-                - Wide river with constant cross-section
-                """)
-            else:
-                st.warning("""
-                **Non-uniform Flow**: Properties CHANGE with position.
-                
-                Mathematically: ∂(property)/∂s ≠ 0
-                
-                **Examples:**
-                - Flow through a nozzle or diffuser
-                - Flow around obstacles
-                - River with varying width/depth
-                """)
-                
-        elif flow_classification == "Laminar vs Turbulent":
-            Re = st.slider("Reynolds Number (Re)", 100, 10000, 2000, 100, key="Re_slider")
-            
-            st.markdown("---")
-            if Re < 2300:
-                flow_mode = "Laminar"
-                st.success(f"""
-                **Laminar Flow** (Re = {Re} < 2300)
-                
-                - Smooth, orderly fluid motion
-                - Fluid moves in parallel layers
-                - Viscous forces dominate
-                - Predictable behavior
-                """)
-            elif Re > 4000:
-                flow_mode = "Turbulent"
-                st.error(f"""
-                **Turbulent Flow** (Re = {Re} > 4000)
-                
-                - Chaotic, irregular motion
-                - Eddies and vortices present
-                - Inertial forces dominate
-                - Enhanced mixing
-                """)
-            else:
-                flow_mode = "Transitional"
-                st.warning(f"""
-                **Transitional Flow** (Re = {Re})
-                
-                2300 < Re < 4000
-                
-                - Intermittent turbulent bursts
-                - Unpredictable behavior
-                - Sensitive to disturbances
-                """)
-        else:  # 1D vs 2D vs 3D
-            flow_mode = st.radio("Select Flow Dimension:", ["1D Flow", "2D Flow", "3D Flow"], key="dim_radio")
-            
-            st.markdown("---")
-            if flow_mode == "1D Flow":
-                st.success("""
-                **One-Dimensional Flow**
-                
-                Properties vary in ONE direction only.
-                
-                u = u(x), v = 0, w = 0
-                
-                **Examples:**
-                - Fully developed pipe flow (average velocity)
-                - Flow in long channels
-                """)
-            elif flow_mode == "2D Flow":
-                st.info("""
-                **Two-Dimensional Flow**
-                
-                Properties vary in TWO directions.
-                
-                u = u(x,y), v = v(x,y), w = 0
-                
-                **Examples:**
-                - Flow over a long cylinder
-                - Flow between parallel plates
-                - Wind over a building (plan view)
-                """)
-            else:
-                st.warning("""
-                **Three-Dimensional Flow**
-                
-                Properties vary in ALL directions.
-                
-                u = u(x,y,z), v = v(x,y,z), w = w(x,y,z)
-                
-                **Examples:**
-                - Flow around a sphere
-                - Flow in complex geometries
-                - Atmospheric flows
-                """)
-    
-    with col_flow2:
-        st.subheader("🖼️ Visualization")
-        
-        fig_flow = go.Figure()
-        
-        if flow_classification == "Steady vs Unsteady":
-            # Create pipe visualization with streamlines
-            if flow_mode == "Steady Flow":
-                # Steady flow - parallel streamlines
-                for y_pos in np.linspace(0.2, 0.8, 5):
-                    x_line = np.linspace(0, 10, 50)
-                    y_line = np.ones_like(x_line) * y_pos
-                    fig_flow.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
-                                                  line=dict(color='blue', width=2), showlegend=False))
-                    # Add arrows
-                    for x_arr in [2, 5, 8]:
-                        fig_flow.add_annotation(x=x_arr+0.3, y=y_pos, ax=x_arr, ay=y_pos,
-                                               showarrow=True, arrowhead=2, arrowsize=1.5,
-                                               arrowwidth=2, arrowcolor='blue')
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Steady Flow: Constant velocity at each point</b>",
-                                       showarrow=False, font=dict(size=14))
-            else:
-                # Unsteady flow - varying streamlines with time indication
-                times = [0.3, 0.5, 0.7]
-                colors = ['lightblue', 'blue', 'darkblue']
-                for i, (t, color) in enumerate(zip(times, colors)):
-                    for y_pos in np.linspace(0.2, 0.8, 4):
-                        x_line = np.linspace(0, 10, 50)
-                        amplitude = 0.05 * (i + 1)
-                        y_line = y_pos + amplitude * np.sin(x_line * 2 + i)
-                        fig_flow.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
-                                                      line=dict(color=color, width=2), 
-                                                      name=f't = {i+1}s', showlegend=(y_pos == 0.5)))
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Unsteady Flow: Velocity changes with time</b>",
-                                       showarrow=False, font=dict(size=14))
-        
-        elif flow_classification == "Uniform vs Non-uniform":
-            if flow_mode == "Uniform Flow":
-                # Uniform pipe
-                fig_flow.add_shape(type="rect", x0=0, y0=0.2, x1=10, y1=0.8,
-                                  fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
-                
-                for y_pos in np.linspace(0.3, 0.7, 4):
-                    for x_arr in [1, 3, 5, 7, 9]:
-                        fig_flow.add_annotation(x=x_arr+0.5, y=y_pos, ax=x_arr, ay=y_pos,
-                                               showarrow=True, arrowhead=2, arrowsize=1.5,
-                                               arrowwidth=2, arrowcolor='blue')
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Uniform: Same velocity everywhere</b>",
-                                       showarrow=False, font=dict(size=14))
-            else:
-                # Converging pipe (non-uniform)
-                # Draw converging section
-                x_pipe = [0, 4, 6, 10, 10, 6, 4, 0, 0]
-                y_pipe = [0.2, 0.2, 0.35, 0.35, 0.65, 0.65, 0.8, 0.8, 0.2]
-                fig_flow.add_trace(go.Scatter(x=x_pipe, y=y_pipe, fill="toself",
-                                             fillcolor="rgba(200,220,255,0.3)", 
-                                             line=dict(color="black", width=2), showlegend=False))
-                
-                # Arrows - longer in narrow section
-                for x_arr, length in [(1, 0.3), (3, 0.35), (5, 0.5), (7, 0.6), (9, 0.6)]:
-                    y_center = 0.5
-                    fig_flow.add_annotation(x=x_arr+length, y=y_center, ax=x_arr, ay=y_center,
-                                           showarrow=True, arrowhead=2, arrowsize=1.5,
-                                           arrowwidth=2, arrowcolor='blue')
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Non-uniform: Velocity changes with position</b>",
-                                       showarrow=False, font=dict(size=14))
-        
-        elif flow_classification == "Laminar vs Turbulent":
-            # Create pipe
-            fig_flow.add_shape(type="rect", x0=0, y0=0.1, x1=10, y1=0.9,
-                              fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
-            
-            if flow_mode == "Laminar":
-                # Smooth parallel streamlines
-                for y_pos in np.linspace(0.2, 0.8, 7):
-                    x_line = np.linspace(0, 10, 100)
-                    y_line = np.ones_like(x_line) * y_pos
-                    fig_flow.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
-                                                  line=dict(color='blue', width=1.5), showlegend=False))
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Laminar: Smooth, parallel layers</b>",
-                                       showarrow=False, font=dict(size=14, color="green"))
-            elif flow_mode == "Turbulent":
-                # Chaotic streamlines
-                np.random.seed(42)
-                for y_start in np.linspace(0.2, 0.8, 6):
-                    x_line = np.linspace(0, 10, 100)
-                    y_line = y_start + 0.1 * np.cumsum(np.random.randn(100)) / 15
-                    y_line = np.clip(y_line, 0.15, 0.85)
-                    fig_flow.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
-                                                  line=dict(color='red', width=1), showlegend=False))
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Turbulent: Chaotic, irregular motion</b>",
-                                       showarrow=False, font=dict(size=14, color="red"))
-            else:
-                # Transitional - mix of both
-                np.random.seed(42)
-                for i, y_start in enumerate(np.linspace(0.2, 0.8, 6)):
-                    x_line = np.linspace(0, 10, 100)
-                    if i % 2 == 0:
-                        y_line = np.ones_like(x_line) * y_start
-                        color = 'blue'
-                    else:
-                        y_line = y_start + 0.05 * np.cumsum(np.random.randn(100)) / 15
-                        y_line = np.clip(y_line, 0.15, 0.85)
-                        color = 'orange'
-                    fig_flow.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
-                                                  line=dict(color=color, width=1.5), showlegend=False))
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>Transitional: Intermittent behavior</b>",
-                                       showarrow=False, font=dict(size=14, color="orange"))
-        
-        else:  # 1D, 2D, 3D visualization
-            if flow_mode == "1D Flow":
-                # Simple pipe with single direction arrows
-                fig_flow.add_shape(type="rect", x0=0, y0=0.3, x1=10, y1=0.7,
-                                  fillcolor="rgba(200,220,255,0.3)", line=dict(color="black", width=2))
-                
-                for x_arr in [1, 3, 5, 7, 9]:
-                    fig_flow.add_annotation(x=x_arr+0.6, y=0.5, ax=x_arr, ay=0.5,
-                                           showarrow=True, arrowhead=2, arrowsize=1.5,
-                                           arrowwidth=3, arrowcolor='blue')
-                
-                fig_flow.add_annotation(x=5, y=0.85, text="<b>1D: u = u(x) only</b>",
-                                       showarrow=False, font=dict(size=14))
-                fig_flow.add_annotation(x=5, y=0.15, text="x →",
-                                       showarrow=False, font=dict(size=12))
-                
-            elif flow_mode == "2D Flow":
-                # Flow over obstacle showing 2D velocity field
-                theta = np.linspace(0, np.pi, 30)
-                x_cyl = 5 + 0.8 * np.cos(theta)
-                y_cyl = 0.5 + 0.8 * np.sin(theta)
-                fig_flow.add_trace(go.Scatter(x=x_cyl, y=y_cyl, fill="toself",
-                                             fillcolor="gray", line=dict(color="black", width=2),
-                                             showlegend=False))
-                
-                # Streamlines around cylinder
-                for y_start in [0.2, 0.35, 0.65, 0.8]:
-                    x_line = np.linspace(0, 10, 50)
-                    if y_start < 0.5:
-                        y_line = y_start - 0.15 * np.exp(-((x_line - 5)**2) / 2)
-                    else:
-                        y_line = y_start + 0.15 * np.exp(-((x_line - 5)**2) / 2)
-                    fig_flow.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines',
-                                                  line=dict(color='blue', width=1.5), showlegend=False))
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>2D: u = u(x,y), v = v(x,y)</b>",
-                                       showarrow=False, font=dict(size=14))
-                
-            else:  # 3D
-                # Show coordinate system and indicate 3D nature
-                fig_flow.add_trace(go.Scatter(x=[1, 9], y=[0.5, 0.5], mode='lines+markers',
-                                             line=dict(color='red', width=3), name='x', showlegend=True))
-                fig_flow.add_trace(go.Scatter(x=[5, 5], y=[0.1, 0.9], mode='lines+markers',
-                                             line=dict(color='green', width=3), name='y', showlegend=True))
-                # Z direction indicated by circles (coming out of page)
-                for x, y in [(3, 0.3), (7, 0.7), (5, 0.5)]:
-                    fig_flow.add_trace(go.Scatter(x=[x], y=[y], mode='markers',
-                                                  marker=dict(size=20, color='blue', 
-                                                             symbol='circle-open', line=dict(width=3)),
-                                                  showlegend=False))
-                    fig_flow.add_trace(go.Scatter(x=[x], y=[y], mode='markers',
-                                                  marker=dict(size=5, color='blue'),
-                                                  showlegend=False))
-                
-                fig_flow.add_annotation(x=5, y=0.95, text="<b>3D: u, v, w all vary with x, y, z</b>",
-                                       showarrow=False, font=dict(size=14))
-                fig_flow.add_annotation(x=5.3, y=0.5, text="z (out)", showarrow=False, font=dict(size=10, color='blue'))
-        
-        fig_flow.update_layout(
-            xaxis=dict(range=[0, 10], showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(range=[0, 1], showgrid=False, zeroline=False, showticklabels=False, scaleanchor="x"),
-            height=400,
-            margin=dict(t=20, b=20, l=20, r=20),
-            plot_bgcolor='white'
-        )
-        
-        st.plotly_chart(fig_flow, use_container_width=True)
-    
 # TAB 6: CONTINUUM ASSUMPTION
 # =====================================================
 with main_tab6:
