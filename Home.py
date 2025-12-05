@@ -160,6 +160,130 @@ st.markdown("""
         width: fit-content;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
+    
+    /* ============================================= */
+    /* COLORFUL SIDEBAR STYLING */
+    /* ============================================= */
+    
+    /* Sidebar header styling */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    [data-testid="stSidebar"] > div:first-child {
+        padding-top: 1rem;
+    }
+    
+    /* Style for sidebar navigation items */
+    [data-testid="stSidebarNav"] {
+        padding: 0.5rem 0;
+    }
+    
+    /* Individual navigation link styling with colored left border stripes */
+    [data-testid="stSidebarNav"] li:nth-child(1) > div > a {
+        border-left: 4px solid #3b82f6 !important;
+        background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 1: Capillary Rise - Blue */
+    [data-testid="stSidebarNav"] li:nth-child(2) > div > a {
+        border-left: 4px solid #06b6d4 !important;
+        background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 2: Open Manometer - Teal */
+    [data-testid="stSidebarNav"] li:nth-child(3) > div > a {
+        border-left: 4px solid #14b8a6 !important;
+        background: linear-gradient(90deg, rgba(20, 184, 166, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 3: Closed Manometer - Green */
+    [data-testid="stSidebarNav"] li:nth-child(4) > div > a {
+        border-left: 4px solid #22c55e !important;
+        background: linear-gradient(90deg, rgba(34, 197, 94, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 4: Pitot-Static - Lime */
+    [data-testid="stSidebarNav"] li:nth-child(5) > div > a {
+        border-left: 4px solid #84cc16 !important;
+        background: linear-gradient(90deg, rgba(132, 204, 22, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 5: Hydrostatic Straight - Yellow */
+    [data-testid="stSidebarNav"] li:nth-child(6) > div > a {
+        border-left: 4px solid #eab308 !important;
+        background: linear-gradient(90deg, rgba(234, 179, 8, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 6: Hydrostatic Inclined - Orange */
+    [data-testid="stSidebarNav"] li:nth-child(7) > div > a {
+        border-left: 4px solid #f97316 !important;
+        background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 7: Reducing Pipe Bend - Red */
+    [data-testid="stSidebarNav"] li:nth-child(8) > div > a {
+        border-left: 4px solid #ef4444 !important;
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 8: Laminar vs Turbulent - Rose */
+    [data-testid="stSidebarNav"] li:nth-child(9) > div > a {
+        border-left: 4px solid #f43f5e !important;
+        background: linear-gradient(90deg, rgba(244, 63, 94, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 9: Pump Head & Power - Pink */
+    [data-testid="stSidebarNav"] li:nth-child(10) > div > a {
+        border-left: 4px solid #ec4899 !important;
+        background: linear-gradient(90deg, rgba(236, 72, 153, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 10: Turbine Power - Fuchsia */
+    [data-testid="stSidebarNav"] li:nth-child(11) > div > a {
+        border-left: 4px solid #d946ef !important;
+        background: linear-gradient(90deg, rgba(217, 70, 239, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Module 11: Fundamental Concepts - Purple */
+    [data-testid="stSidebarNav"] li:nth-child(12) > div > a {
+        border-left: 4px solid #a855f7 !important;
+        background: linear-gradient(90deg, rgba(168, 85, 247, 0.1) 0%, transparent 100%) !important;
+    }
+    
+    /* Hover effects for all sidebar links */
+    [data-testid="stSidebarNav"] li > div > a:hover {
+        background: linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%) !important;
+        transform: translateX(3px);
+        transition: all 0.2s ease;
+    }
+    
+    /* Active/selected page styling */
+    [data-testid="stSidebarNav"] li > div > a[aria-selected="true"] {
+        font-weight: 600 !important;
+        border-left-width: 6px !important;
+    }
+    
+    /* Sidebar navigation link text styling */
+    [data-testid="stSidebarNav"] li > div > a {
+        padding: 0.6rem 1rem !important;
+        margin: 2px 0.5rem !important;
+        border-radius: 0 8px 8px 0 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    /* Sidebar title/header area */
+    [data-testid="stSidebarNav"]::before {
+        content: "📚 Modules";
+        display: block;
+        font-size: 0.85em;
+        font-weight: 600;
+        color: #64748b;
+        padding: 0.5rem 1rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
 </style>
 """, unsafe_allow_html=True)
 
