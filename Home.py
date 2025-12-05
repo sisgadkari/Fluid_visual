@@ -539,7 +539,6 @@ st.markdown("---")
 # --- Credits Footer ---
 st.markdown("""
 <div style='text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9em;'>
-    <p>🎓 Developed for Chemical Engineering Students</p>
     <p>University of Surrey | School of Chemistry and Chemical Engineering</p>
     <p style='margin-top: 10px;'>👨‍💻 Developer: <strong>Dr Siddharth Gadkari</strong></p>
     <p style='margin-top: 5px;'>🏆 Funded by the <strong>Fluor Global University Sponsorship Program (GUSP) Award</strong> and <strong>Faculty of Engineering and Physical Sciences Teaching Innovation Fund</strong></p>
