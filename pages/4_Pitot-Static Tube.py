@@ -1191,7 +1191,7 @@ with tab1:
             return fig
         
         # Display the animated plot
-        if velocity > 0:
+        if U > 0:
             fig = generate_animated_pitot_plot(h_mano, U, rho_f, rho_m)
         else:
             fig = generate_pitot_plot(h_mano, U)
